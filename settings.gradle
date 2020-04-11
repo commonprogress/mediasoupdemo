@@ -1,0 +1,4 @@
+include ':app', ':library'
+include ':protoo-client'
+include ':mediasoup-client'
+include ':mediasoupdemo'

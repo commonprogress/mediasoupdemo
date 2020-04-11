@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:bind="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <variable
+            name="roomProps"
+            type="com.jsy.mediasoup.vm.RoomProps" />
+    </data>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/bg_room"
+        android:orientation="vertical"
+        tools:context=".RoomActivity">
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/remote_peers"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone" />
+<!--连接状态-->
+        <ImageView
+            android:id="@+id/room_state"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="5dp"
+            android:padding="5dp"
+            bind:srcCompat="@drawable/ic_state_new_close"
+            bind:edias_state="@{roomProps.connectionState}"
+            bind:edias_state_animation="@{roomProps.getConnectingAnimation}" />
+<!--邀请连接 view-->
+        <TextView
+            android:id="@+id/invitation_link"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:background="@drawable/bg_area"
+            android:paddingLeft="15dp"
+            android:paddingTop="8dp"
+            android:paddingRight="15dp"
+            android:paddingBottom="8dp"
+            android:text="@string/invitation_link"
+            android:textColor="@color/text_color"
+            android:textSize="15sp"
+            bind:edias_link="@{roomProps.invitationLink}" />
+<!--自己是否显示视频-->
+        <ImageView
+            android:id="@+id/hide_videos"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/mute_audio"
+            android:layout_marginStart="10dp"
+            android:layout_marginBottom="5dp"
+            android:background="@drawable/bg_left_box_off"
+            android:padding="8dp"
+            bind:srcCompat="@drawable/icon_video_white_off"
+            bind:edias_hide_videos="@{roomProps.audioOnly}"
+            bind:edias_hide_videos_progress="@{roomProps.audioOnlyInProgress}" />
+<!--是否静音-->
+        <ImageView
+            android:id="@+id/mute_audio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="10dp"
+            android:layout_marginBottom="5dp"
+            android:background="@drawable/bg_left_box_off"
+            android:padding="8dp"
+            bind:srcCompat="@drawable/icon_volume_white_off"
+            bind:edias_audio_muted="@{roomProps.audioMuted}" />
+
+        <!--是否重启ice-->
+        <ImageView
+            android:id="@+id/restart_ice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/mute_audio"
+            android:layout_marginStart="10dp"
+            android:layout_marginBottom="5dp"
+            android:background="@drawable/bg_left_box"
+            android:padding="8dp"
+            bind:srcCompat="@drawable/icon_restart_ice_white"
+            bind:edias_restart_ice_progress="@{roomProps.restartIceInProgress}"
+            bind:edias_restart_ice_ani="@{roomProps.restartIceAnimation}" />
+
+<!--自己信息的view-->
+        <com.jsy.mediasoup.view.MeView
+            android:id="@+id/me"
+            android:layout_width="220dp"
+            android:layout_height="200dp"
+            android:layout_alignParentBottom="true"
+            android:layout_marginLeft="10dp"
+            android:layout_marginBottom="10dp" />
+
+    </RelativeLayout>
+</layout>
