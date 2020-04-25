@@ -17,7 +17,7 @@ public class CombinedLiveData<A, B, OUTPUT> extends MediatorLiveData<OUTPUT> {
     private B mB;
 
     public CombinedLiveData(
-            LiveData<A> source1, LiveData<B> source2, @NonNull Combiner<A, B, OUTPUT> combiner) {
+        LiveData<A> source1, LiveData<B> source2, @NonNull Combiner<A, B, OUTPUT> combiner) {
         super.addSource(
                 source1,
                 (data1) -> {

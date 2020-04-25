@@ -2,6 +2,7 @@ package org.mediasoup.droid.lib.model;
 
 
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 
 import org.json.JSONObject;
 import org.mediasoup.droid.Consumer;
@@ -26,7 +27,7 @@ public class Peers {
   private Map<String, Peer> mPeersInfo;
 
   public Peers() {
-    mPeersInfo = Collections.synchronizedMap(new LinkedHashMap<String, Peer>());
+    mPeersInfo = Collections.synchronizedMap(new LinkedHashMap<>());
   }
 
   /**
@@ -43,7 +44,9 @@ public class Peers {
    * @param peerId
    */
   public void removePeer(String peerId) {
-    mPeersInfo.remove(peerId);
+      if(isContainsCurPeer(peerId)) {
+          mPeersInfo.remove(peerId);
+      }
   }
 
   /**
@@ -52,12 +55,28 @@ public class Peers {
    * @param displayName
    */
   public void setPeerDisplayName(String peerId, String displayName) {
-    Peer peer = mPeersInfo.get(peerId);
+     Peer peer = getPeer(peerId);
     if (peer == null) {
       Logger.e(TAG, "no Protoo found");
       return;
     }
     peer.setDisplayName(displayName);
+  }
+
+  /**
+   * 更新当前peer 视频音频状态
+   * @param peerId
+   * @param isVideoVisible
+   * @param isAudioEnabled
+   */
+  public void updatePeerVideoAudioState(String peerId, boolean isVideoVisible, boolean isAudioEnabled) {
+      Peer peer = getPeer(peerId);
+      if (peer == null) {
+          Logger.e(TAG, "no Peer found for update Video Audio state");
+          return;
+      }
+      peer.setVideoVisible(isVideoVisible);
+      peer.setAudioEnabled(isAudioEnabled);
   }
 
   /**
@@ -71,7 +90,6 @@ public class Peers {
       Logger.e(TAG, "no Peer found for new Consumer");
       return;
     }
-
     peer.getConsumers().add(consumer.getId());
   }
 
@@ -85,7 +103,6 @@ public class Peers {
     if (peer == null) {
       return;
     }
-
     peer.getConsumers().remove(consumerId);
   }
 
@@ -95,7 +112,16 @@ public class Peers {
    * @return
    */
   public Peer getPeer(String peerId) {
-    return mPeersInfo.get(peerId);
+      return isContainsCurPeer(peerId) ? mPeersInfo.get(peerId) : null;
+  }
+
+  /**
+   * 是否包含peerId
+   * @param peerId
+   * @return
+   */
+  public boolean isContainsCurPeer(String peerId) {
+      return !TextUtils.isEmpty(peerId) && mPeersInfo.containsKey(peerId);
   }
 
   /**

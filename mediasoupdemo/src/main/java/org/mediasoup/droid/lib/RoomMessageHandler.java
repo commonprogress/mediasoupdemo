@@ -48,6 +48,7 @@ class RoomMessageHandler {
   @WorkerThread
   void handleNotification(Message.Notification notification) throws JSONException {
     JSONObject data = notification.getData();
+    Logger.d(TAG, "handleNotification notification.method " + notification.getMethod()+", data:"+data.toString());
     switch (notification.getMethod()) {
       case "producerScore":
         {

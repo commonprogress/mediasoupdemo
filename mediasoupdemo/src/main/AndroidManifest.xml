@@ -1,6 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.jsy.mediasoup" >
+    package="com.jsy.mediasoup">
+
     <uses-sdk tools:overrideLibrary="io.crossbar.autobahn" />
 
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
@@ -28,12 +29,27 @@
         <activity
             android:name="com.jsy.mediasoup.RoomActivity"
             android:label="@string/title_activity_room"
+            android:hardwareAccelerated="true"
+            android:launchMode="singleTask"
             android:screenOrientation="portrait"
-            android:launchMode="singleInstance"/>
+            android:showOnLockScreen="true"
+            android:theme="@style/Theme.Calling"
+            android:windowSoftInputMode="stateHidden" />
+
+        <activity
+            android:name="com.jsy.mediasoup.RoomConfigurationActivity"
+            android:screenOrientation="portrait" /> <!-- android:launchMode="singleInstance" -->
 
         <activity
             android:name="com.jsy.mediasoup.SettingsActivity"
             android:label="@string/title_activity_settings"
             android:screenOrientation="portrait" />
+
+        <service
+            android:name="com.jsy.mediasoup.services.MediasoupService"
+            android:enabled="true"
+            android:exported="true"></service>
+
+
     </application>
 </manifest>

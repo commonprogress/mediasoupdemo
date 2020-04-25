@@ -6,6 +6,7 @@ package org.mediasoup.droid.lib.model;
 public class Me extends Info {
 
   private String mId;//peerid 类似于userid
+  private String mClientId;
   private String mDisplayName;
   private boolean mDisplayNameSet;
   private DeviceInfo mDevice;
@@ -22,7 +23,10 @@ public class Me extends Info {
   private boolean mAudioMuted;
   private boolean mRestartIceInProgress;
 
-  @Override
+  private boolean mSpeakerMute;
+    private boolean mFrontCamera = true;
+
+    @Override
   public String getId() {
     return mId;
   }
@@ -32,6 +36,15 @@ public class Me extends Info {
   }
 
   @Override
+  public String getClientId() {
+    return mClientId;
+  }
+
+  public void setClientId(String clientId) {
+    this.mClientId = clientId;
+  }
+
+    @Override
   public String getDisplayName() {
     return mDisplayName;
   }
@@ -129,12 +142,30 @@ public class Me extends Info {
     this.mRestartIceInProgress = restartIceInProgress;
   }
 
-  public void clear() {
+    public boolean isSpeakerMute() {
+        return mSpeakerMute;
+    }
+
+    public void setSpeakerMute(boolean speakerMute) {
+        this.mSpeakerMute = speakerMute;
+    }
+
+    public void setFrontCamera(boolean frontCamera) {
+        this.mFrontCamera = frontCamera;
+    }
+
+    public boolean isFrontCamera() {
+        return mFrontCamera;
+    }
+
+    public void clear() {
     mCamInProgress = false;
     mShareInProgress = false;
     mAudioOnly = false;
     mAudioOnlyInProgress = false;
     mAudioMuted = false;
     mRestartIceInProgress = false;
+      mSpeakerMute = false;
+      mFrontCamera = true;
   }
 }

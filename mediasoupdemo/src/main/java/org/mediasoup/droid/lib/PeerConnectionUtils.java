@@ -118,7 +118,7 @@ public class PeerConnectionUtils {
 
           @Override
           public void onWebRtcAudioRecordStartError(
-                  JavaAudioDeviceModule.AudioRecordStartErrorCode errorCode, String errorMessage) {
+              JavaAudioDeviceModule.AudioRecordStartErrorCode errorCode, String errorMessage) {
             Logger.e(TAG, "onWebRtcAudioRecordStartError: " + errorCode + ". " + errorMessage);
           }
 
@@ -138,7 +138,7 @@ public class PeerConnectionUtils {
 
           @Override
           public void onWebRtcAudioTrackStartError(
-                  JavaAudioDeviceModule.AudioTrackStartErrorCode errorCode, String errorMessage) {
+              JavaAudioDeviceModule.AudioTrackStartErrorCode errorCode, String errorMessage) {
             Log.e(TAG, "onWebRtcAudioTrackStartError: " + errorCode + ". " + errorMessage);
           }
 
@@ -205,8 +205,8 @@ public class PeerConnectionUtils {
                 selectedDeviceName,
                 new CameraVideoCapturer.CameraEventsHandler() {
                   @Override
-                  public void onCameraError(String s) {
-                    Logger.e(TAG, "onCameraError, " + s);
+                  public void onCameraError(String errorDescription) {
+                    Logger.e(TAG, "onCameraError, errorDescription:" + errorDescription);
                   }
 
                   @Override
@@ -215,13 +215,15 @@ public class PeerConnectionUtils {
                   }
 
                   @Override
-                  public void onCameraFreezed(String s) {
-                    Logger.w(TAG, "onCameraFreezed, " + s);
+                  public void onCameraFreezed(String errorDescription) {
+                    Logger.w(TAG, "onCameraFreezed, errorDescription:" + errorDescription);
                   }
 
                   @Override
-                  public void onCameraOpening(String s) {
-                    Logger.d(TAG, "onCameraOpening, " + s);
+                  public void onCameraOpening(String cameraName) {
+                      boolean isFrontCamera = !TextUtils.isEmpty(cameraName) && cameraName.toLowerCase().contains("front");
+                      Logger.d(TAG, "onCameraOpening,isFrontCamera:" + isFrontCamera + ", cameraName:" + cameraName);
+                    //cameraName:Camera 1, Facing front, Orientation 270
                   }
 
                   @Override
@@ -277,7 +279,7 @@ public class PeerConnectionUtils {
                 SurfaceTextureHelper.create("CaptureThread", mEglBase.getEglBaseContext());
 
         mCamCapture.initialize(surfaceTextureHelper, context, mVideoSource.getCapturerObserver());
-        mCamCapture.startCapture(640, 480, 30);
+        mCamCapture.startCapture(640, 480, 15);
     }
 
 

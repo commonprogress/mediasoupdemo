@@ -1,4 +1,7 @@
 apply plugin: 'com.android.application'
+//apply plugin: 'kotlin-kapt'
+//apply plugin: 'kotlin-android'
+//apply plugin: 'kotlin-android-extensions'
 repositories {
     flatDir {
         dirs 'libs'
@@ -30,6 +33,10 @@ android {
     //引入对 DataBinding 的支持
     dataBinding {
         enabled = true
+    }
+
+    sourceSets {
+        main.java.srcDirs += ['src/main/java', 'src/main/aidl']
     }
 
     buildTypes {

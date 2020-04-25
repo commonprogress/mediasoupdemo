@@ -13,4 +13,8 @@
     <style name="SplashScreenTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:windowFullscreen">true</item>
     </style>
+
+    <style name="Theme.Calling" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowBackground">@color/background_graphite</item>
+    </style>
 </resources>

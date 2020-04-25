@@ -3,7 +3,6 @@ package org.mediasoup.droid.lib.lv;
 import android.arch.lifecycle.MutableLiveData;
 import android.text.TextUtils;
 
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.mediasoup.droid.Consumer;
@@ -81,8 +80,12 @@ public class RoomStore {
     }
   }
 
+//  public RoomClient.ConnectionState getRoomState(){
+//
+//  }
+
     /**
-     * 扬声器
+     * 设置有声音room？
      * @param peerId
      */
   public void setRoomActiveSpeaker(String peerId) {
@@ -163,6 +166,14 @@ public class RoomStore {
     me.postValue(me -> me.setRestartIceInProgress(restartIceInProgress));
   }
 
+    /**
+     * 设置听筒和扬声器切换
+     * @param enabled
+     */
+    public void setSpeakerMuteState(boolean enabled) {
+        me.postValue(me -> me.setSpeakerMute(enabled));
+    }
+
   /**
    * 启用摄像头 进度
    * @param inProgress 是否进行中
@@ -170,6 +181,14 @@ public class RoomStore {
   public void setCamInProgress(boolean inProgress) {
     me.postValue(me -> me.setCamInProgress(inProgress));
   }
+
+    /**
+     * 切换摄像头完成
+     * @param isFrontCamera 是否前置
+     */
+    public void cameraSwitchDone(boolean isFrontCamera) {
+        me.postValue(me -> me.setFrontCamera(isFrontCamera));
+    }
 
   public void addProducer(Producer producer) {
     producers.postValue(producers -> producers.addProducer(producer));
@@ -215,6 +234,16 @@ public class RoomStore {
    */
   public void setPeerDisplayName(String peerId, String displayName) {
     peers.postValue(peersInfo -> peersInfo.setPeerDisplayName(peerId, displayName));
+  }
+
+  /**
+   * 更新当前peer 视频音频状态
+   * @param peerId
+   * @param isVideoVisible
+   * @param isAudioEnabled
+   */
+  public void updatePeerVideoAudioState(String peerId, boolean isVideoVisible, boolean isAudioEnabled) {
+      peers.postValue(peersInfo -> peersInfo.updatePeerVideoAudioState(peerId, isVideoVisible, isAudioEnabled));
   }
 
   /**

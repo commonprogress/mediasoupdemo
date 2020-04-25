@@ -6,6 +6,10 @@ public class Info {
     return "";
   }
 
+  public String getClientId() {
+    return "";
+  }
+
   public String getDisplayName() {
     return "";
   }

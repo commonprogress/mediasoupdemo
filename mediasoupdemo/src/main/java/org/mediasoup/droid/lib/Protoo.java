@@ -15,7 +15,7 @@ import io.reactivex.Observable;
  * 连接WebSocket 和请求返回相关
  */
 @SuppressWarnings({"unused", "WeakerAccess"})
-public class Protoo extends org.protoojs.droid.Peer {
+public class Protoo extends Peer {
 
   private static final String TAG = "Protoo";
 
@@ -23,7 +23,7 @@ public class Protoo extends org.protoojs.droid.Peer {
     void request(JSONObject req);
   }
 
-  public Protoo(@NonNull WebSocketTransport transport, @NonNull Peer.Listener listener) {
+  public Protoo(@NonNull WebSocketTransport transport, @NonNull Listener listener) {
     super(transport, listener);//初始化Protoo ， 相关监听 并连接WebSocket
   }
 

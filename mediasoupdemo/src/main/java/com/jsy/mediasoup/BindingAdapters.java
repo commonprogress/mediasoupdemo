@@ -7,9 +7,8 @@ import android.view.animation.Animation;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import android.databinding.BindingAdapter;
-
 import com.jsy.mediasoup.vm.MeProps;
+
 import org.mediasoup.droid.lib.RoomClient;
 import org.mediasoup.droid.lib.model.DeviceInfo;
 import org.webrtc.SurfaceViewRenderer;
@@ -19,9 +18,8 @@ public class BindingAdapters {
 
   private static final String TAG = "BindingAdapters";
 
-  @BindingAdapter({"bind:edias_state", "bind:edias_state_animation"})
   public static void roomState(
-          ImageView view, RoomClient.ConnectionState state, Animation animation) {
+      ImageView view, RoomClient.ConnectionState state, Animation animation) {
     if (state == null) {
       return;
     }
@@ -39,12 +37,10 @@ public class BindingAdapters {
     }
   }
 
-  @BindingAdapter({"bind:edias_link"})
   public static void inviteLink(TextView view, String inviteLink) {
     view.setVisibility(TextUtils.isEmpty(inviteLink) ? View.INVISIBLE : View.VISIBLE);
   }
 
-  @BindingAdapter({"bind:edias_hide_videos", "bind:edias_hide_videos_progress"})
   public static void hideVideos(ImageView view, boolean audioOnly, boolean audioOnlyInProgress) {
     view.setEnabled(!audioOnlyInProgress);
     if (!audioOnly) {
@@ -56,7 +52,6 @@ public class BindingAdapters {
     }
   }
 
-  @BindingAdapter({"bind:edias_audio_muted"})
   public static void audioMuted(ImageView view, boolean audioMuted) {
     if (!audioMuted) {
       view.setBackgroundResource(R.drawable.bg_left_box_off);
@@ -67,7 +62,6 @@ public class BindingAdapters {
     }
   }
 
-  @BindingAdapter({"bind:edias_restart_ice_progress", "bind:edias_restart_ice_ani"})
   public static void restartIce(
           ImageView view, boolean restart_ice_in_progress, Animation animation) {
     Log.d(TAG, "restartIce() " + restart_ice_in_progress);
@@ -80,7 +74,6 @@ public class BindingAdapters {
     }
   }
 
-  @BindingAdapter({"bind:edias_device"})
   public static void deviceInfo(TextView view, DeviceInfo deviceInfo) {
     if (deviceInfo == null) {
       return;
@@ -115,7 +108,6 @@ public class BindingAdapters {
     view.setCompoundDrawablesWithIntrinsicBounds(deviceIcon, 0, 0, 0);
   }
 
-  @BindingAdapter({"edias_mic_state"})
   public static void deviceMicState(ImageView imageView, MeProps.DeviceState state) {
     if (state == null) {
       return;
@@ -140,7 +132,6 @@ public class BindingAdapters {
     }
   }
 
-  @BindingAdapter({"edias_cam_state"})
   public static void deviceCamState(ImageView imageView, MeProps.DeviceState state) {
     if (state == null) {
       return;
@@ -165,7 +156,6 @@ public class BindingAdapters {
     }
   }
 
-  @BindingAdapter({"edias_change_came_state"})
   public static void changeCamState(View view, MeProps.DeviceState state) {
     if (state == null) {
       return;
@@ -178,7 +168,6 @@ public class BindingAdapters {
     }
   }
 
-  @BindingAdapter({"edias_share_state"})
   public static void shareState(View view, MeProps.DeviceState state) {
     if (state == null) {
       return;
@@ -191,7 +180,6 @@ public class BindingAdapters {
     }
   }
 
-  @BindingAdapter({"edias_render"})
   public static void render(SurfaceViewRenderer renderer, VideoTrack track) {
     Log.d(TAG, "edias_render: " + (track != null ? "VISIBLE" : "GONE"));
     if (track != null) {
@@ -202,7 +190,6 @@ public class BindingAdapters {
     }
   }
 
-  @BindingAdapter({"edias_render_empty"})
   public static void renderEmpty(View renderer, VideoTrack track) {
     Log.d(TAG, "edias_render_empty: " + (track != null ? "GONE" : "VISIBLE"));
     if (track == null) {
