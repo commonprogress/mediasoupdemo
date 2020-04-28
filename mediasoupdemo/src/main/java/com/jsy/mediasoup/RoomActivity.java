@@ -32,6 +32,7 @@ import com.nabinbhandari.android.permissions.PermissionHandler;
 import com.nabinbhandari.android.permissions.Permissions;
 
 import org.mediasoup.droid.Logger;
+import org.mediasoup.droid.MediasoupClient;
 import org.mediasoup.droid.lib.RoomClient;
 import org.mediasoup.droid.lib.lv.RoomStore;
 import org.mediasoup.droid.lib.model.Me;
@@ -201,6 +202,8 @@ public class RoomActivity extends AppCompatActivity {
         text_cancel = findViewById(R.id.text_cancel);
         text_accept = findViewById(R.id.text_accept);
         text_name = findViewById(R.id.text_name);
+        // Display version number.
+        ((TextView)findViewById(R.id.version)).setText(String.valueOf(MediasoupClient.version()));
     }
 
     private void initViewData() {

@@ -14,7 +14,7 @@ import org.mediasoup.droid.data.Parameters;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mediasoup.droid.Utils.exceptionException;
-import static org.mediasoup.droid.data.Parameters.generateTransportRemoteParameters;
+import static org.mediasoup.droid.data.Parameters.nativeGenTransportRemoteParameters;
 
 @RunWith(AndroidJUnit4.class)
 public class DeviceTest extends BaseTest {
@@ -29,7 +29,7 @@ public class DeviceTest extends BaseTest {
   public void setUp() {
     super.setUp();
     try {
-      JSONObject transportRemoteParameters = new JSONObject(generateTransportRemoteParameters());
+      JSONObject transportRemoteParameters = new JSONObject(nativeGenTransportRemoteParameters());
       mId = transportRemoteParameters.getString("id");
       mIceParameters = transportRemoteParameters.getString("iceParameters");
       mIceCandidates = transportRemoteParameters.getString("iceCandidates");
@@ -66,27 +66,27 @@ public class DeviceTest extends BaseTest {
     // 'device->CreateSendTransport()' fails if not loaded".
     {
       final FakeTransportListener.FakeSendTransportListener listener =
-          new FakeTransportListener.FakeSendTransportListener();
+              new FakeTransportListener.FakeSendTransportListener();
       exceptionException(
-          () ->
-              mDevice.createSendTransport(
-                  listener, mId, mIceParameters, mIceCandidates, mDtlsParameters));
+              () ->
+                      mDevice.createSendTransport(
+                              listener, mId, mIceParameters, mIceCandidates, mDtlsParameters));
     }
 
     // 'device->CreateRecvTransport()' fails if not loaded.
     {
       final FakeTransportListener.FakeRecvTransportListener listener =
-          new FakeTransportListener.FakeRecvTransportListener();
+              new FakeTransportListener.FakeRecvTransportListener();
       exceptionException(
-          () ->
-              mDevice.createRecvTransport(
-                  listener, mId, mIceParameters, mIceCandidates, mDtlsParameters));
+              () ->
+                      mDevice.createRecvTransport(
+                              listener, mId, mIceParameters, mIceCandidates, mDtlsParameters, null));
     }
   }
 
   @Test
   public void testLoad() throws MediasoupException {
-    String routerRtpCapabilities = Parameters.generateRouterRtpCapabilities();
+    String routerRtpCapabilities = Parameters.nativeGenRouterRtpCapabilities();
     assertFalse(TextUtils.isEmpty(routerRtpCapabilities));
 
     // 'device->Load()' succeeds.
@@ -102,20 +102,20 @@ public class DeviceTest extends BaseTest {
     // 'device->CreateSendTransport()' succeeds.
     {
       final FakeTransportListener.FakeSendTransportListener listener =
-          new FakeTransportListener.FakeSendTransportListener();
+              new FakeTransportListener.FakeSendTransportListener();
       SendTransport transport =
-          mDevice.createSendTransport(
-              listener, mId, mIceParameters, mIceCandidates, mDtlsParameters);
+              mDevice.createSendTransport(
+                      listener, mId, mIceParameters, mIceCandidates, mDtlsParameters);
       transport.dispose();
     }
 
     // 'device->CreateRecvTransport()' succeeds.
     {
       final FakeTransportListener.FakeRecvTransportListener listener =
-          new FakeTransportListener.FakeRecvTransportListener();
+              new FakeTransportListener.FakeRecvTransportListener();
       RecvTransport transport =
-          mDevice.createRecvTransport(
-              listener, mId, mIceParameters, mIceCandidates, mDtlsParameters);
+              mDevice.createRecvTransport(
+                      listener, mId, mIceParameters, mIceCandidates, mDtlsParameters, null);
       transport.dispose();
     }
   }

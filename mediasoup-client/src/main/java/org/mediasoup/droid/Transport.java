@@ -5,39 +5,29 @@ import org.webrtc.CalledByNative;
 public abstract class Transport {
 
   public String getId() {
-    return getNativeId();
+    return nativeGetId();
   }
 
   public String getConnectionState() {
-    return getNativeConnectionState();
+    return nativeGetConnectionState();
   }
 
   public String getAppData() {
-    return getNativeAppData();
+    return nativeGetAppData();
   }
 
   public String getStats() throws MediasoupException {
-    return getNativeStats();
+    return nativeGetStats();
   }
 
   public boolean isClosed() {
-    return isNativeClosed();
+    return nativeIsClosed();
   }
 
-  /**
-   * 重新启动ice
-   * @param iceParameters
-   * @throws MediasoupException
-   */
   public void restartIce(String iceParameters) throws MediasoupException {
     nativeRestartIce(iceParameters);
   }
 
-  /**
-   * 更新ice Servers
-   * @param iceServers
-   * @throws MediasoupException
-   */
   public void updateIceServers(String iceServers) throws MediasoupException {
     nativeUpdateIceServers(iceServers);
   }
@@ -58,29 +48,22 @@ public abstract class Transport {
     void onConnectionStateChange(Transport transport, String connectionState);
   }
 
-  private native String getNativeId();
+  private native String nativeGetId();
 
-  private native String getNativeConnectionState();
+  private native String nativeGetConnectionState();
 
-  private native String getNativeAppData();
+  private native String nativeGetAppData();
 
-  private native String getNativeStats() throws MediasoupException;
+  // may throws MediasoupException;
+  private native String nativeGetStats();
 
-  private native boolean isNativeClosed();
+  private native boolean nativeIsClosed();
 
-  /**
-   * 重新启动ice
-   * @param iceParameters
-   * @throws MediasoupException
-   */
-  private native void nativeRestartIce(String iceParameters) throws MediasoupException;
+  // may throws MediasoupException;
+  private native void nativeRestartIce(String iceParameters);
 
-  /**
-   * 更新ice Servers
-   * @param iceServers
-   * @throws MediasoupException
-   */
-  private native void nativeUpdateIceServers(String iceServers) throws MediasoupException;
+  // may throws MediasoupException;
+  private native void nativeUpdateIceServers(String iceServers);
 
   private native void nativeClose();
 }

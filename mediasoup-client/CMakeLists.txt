@@ -5,7 +5,7 @@ project(mediasoupclient_so LANGUAGES CXX)
 # Set version number.
 set(mediasoup_client_so_VERSION_MAJOR 3)
 set(mediasoup_client_so_VERSION_MINOR 0)
-set(mediasoup_client_so_VERSION_PATCH 4)
+set(mediasoup_client_so_VERSION_PATCH 8)
 
 # C++ standard requirements.
 set(CMAKE_CXX_STANDARD 11)
@@ -18,7 +18,10 @@ set(
 
 set(
 	SOURCE_FILES
+	${SOURCE_DIR}/jni_generator_helper.cpp
 	${SOURCE_DIR}/jni_onload.cpp
+	${SOURCE_DIR}/scoped_java_ref.cpp
+	${SOURCE_DIR}/java_types.cpp
 	${SOURCE_DIR}/consumer_jni.cpp
 	${SOURCE_DIR}/device_jni.cpp
 	${SOURCE_DIR}/logger_jni.cpp
@@ -30,7 +33,7 @@ set(
 
 # TODO(haiyang wu): add condition
 list(APPEND SOURCE_FILES ${PROJECT_SOURCE_DIR}/src/androidTest/jni/parameters_jni.cpp)
-list(APPEND SOURCE_FILES ${PROJECT_SOURCE_DIR}/deps/libmediasoupclient/test/data/parameters.cpp)
+list(APPEND SOURCE_FILES ${PROJECT_SOURCE_DIR}/deps/libmediasoupclient/test/src/fakeParameters.cpp)
 
 # Create target.
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})
@@ -47,7 +50,9 @@ if(${MEDIASOUPCLIENT_LOG_DEV})
 	)
 endif()
 
-# Source Dependencies.
+# Source Dependencies. override LIBWEBRTC_BINARY_PATH
+# TODO(HaiyangWu) add libwebrtc.a without change CMakeLists in libmediasoupclient
+# set(LIBWEBRTC_BINARY_PATH ${LIBWEBRTC_BINARY_ANDROID_PATH}/${ANDROID_ABI} CACHE STRING "libwebrtc binary path" FORCE)
 add_subdirectory("deps/libmediasoupclient")
 
 # Add some compile flags to our source files.
@@ -58,9 +63,10 @@ include_directories(SYSTEM "${LIBWEBRTC_INCLUDE_PATH}/third_party/abseil-cpp")
 
 # Private (implementation) header files.
 target_include_directories(${PROJECT_NAME} PUBLIC
+	"${SOURCE_DIR}/"
 	"${SOURCE_DIR}/include"
-	"${SOURCE_DIR}/generated"
 	"${PROJECT_SOURCE_DIR}/deps/libmediasoupclient/include"
+	"${PROJECT_SOURCE_DIR}/deps/libmediasoupclient/test/include"
 	"${PROJECT_SOURCE_DIR}/deps/libmediasoupclient/deps/libsdptransform/include"
 	"${LIBWEBRTC_INCLUDE_PATH}"
 	"${LIBWEBRTC_INCLUDE_PATH}/third_party/abseil-cpp"

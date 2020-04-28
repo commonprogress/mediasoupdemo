@@ -30,33 +30,12 @@ public class RecvTransport extends Transport {
     }
   }
 
-  /**
-   * 添加一个Consumer（消费者）到C 层
-   * @param listener
-   * @param id
-   * @param producerId
-   * @param kind
-   * @param rtpParameters
-   * @return
-   * @throws MediasoupException
-   */
   public Consumer consume(
-      Consumer.Listener listener, String id, String producerId, String kind, String rtpParameters)
+          Consumer.Listener listener, String id, String producerId, String kind, String rtpParameters)
       throws MediasoupException {
     return consume(listener, id, producerId, kind, rtpParameters, null);
   }
 
-  /**
-   * 添加一个Consumer（消费者）到C 层
-   * @param listener
-   * @param id
-   * @param producerId
-   * @param kind
-   * @param rtpParameters
-   * @param appData
-   * @return
-   * @throws MediasoupException
-   */
   public Consumer consume(
       Consumer.Listener listener,
       String id,
@@ -69,29 +48,17 @@ public class RecvTransport extends Transport {
     return nativeConsume(mNativeTransport, listener, id, producerId, kind, rtpParameters, appData);
   }
 
-  private static native long nativeGetNativeTransport(long nativeTransport);
+  private static native long nativeGetNativeTransport(long transport);
 
-  /**
-   * 添加一个Consumer（消费者）到C 层
-   * @param mNativeTransport
-   * @param listener
-   * @param id
-   * @param producerId
-   * @param kind
-   * @param rtpParameters
-   * @param appData
-   * @return
-   * @throws MediasoupException
-   */
+  // may throws MediasoupException
   private static native Consumer nativeConsume(
-      long mNativeTransport,
+      long transport,
       Consumer.Listener listener,
       String id,
       String producerId,
       String kind,
       String rtpParameters,
-      String appData)
-      throws MediasoupException;
+      String appData);
 
-  private static native void nativeFreeTransport(long nativeTransport);
+  private static native void nativeFreeTransport(long transport);
 }

@@ -1182,7 +1182,7 @@ public class RoomClient extends RoomMessageHandler {
 
         mRecvTransport =
             mMediasoupDevice.createRecvTransport(
-                recvTransportListener, id, iceParameters, iceCandidates, dtlsParameters);
+                recvTransportListener, id, iceParameters, iceCandidates, dtlsParameters, null);
     }
 
     /**

@@ -49,7 +49,6 @@ function get_dep()
 function get_libmediasoupclient()
 {
 	GIT_REPO="https://github.com/versatica/libmediasoupclient.git"
-	GIT_TAG="3.0.4"
 	DEST="deps/libmediasoupclient"
 
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
@@ -57,7 +56,7 @@ function get_libmediasoupclient()
 
 function get_webrtc()
 {
-    GIT_REPO="-b m74 --depth=1 https://github.com/haiyangwu/webrtc-mirror.git"
+    GIT_REPO="-b m79 --depth=1 https://github.com/haiyangwu/webrtc-mirror.git"
 	DEST="deps/webrtc/src"
 
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
@@ -66,7 +65,7 @@ function get_webrtc()
 function get_abseil-cpp()
 {
     GIT_REPO="https://github.com/abseil/abseil-cpp.git"
-	GIT_TAG="20181200"
+	GIT_TAG="20190808"
 	DEST="deps/webrtc/src/third_party/abseil-cpp"
 
 	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"

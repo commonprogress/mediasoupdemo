@@ -5,9 +5,6 @@ import android.content.Context;
 import org.webrtc.PeerConnectionFactory;
 import org.webrtc.PeerConnectionFactory.InitializationOptions;
 
-/**
- * Mediasoup 初始化管理类
- */
 public class MediasoupClient {
 
   static {
@@ -18,11 +15,6 @@ public class MediasoupClient {
     initialize(appContext, null);
   }
 
-  /**
-   * 初始化 PeerConnection
-   * @param appContext
-   * @param fieldTrials
-   */
   public static void initialize(Context appContext, String fieldTrials) {
     InitializationOptions options =
         InitializationOptions.builder(appContext)
@@ -30,16 +22,12 @@ public class MediasoupClient {
             .setEnableInternalTracer(true)
             .setNativeLibraryName("mediasoupclient_so")
             .createInitializationOptions();
-    PeerConnectionFactory.initialize(options);//初始化 PeerConnection
+    PeerConnectionFactory.initialize(options);
   }
 
   public static String version() {
     return nativeVersion();
   }
 
-  /**
-   * 获取 Mediasoup 版本
-   * @return
-   */
   private static native String nativeVersion();
 }

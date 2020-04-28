@@ -183,7 +183,7 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
   // Controls
   private CallFragment callFragment;
   private HudFragment hudFragment;
-  private org.appspot.apprtc.CpuMonitor cpuMonitor;
+  private CpuMonitor cpuMonitor;
 
   @Override
   // TODO(bugs.webrtc.org/8580): LayoutParams.FLAG_TURN_SCREEN_ON and

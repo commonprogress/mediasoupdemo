@@ -113,14 +113,15 @@ public class MediasoupLoaderUtils {
 
     public void mediasoupInit(Context context) {
         LogUtils.i(TAG, "mediasoupInit:" + this.hashCode());
-        Logger.setLogLevel(Logger.LogLevel.LOG_TRACE);
+        Logger.setLogLevel(Logger.LogLevel.LOG_DEBUG);
         Logger.setDefaultHandler();
         MediasoupClient.initialize(context.getApplicationContext());
         this.isInitMediasoup = true;
     }
 
     public String libraryVersion() {
-        return MediasoupConstant.mediasoup_version;
+//        return MediasoupConstant.mediasoup_version;
+        return String.valueOf(MediasoupClient.version());
     }
 
     public boolean mediasoupCreate(Context context,

@@ -11,7 +11,7 @@ public class MyApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        Logger.setLogLevel(Logger.LogLevel.LOG_TRACE);
+        Logger.setLogLevel(Logger.LogLevel.LOG_DEBUG);
         Logger.setDefaultHandler();
         MediasoupClient.initialize(getApplicationContext());
         CrashHandler.init(this);

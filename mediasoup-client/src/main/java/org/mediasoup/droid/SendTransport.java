@@ -29,11 +29,6 @@ public class SendTransport extends Transport {
     mNativeTransport = 0;
   }
 
-  @CalledByNative
-  long getNativeOwnedSendTransport() {
-    return mNativeTransport;
-  }
-
   private void checkTransportExists() {
     if (mNativeTransport == 0) {
       throw new IllegalStateException("SendTransport has been disposed.");
@@ -72,16 +67,16 @@ public class SendTransport extends Transport {
         mNativeTransport, listener, nativeTrack, pEncodings, codecOptions, appData);
   }
 
-  private static native long nativeGetNativeTransport(long nativeTransport);
+  private static native long nativeGetNativeTransport(long transport);
 
+  // may throws MediasoupException
   private static native Producer nativeProduce(
-      long mNativeTransport,
+      long transport,
       Producer.Listener listener,
       long track,
       RtpParameters.Encoding[] encodings,
       String codecOptions,
-      String appData)
-      throws MediasoupException;
+      String appData);
 
-  private static native void nativeFreeTransport(long nativeTransport);
+  private static native void nativeFreeTransport(long transport);
 }

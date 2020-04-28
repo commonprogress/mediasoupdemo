@@ -8,12 +8,13 @@ def WEBRTC_LIB_PATH = "${projectDir}/deps/webrtc/lib"
 
 android {
     compileSdkVersion 28
+    ndkVersion "20.0.5594570"
 
     defaultConfig {
         minSdkVersion 18
         targetSdkVersion 28
-        versionCode 1
-        versionName "3.0.4"
+        versionCode 308
+        versionName "3.0.8"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
@@ -22,11 +23,11 @@ android {
                 // Passes optional arguments to CMake.
                 arguments "-DLIBWEBRTC_INCLUDE_PATH=" + WEBRTC_INC_PATH,
                         "-DLIBWEBRTC_BINARY_PATH=" + WEBRTC_LIB_PATH,
-                        "-DMEDIASOUPCLIENT_BUILD_TESTS=OFF",
+                        "-DMEDIASOUPCLIENT_BUILD_TESTS=false",
                         "-DSDPTRANSFORM_BUILD_TESTS=OFF",
                         "-DSDPTRANSFORM_BUILD_READMEHELPER=OFF",
-                        "-DMEDIASOUPCLIENT_LOG_TRACE=1",
-                        "-DMEDIASOUPCLIENT_LOG_DEV=1"
+                        "-DMEDIASOUPCLIENT_LOG_TRACE=ON",
+                        "-DMEDIASOUPCLIENT_LOG_DEV=ON"
             }
         }
 
@@ -71,7 +72,7 @@ publish {
     userOrg = 'haiyangwu'
     groupId = 'org.mediasoup.droid'
     artifactId = 'mediasoup-client'
-    publishVersion = '3.0.4-beta-1'
+    publishVersion = '3.0.8-beta-1'
     desc = 'mediasoup android client side library'
     website = 'https://github.com/haiyangwu/mediasoup-client-android'
 }

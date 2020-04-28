@@ -7,113 +7,96 @@ import org.webrtc.CalledByNative;
 import org.webrtc.MediaStreamTrack;
 import org.webrtc.RTCUtils;
 
-/**
- * 消费值 消息信息管理类
- */
 public class Consumer {
 
-    public interface Listener {
+  public interface Listener {
 
-        @CalledByNative
-        void onTransportClose(Consumer consumer);//消费者关闭监听
-    }
+    @CalledByNative("Listener")
+    void onTransportClose(Consumer consumer);
+  }
 
-    private long mNativeConsumer;//类似于消费者 native  id
+  private long mNativeConsumer;
 
-    @Nullable
-    private MediaStreamTrack mCachedTrack;
+  @Nullable
+  private MediaStreamTrack mCachedTrack;
 
-    @CalledByNative
-    public Consumer(long nativeProducer) {
-        mNativeConsumer = nativeProducer;
-        long nativeTrack = getNativeTrack(mNativeConsumer);
-        mCachedTrack = RTCUtils.createMediaStreamTrack(nativeTrack);
-    }
+  @CalledByNative
+  public Consumer(long nativeConsumer) {
+    mNativeConsumer = nativeConsumer;
+    long nativeTrack = nativeGetTrack(mNativeConsumer);
+    mCachedTrack = RTCUtils.createMediaStreamTrack(nativeTrack);
+  }
 
-    public String getId() {
-        return getNativeId(mNativeConsumer);
-    }
+  public String getId() {
+    return nativeGetNativeId(mNativeConsumer);
+  }
 
-    public String getProducerId() {
-        return getNativeProducerId(mNativeConsumer);
-    }
+  public String getProducerId() {
+    return nativeGetProducerId(mNativeConsumer);
+  }
 
-    public boolean isClosed() {
-        return isNativeClosed(mNativeConsumer);
-    }
+  public boolean isClosed() {
+    return nativeIsClosed(mNativeConsumer);
+  }
 
-    public boolean isPaused() {
-        return isNativePaused(mNativeConsumer);
-    }
+  public boolean isPaused() {
+    return nativeIsPaused(mNativeConsumer);
+  }
 
-    /**
-     * 获取当前模式
-     * video 视频
-     * audio 音频
-     *
-     * @return
-     */
-    public String getKind() {
-        return getNativeKind(mNativeConsumer);
-    }
+  public String getKind() {
+    return nativeGetKind(mNativeConsumer);
+  }
 
-    public MediaStreamTrack getTrack() {
-        return mCachedTrack;
-    }
+  public MediaStreamTrack getTrack() {
+    return mCachedTrack;
+  }
 
-    public String getRtpParameters() {
-        return getNativeRtpParameters(mNativeConsumer);
-    }
+  public String getRtpParameters() {
+    return nativeGetRtpParameters(mNativeConsumer);
+  }
 
-    public String getAppData() {
-        return getNativeAppData(mNativeConsumer);
-    }
+  public String getAppData() {
+    return nativeGetAppData(mNativeConsumer);
+  }
 
-    public void resume() {
-        nativeResume(mNativeConsumer);
-    }
+  public void resume() {
+    nativeResume(mNativeConsumer);
+  }
 
-    public void pause() {
-        nativePause(mNativeConsumer);
-    }
+  public void pause() {
+    nativePause(mNativeConsumer);
+  }
 
-    public String getStats() throws MediasoupException {
-        return getNativeStats(mNativeConsumer);
-    }
+  public String getStats() throws MediasoupException {
+    return nativeGetStats(mNativeConsumer);
+  }
 
-    public void close() {
-        nativeClose(mNativeConsumer);
-    }
+  public void close() {
+    nativeClose(mNativeConsumer);
+  }
 
-    private static native String getNativeId(long nativeConsumer);
+  private static native String nativeGetNativeId(long consumer);
 
-    private static native String getNativeProducerId(long nativeConsumer);
+  private static native String nativeGetProducerId(long consumer);
 
-    private static native boolean isNativeClosed(long nativeConsumer);
+  private static native boolean nativeIsClosed(long consumer);
 
-    private static native boolean isNativePaused(long nativeConsumer);
+  private static native boolean nativeIsPaused(long consumer);
 
-    /**
-     * 获取当前模式
-     * video 视频
-     * audio 音频
-     *
-     * @param nativeConsumer
-     * @return
-     */
-    private static native String getNativeKind(long nativeConsumer);
+  private static native String nativeGetKind(long consumer);
 
-    private static native long getNativeTrack(long nativeConsumer);
+  private static native long nativeGetTrack(long consumer);
 
-    private static native String getNativeRtpParameters(long nativeConsumer);
+  private static native String nativeGetRtpParameters(long consumer);
 
-    private static native String getNativeAppData(long nativeConsumer);
+  private static native String nativeGetAppData(long consumer);
 
-    private static native void nativeResume(long nativeConsumer);
+  private static native void nativeResume(long consumer);
 
-    private static native void nativePause(long nativeConsumer);
+  private static native void nativePause(long consumer);
 
-    private static native String getNativeStats(long nativeConsumer) throws MediasoupException;
+  // may throws MediasoupException;
+  private static native String nativeGetStats(long consumer);
 
-    private static native void nativeClose(long nativeConsumer);
+  private static native void nativeClose(long consumer);
 }

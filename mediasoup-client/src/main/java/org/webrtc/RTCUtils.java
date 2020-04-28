@@ -2,9 +2,6 @@ package org.webrtc;
 
 import java.lang.reflect.Field;
 
-/**
- * WebRTC 管理类
- */
 public class RTCUtils {
 
   public static long getNativeMediaStreamTrack(MediaStreamTrack track) {
@@ -32,21 +29,23 @@ public class RTCUtils {
   }
 
   public static RtpParameters.Encoding genRtpEncodingParameters(
-      boolean active,
-      Integer maxBitrateBps,
-      Integer minBitrateBps,
-      Integer maxFramerate,
-      Integer numTemporalLayers,
-      Double scaleResolutionDownBy,
-      Long ssrc) {
+          String rid,
+          boolean active,
+          Integer maxBitrateBps,
+          Integer minBitrateBps,
+          Integer maxFramerate,
+          Integer numTemporalLayers,
+          Double scaleResolutionDownBy,
+          Long ssrc) {
     return new RtpParameters.Encoding(
-        active,
-        maxBitrateBps,
-        minBitrateBps,
-        maxFramerate,
-        numTemporalLayers,
-        scaleResolutionDownBy,
-        ssrc);
+            rid,
+            active,
+            maxBitrateBps,
+            minBitrateBps,
+            maxFramerate,
+            numTemporalLayers,
+            scaleResolutionDownBy,
+            ssrc);
   }
 
   public static MediaStreamTrack createMediaStreamTrack(long nativeTrack) {
