@@ -197,7 +197,7 @@ public class MeView extends FrameLayout {
             return;
         }
 //        isCamFront = "front".endsWith(MediasoupLoaderUtils.getInstance().getCurCameraFace());
-        boolean isFrontCamera = props.getMe().get().isFrontCamera();
+        boolean isFrontCamera = null == props.getMe().get() ? true : props.getMe().get().isFrontCamera();
         videoRenderer.setMirror(isFrontCamera);
 //        videoRenderer.setEnableHardwareScaler(true);
     }

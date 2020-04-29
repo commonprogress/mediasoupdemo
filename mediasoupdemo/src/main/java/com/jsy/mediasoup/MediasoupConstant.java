@@ -6,7 +6,7 @@ package com.jsy.mediasoup;
 public class MediasoupConstant {
     public static final String mediasoup_version = "1.0";
 
-    public static final long mediasoup_missed_time = 1 * 60 * 1000 + 30 * 1000;
+    public static final long mediasoup_missed_time = 3 * 60 * 1000 + 30 * 1000;
 
     public static final String key_intent_roommode = "room_mode";
     public static final int roommode_video = 1;

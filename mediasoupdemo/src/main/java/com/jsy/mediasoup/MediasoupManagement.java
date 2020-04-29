@@ -6,7 +6,7 @@ import com.jsy.mediasoup.utils.LogUtils;
 
 public class MediasoupManagement {
 
-    public boolean mediasoupInit(Context context) {
+    public static boolean mediasoupInit(Context context) {
         try {
             MediasoupLoaderUtils.getInstance().mediasoupInit(context);
             LogUtils.i("MediasoupManagement", "mediasoupInit:");
@@ -17,7 +17,7 @@ public class MediasoupManagement {
         }
     }
 
-    public boolean isInitMediasoup() {
+    public static boolean isInitMediasoup() {
         return MediasoupLoaderUtils.getInstance().isInitMediasoup();
     }
 
@@ -25,19 +25,19 @@ public class MediasoupManagement {
         return MediasoupLoaderUtils.getInstance().libraryVersion();
     }
 
-    public boolean mediasoupCreate(Context context,
-                                   String userId,
-                                   String clientId,
-                                   String displayName,
-                                   MediasoupHandler mediasoupH) {
+    public static boolean mediasoupCreate(Context context,
+                                          String userId,
+                                          String clientId,
+                                          String displayName,
+                                          MediasoupHandler mediasoupH) {
         return MediasoupLoaderUtils.getInstance().mediasoupCreate(context, userId, clientId, displayName, mediasoupH);
     }
 
-    public void setUserChangedHandler(UserChangedHandler userChangedHandler) {
+    public static void setUserChangedHandler(UserChangedHandler userChangedHandler) {
         MediasoupLoaderUtils.getInstance().setUserChangedHandler(userChangedHandler);
     }
 
-    public int mediasoupStartCall(Context context, String rConvId, int call_type, int conv_type, boolean audio_cbr) {
+    public static int mediasoupStartCall(Context context, String rConvId, int call_type, int conv_type, boolean audio_cbr) {
         return MediasoupLoaderUtils.getInstance().mediasoupStartCall(context, rConvId, call_type, conv_type, audio_cbr);
     }
 
@@ -61,7 +61,7 @@ public class MediasoupManagement {
         MediasoupLoaderUtils.getInstance().onConfigRequest(error, json);
     }
 
-    public void endCall(String rConvId, int meidasoup_state) {
+    public static void endCall(String rConvId, int meidasoup_state) {
         MediasoupLoaderUtils.getInstance().endMediasoupCall(rConvId, meidasoup_state);
     }
 
@@ -69,15 +69,15 @@ public class MediasoupManagement {
         MediasoupLoaderUtils.getInstance().rejectMediasoupCall(rConvId, meidasoup_state);
     }
 
-    public void setVideoSendState(String rConvId, int state) {
+    public static void setVideoSendState(String rConvId, int state) {
         MediasoupLoaderUtils.getInstance().setVideoSendState(rConvId, state);
     }
 
-    public void setCallMuted(boolean muted) {
+    public static void setCallMuted(boolean muted) {
         MediasoupLoaderUtils.getInstance().setCallMuted(muted);
     }
 
-    public void switchCam() {
+    public static void switchCam() {
         MediasoupLoaderUtils.getInstance().switchCam();
     }
 

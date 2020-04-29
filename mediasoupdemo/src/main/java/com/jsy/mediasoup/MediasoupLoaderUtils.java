@@ -6,8 +6,8 @@ import android.content.Intent;
 import android.text.TextUtils;
 
 import com.jsy.mediasoup.services.MediasoupService;
-import com.jsy.mediasoup.vm.RoomProps;
 import com.jsy.mediasoup.utils.LogUtils;
+import com.jsy.mediasoup.vm.RoomProps;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -93,18 +93,23 @@ public class MediasoupLoaderUtils {
     }
 
     private void mediasoupClose() {
-        curRConvId = "";
-        meidasoupStart = null;
-        meidasoupTimely = null;
-        incomingUserId = "";
-        incomingClientId = "";
-        incomingDisplayName = "";
-        incomingMsgTime = 0L;
-        mediasoupConvType = null;
-        mediasoupCallType = null;
-        isShouldRing = false;
-        curCameraFace = "";
-        clearAllVideoState();
+        if (null == roomManagement || !roomManagement.isRoomConnecting()) {
+            LogUtils.e(TAG, "mediasoupClose 可以重置 ,hashCode:" + this.hashCode());
+            curRConvId = "";
+            meidasoupStart = null;
+            meidasoupTimely = null;
+            incomingUserId = "";
+            incomingClientId = "";
+            incomingDisplayName = "";
+            incomingMsgTime = 0L;
+            mediasoupConvType = null;
+            mediasoupCallType = null;
+            isShouldRing = false;
+            curCameraFace = "";
+            clearAllVideoState();
+        } else {
+            LogUtils.e(TAG, "mediasoupClose 连接中 不可以重置 ,hashCode:" + this.hashCode());
+        }
     }
 
     public void setRoomManagement(RoomManagement roomManagement) {
@@ -164,7 +169,7 @@ public class MediasoupLoaderUtils {
                                    String userId,
                                    String clientId,
                                    boolean isMediasoup) {
-        LogUtils.i(TAG, "receiveCallMessage 接收到邀请 isMediasoup:" + isMediasoup + " ,curTime:" + curTime + ", msgTime:" + msgTime + ", rConvId:" + rConvId + " ,userId:" + userId + ", clientId:" + clientId + ", mediasoupmsg:" + msg + ", isInitMediasoup:" + isInitMediasoup() + ", isCreateMediasoup:" + isCreateMediasoup + ",hashCode:" + this.hashCode());
+        LogUtils.i(TAG, "receiveCallMessage 接收到邀请 isMediasoup:" + isMediasoup + " ,curTime:" + curTime + ", msgTime:" + msgTime + ", rConvId:" + rConvId + "，getCurRConvId()：" + getCurRConvId() + " ,userId:" + userId + ", clientId:" + clientId + ", mediasoupmsg:" + msg + ", isInitMediasoup:" + isInitMediasoup() + ", isCreateMediasoup:" + isCreateMediasoup + ",hashCode:" + this.hashCode());
         if (!isMediasoup) {
             //不是Mediasoup消息
 //            closedMediasoup(MediasoupConstant.ClosedReason.DataChannel, rConvId, msgTime, userId);//接收的不是Mediasoup消息
@@ -621,7 +626,7 @@ public class MediasoupLoaderUtils {
      * @param callState 0发起，1接受，2拒绝，3结束，4取消 5 未响应
      */
     public void sendMediasoupMsg(MediasoupConstant.CallState callState) {
-        LogUtils.i(TAG, "startJoinMediasoup: callState.name:" + callState.name() + ",callState.ordinal:" + callState.ordinal() + ", hashCode:" + this.hashCode());
+        LogUtils.i(TAG, "sendMediasoupMsg: callState.name:" + callState.name() + ",callState.ordinal:" + callState.ordinal() + ", hashCode:" + this.hashCode());
         sendMediasoupMsg(callState, getCurRConvId());
     }
 
@@ -793,7 +798,7 @@ public class MediasoupLoaderUtils {
      * @param state
      */
     public void onVideoReceiveStateChanged(String userId, String clientId, String displayName, MediasoupConstant.VideoState state) {
-        LogUtils.i(TAG, "onVideoReceiveStateChanged: selfUserId:" + getCurUserId() + ", userId:" + userId + ", displayName:" + displayName + ", clientId:" + clientId + ", state.name:" + state.name() + ", state.ordinal:" + state.ordinal() + ", hashCode:" + this.hashCode());
+//        LogUtils.i(TAG, "onVideoReceiveStateChanged: selfUserId:" + getCurUserId() + ", getCurRConvId()):" + getCurRConvId() + ", userId:" + userId + ", displayName:" + displayName + ", clientId:" + clientId + ", state.name:" + state.name() + ", state.ordinal:" + state.ordinal() + ", hashCode:" + this.hashCode());
         if (!isInitAndCreate()) {
             return;
         }
@@ -875,7 +880,7 @@ public class MediasoupLoaderUtils {
         if (!this.isInitMediasoup()) {
             mediasoupInit(context);
         }
-        if (TextUtils.isEmpty(getCurClientId())) {
+        if (TextUtils.isEmpty(getCurRConvId())) {
             closedMediasoup(MediasoupConstant.ClosedReason.Error);//当前会话id为空
             rejectEndCancelCall();
             return;
@@ -925,7 +930,7 @@ public class MediasoupLoaderUtils {
         this.curCameraFace = camera;
     }
 
-    public String getCurCameraFace(){
+    public String getCurCameraFace() {
         return curCameraFace;
     }
 
@@ -1009,7 +1014,7 @@ public class MediasoupLoaderUtils {
      * @param state
      */
     public void putPeerVideoState(String userId, String clientId, MediasoupConstant.VideoState state) {
-        LogUtils.i(TAG, "putPeerVideoState getCurUserId:" + getCurUserId() + ", userId:" + userId + ", state:" + state);
+//        LogUtils.i(TAG, "putPeerVideoState getCurUserId:" + getCurUserId() + ", userId:" + userId + ", state:" + state);
         peerVideoState.put(userId, state == MediasoupConstant.VideoState.Started);
     }
 

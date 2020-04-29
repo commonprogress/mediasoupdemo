@@ -179,6 +179,7 @@ public class RoomClient extends RoomMessageHandler {
         mWorkHandler = new Handler(handlerThread.getLooper());
         mMainHandler = new Handler(Looper.getMainLooper());
         mWorkHandler.post(() -> mPeerConnectionUtils = new PeerConnectionUtils());
+        Logger.e(TAG, "RoomClient() mDisplayName:" + mDisplayName + ", roomId:" + roomId + ", peerId:" + peerId);
     }
 
     /**
@@ -186,7 +187,7 @@ public class RoomClient extends RoomMessageHandler {
      */
     @Async
     public void joinRoom() {
-        Logger.d(TAG, "join() " + this.mProtooUrl);
+        Logger.d(TAG, "join() mProtooUrl:" + this.mProtooUrl);
         mStore.setRoomState(ConnectionState.CONNECTING);
         mWorkHandler.post(
             () -> {

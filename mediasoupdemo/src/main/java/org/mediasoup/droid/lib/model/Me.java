@@ -1,5 +1,7 @@
 package org.mediasoup.droid.lib.model;
 
+import java.util.Objects;
+
 /**
  * 自己当前信息
  */
@@ -167,5 +169,13 @@ public class Me extends Info {
     mRestartIceInProgress = false;
       mSpeakerMute = false;
       mFrontCamera = true;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    Me me = (Me) o;
+    return Objects.equals(mId, me.mId);
   }
 }

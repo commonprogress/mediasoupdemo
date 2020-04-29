@@ -40,43 +40,43 @@ public class PeerProps extends PeerViewProps {
         mVideoVisible = new ObservableField<>();
         mStateComposer = new StateComposer();
         mStateComposer.addOnPropertyChangedCallback(
-            new Observable.OnPropertyChangedCallback() {
-                @Override
-                public void onPropertyChanged(Observable sender, int propertyId) {
-                    boolean isConnecting = null == mRoomClient ? true : mRoomClient.isConnecting();
-                    if (!isConnecting) {
-                        LogUtils.e(TAG, "PeerProps, onPropertyChanged isConnecting=false");
+                new Observable.OnPropertyChangedCallback() {
+                    @Override
+                    public void onPropertyChanged(Observable sender, int propertyId) {
+                        boolean isConnecting = null == mRoomClient ? true : mRoomClient.isConnecting();
+                        if (!isConnecting) {
+                            LogUtils.e(TAG, "PeerProps, onPropertyChanged isConnecting=false");
+                        }
+                        Consumers.ConsumerWrapper audioCW = mStateComposer.getConsumer("audio");
+                        Consumers.ConsumerWrapper videoCW = mStateComposer.getConsumer("video");
+                        Consumer audioConsumer = !isConnecting ? null : (audioCW != null ? audioCW.getConsumer() : null);
+                        Consumer videoConsumer = !isConnecting ? null : (videoCW != null ? videoCW.getConsumer() : null);
+
+                        mPeer.set(mStateComposer.mPeer);
+                        mAudioProducerId.set(audioConsumer != null ? audioConsumer.getId() : null);
+                        mVideoProducerId.set(videoConsumer != null ? videoConsumer.getId() : null);
+                        mAudioRtpParameters.set(
+                                audioConsumer != null ? audioConsumer.getRtpParameters() : null);
+                        mVideoRtpParameters.set(
+                                videoConsumer != null ? videoConsumer.getRtpParameters() : null);
+                        mAudioTrack.set(audioConsumer != null ? (AudioTrack) audioConsumer.getTrack() : null);
+                        mVideoTrack.set(videoConsumer != null ? (VideoTrack) videoConsumer.getTrack() : null);
+                        // TODO(HaiyangWu) : support codec property
+                        // mAudioCodec.set(videoConsumer != null ? videoConsumer.getCodec() : null);
+                        // mVideoCodec.set(videoConsumer != null ? videoConsumer.getCodec() : null);
+                        mAudioScore.set(audioCW != null ? audioCW.getScore() : null);
+                        mVideoScore.set(videoCW != null ? videoCW.getScore() : null);
+
+                        mAudioEnabled.set(
+                                audioCW != null && !audioCW.isLocallyPaused() && !audioCW.isRemotelyPaused());
+                        mVideoVisible.set(
+                                videoCW != null && !videoCW.isLocallyPaused() && !videoCW.isRemotelyPaused());
+
+                        if (null != mPropsLiveDataChange) {
+                            mPropsLiveDataChange.onDataChanged(PeerProps.this);
+                        }
                     }
-                    Consumers.ConsumerWrapper audioCW = mStateComposer.getConsumer("audio");
-                    Consumers.ConsumerWrapper videoCW = mStateComposer.getConsumer("video");
-                    Consumer audioConsumer = !isConnecting ? null : (audioCW != null ? audioCW.getConsumer() : null);
-                    Consumer videoConsumer = !isConnecting ? null : (videoCW != null ? videoCW.getConsumer() : null);
-
-                    mPeer.set(mStateComposer.mPeer);
-                    mAudioProducerId.set(audioConsumer != null ? audioConsumer.getId() : null);
-                    mVideoProducerId.set(videoConsumer != null ? videoConsumer.getId() : null);
-                    mAudioRtpParameters.set(
-                        audioConsumer != null ? audioConsumer.getRtpParameters() : null);
-                    mVideoRtpParameters.set(
-                        videoConsumer != null ? videoConsumer.getRtpParameters() : null);
-                    mAudioTrack.set(audioConsumer != null ? (AudioTrack) audioConsumer.getTrack() : null);
-                    mVideoTrack.set(videoConsumer != null ? (VideoTrack) videoConsumer.getTrack() : null);
-                    // TODO(HaiyangWu) : support codec property
-                    // mAudioCodec.set(videoConsumer != null ? videoConsumer.getCodec() : null);
-                    // mVideoCodec.set(videoConsumer != null ? videoConsumer.getCodec() : null);
-                    mAudioScore.set(audioCW != null ? audioCW.getScore() : null);
-                    mVideoScore.set(videoCW != null ? videoCW.getScore() : null);
-
-                    mAudioEnabled.set(
-                        audioCW != null && !audioCW.isLocallyPaused() && !audioCW.isRemotelyPaused());
-                    mVideoVisible.set(
-                        videoCW != null && !videoCW.isLocallyPaused() && !videoCW.isRemotelyPaused());
-
-                    if (null != mPropsLiveDataChange) {
-                        mPropsLiveDataChange.onDataChanged(PeerProps.this);
-                    }
-                }
-            });
+                });
     }
 
     /**
@@ -101,8 +101,8 @@ public class PeerProps extends PeerViewProps {
     public void connect(LifecycleOwner owner, @NonNull String peerId) {
         getRoomStore().getMe().observe(owner, me -> mAudioMuted.set(me.isAudioMuted()));
         getRoomStore()
-            .getRoomInfo()
-            .observe(owner, roomInfo -> mFaceDetection.set(roomInfo.isFaceDetection()));
+                .getRoomInfo()
+                .observe(owner, roomInfo -> mFaceDetection.set(roomInfo.isFaceDetection()));
         mStateComposer.connect(owner, getRoomStore(), peerId);
     }
 
@@ -117,24 +117,30 @@ public class PeerProps extends PeerViewProps {
         private Peer mPeer;
         private Consumers mConsumers;
         private Observer<Peers> mPeersObservable =
-            peers -> {
-                mPeer = peers.getPeer(mPeerId);
-                Logger.w(
-                    TAG,
-                    "onChanged() id: "
-                        + mPeerId
-                        + ", name:"
-                        + (mPeer != null ? mPeer.getDisplayName() : ""));
-                // TODO(HaiyangWu): check whether need notify change.
-                notifyChange();
-            };
+                peers -> {
+                    mPeer = peers.getPeer(mPeerId);
+                    Logger.w(
+                            TAG,
+                            "mPeersObservable onChanged() id: "
+                                    + mPeerId
+                                    + ", name:"
+                                    + (mPeer != null ? mPeer.getDisplayName() : ""));
+                    // TODO(HaiyangWu): check whether need notify change.
+                    notifyChange();
+                };
 
         private Observer<Consumers> mConsumersObserver =
-            consumers -> {
-                mConsumers = consumers;
-                // TODO(HaiyangWu): check whether need notify change.
-                notifyChange();
-            };
+                consumers -> {
+                    mConsumers = consumers;
+                    Logger.w(
+                            TAG,
+                            "mConsumersObserver onChanged() id: "
+                                    + mPeerId
+                                    + ", null == mConsumers:"
+                                    + (mConsumers == null));
+                    // TODO(HaiyangWu): check whether need notify change.
+                    notifyChange();
+                };
 
         void connect(@NonNull LifecycleOwner owner, RoomStore store, String peerId) {
             mPeerId = peerId;
@@ -149,6 +155,7 @@ public class PeerProps extends PeerViewProps {
             final Consumers consumers = mConsumers;
             final Peer peer = mPeer;
             if (peer == null || consumers == null) {
+                Logger.e(TAG, "Consumers.ConsumerWrapper getConsumer kind:" + kind + ", peer == null:" + (peer == null) + ", consumers == null:" + (consumers == null));
                 return null;
             }
             final Set<String> consumerIds = peer.getConsumers();
@@ -164,9 +171,8 @@ public class PeerProps extends PeerViewProps {
                         }
                     }
                 }
-            } else {
-                LogUtils.i(TAG, "StateComposer getConsumer,null == consumerIds");
             }
+            LogUtils.e(TAG, "Consumers.ConsumerWrapper getConsumer kind:" + kind + ",null == consumerIds:" + (null == consumerIds));
             return null;
         }
     }

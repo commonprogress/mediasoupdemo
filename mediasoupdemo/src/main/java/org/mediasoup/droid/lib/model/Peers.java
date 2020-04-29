@@ -57,7 +57,7 @@ public class Peers {
   public void setPeerDisplayName(String peerId, String displayName) {
      Peer peer = getPeer(peerId);
     if (peer == null) {
-      Logger.e(TAG, "no Protoo found");
+      Logger.e(TAG, "setPeerDisplayName no Protoo found");
       return;
     }
     peer.setDisplayName(displayName);
@@ -72,7 +72,7 @@ public class Peers {
   public void updatePeerVideoAudioState(String peerId, boolean isVideoVisible, boolean isAudioEnabled) {
       Peer peer = getPeer(peerId);
       if (peer == null) {
-          Logger.e(TAG, "no Peer found for update Video Audio state");
+          Logger.e(TAG, "updatePeerVideoAudioState no Peer found for update Video Audio state");
           return;
       }
       peer.setVideoVisible(isVideoVisible);
@@ -87,7 +87,7 @@ public class Peers {
   public void addConsumer(String peerId, Consumer consumer) {
     Peer peer = getPeer(peerId);
     if (peer == null) {
-      Logger.e(TAG, "no Peer found for new Consumer");
+      Logger.e(TAG, "addConsumer no Peer found for new Consumer");
       return;
     }
     peer.getConsumers().add(consumer.getId());
@@ -101,6 +101,7 @@ public class Peers {
   public void removeConsumer(String peerId, String consumerId) {
     Peer peer = getPeer(peerId);
     if (peer == null) {
+      Logger.e(TAG, "removeConsumer no Peer found for new Consumer");
       return;
     }
     peer.getConsumers().remove(consumerId);

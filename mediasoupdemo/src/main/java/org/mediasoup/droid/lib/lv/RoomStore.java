@@ -6,6 +6,7 @@ import android.text.TextUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.mediasoup.droid.Consumer;
+import org.mediasoup.droid.Logger;
 import org.mediasoup.droid.Producer;
 import org.mediasoup.droid.lib.RoomClient;
 import org.mediasoup.droid.lib.model.Consumers;
@@ -73,6 +74,7 @@ public class RoomStore {
     roomInfo.postValue(roomInfo -> roomInfo.setConnectionState(state));
 
     if (RoomClient.ConnectionState.CLOSED.equals(state)) {
+      Logger.e(TAG, "setRoomState RoomClient.ConnectionState.CLOSED");
       peers.postValue(Peers::clear);
       me.postValue(Me::clear);
       producers.postValue(Producers::clear);
