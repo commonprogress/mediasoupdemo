@@ -8,6 +8,7 @@ import org.mediasoup.droid.lib.Utils;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -92,5 +93,13 @@ public class Peer extends Info {
      */
     public Set<String> getConsumers() {
         return consumers;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Peer peer = (Peer) o;
+        return Objects.equals(mId, peer.mId);
     }
 }

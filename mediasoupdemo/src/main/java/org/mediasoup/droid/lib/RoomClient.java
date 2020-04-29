@@ -121,18 +121,18 @@ public class RoomClient extends RoomMessageHandler {
     }
 
     public RoomClient(
-        Context context, RoomStore roomStore, String roomId, String peerId, String clientId, String displayName) {
+            Context context, RoomStore roomStore, String roomId, String peerId, String clientId, String displayName) {
         this(context, roomStore, roomId, peerId, clientId, displayName, false, false, null, null);
     }
 
     public RoomClient(
-        Context context,
-        RoomStore roomStore,
-        String roomId,
-        String peerId,
-        String clientId,
-        String displayName,
-        RoomOptions options) {
+            Context context,
+            RoomStore roomStore,
+            String roomId,
+            String peerId,
+            String clientId,
+            String displayName,
+            RoomOptions options) {
         this(context, roomStore, roomId, peerId, clientId, displayName, false, false, options, null);
     }
 
@@ -149,16 +149,16 @@ public class RoomClient extends RoomMessageHandler {
      * @param options     房间的配置信息
      */
     public RoomClient(
-        Context context,
-        RoomStore roomStore,
-        String roomId,
-        String peerId,
-        String clientId,
-        String displayName,
-        boolean forceH264,
-        boolean forceVP9,
-        RoomOptions options,
-        MediasoupConnectCallback connectCallback) {
+            Context context,
+            RoomStore roomStore,
+            String roomId,
+            String peerId,
+            String clientId,
+            String displayName,
+            boolean forceH264,
+            boolean forceVP9,
+            RoomOptions options,
+            MediasoupConnectCallback connectCallback) {
         super(roomStore);
         this.mContext = context.getApplicationContext();
         this.mOptions = options == null ? new RoomOptions() : options;
@@ -179,6 +179,7 @@ public class RoomClient extends RoomMessageHandler {
         mWorkHandler = new Handler(handlerThread.getLooper());
         mMainHandler = new Handler(Looper.getMainLooper());
         mWorkHandler.post(() -> mPeerConnectionUtils = new PeerConnectionUtils());
+        Logger.e(TAG, "RoomClient() mDisplayName:" + mDisplayName + ", roomId:" + roomId + ", peerId:" + peerId);
     }
 
     /**
@@ -186,15 +187,15 @@ public class RoomClient extends RoomMessageHandler {
      */
     @Async
     public void joinRoom() {
-        Logger.d(TAG, "join() " + this.mProtooUrl);
+        Logger.d(TAG, "join() mProtooUrl:" + this.mProtooUrl);
         mStore.setRoomState(ConnectionState.CONNECTING);
         mWorkHandler.post(
-            () -> {
-                //初始化连接mediasoup WebSocket服务器
-                WebSocketTransport transport = new WebSocketTransport(mProtooUrl);
-                //初始化Protoo ， 相关监听 并连接WebSocket
-                mProtoo = new Protoo(transport, peerListener);
-            });
+                () -> {
+                    //初始化连接mediasoup WebSocket服务器
+                    WebSocketTransport transport = new WebSocketTransport(mProtooUrl);
+                    //初始化Protoo ， 相关监听 并连接WebSocket
+                    mProtoo = new Protoo(transport, peerListener);
+                });
     }
 
     /**
@@ -241,10 +242,10 @@ public class RoomClient extends RoomMessageHandler {
         Logger.d(TAG, "enableCam()");
         mStore.setCamInProgress(true);
         mWorkHandler.post(
-            () -> {
-                enableCamImpl();
-                mStore.setCamInProgress(false);
-            });
+                () -> {
+                    enableCamImpl();
+                    mStore.setCamInProgress(false);
+                });
     }
 
     /**
@@ -266,21 +267,21 @@ public class RoomClient extends RoomMessageHandler {
         mWorkHandler.post(() -> {
             if (null != mPeerConnectionUtils) {
                 mPeerConnectionUtils.switchCam(
-                    new CameraVideoCapturer.CameraSwitchHandler() {
-                        @Override
-                        public void onCameraSwitchDone(boolean isFrontCamera) {
-                            Logger.w(TAG, "changeCam() onCameraSwitchDone isFrontCamera:" + isFrontCamera);
-                            mStore.cameraSwitchDone(isFrontCamera);
-                            mStore.setCamInProgress(false);
-                        }
+                        new CameraVideoCapturer.CameraSwitchHandler() {
+                            @Override
+                            public void onCameraSwitchDone(boolean isFrontCamera) {
+                                Logger.w(TAG, "changeCam() onCameraSwitchDone isFrontCamera:" + isFrontCamera);
+                                mStore.cameraSwitchDone(isFrontCamera);
+                                mStore.setCamInProgress(false);
+                            }
 
-                        @Override
-                        public void onCameraSwitchError(String errorDescription) {
-                            Logger.w(TAG, "changeCam() onCameraSwitchError | failed: " + errorDescription);
-                            mStore.addNotify("error", "Could not change cam: " + errorDescription);
-                            mStore.setCamInProgress(false);
-                        }
-                    });
+                            @Override
+                            public void onCameraSwitchError(String errorDescription) {
+                                Logger.w(TAG, "changeCam() onCameraSwitchError | failed: " + errorDescription);
+                                mStore.addNotify("error", "Could not change cam: " + errorDescription);
+                                mStore.setCamInProgress(false);
+                            }
+                        });
             } else {
                 mStore.setCamInProgress(false);
             }
@@ -331,16 +332,16 @@ public class RoomClient extends RoomMessageHandler {
 
         disableCam();
         mWorkHandler.post(
-            () -> {
-                for (ConsumerHolder holder : mConsumers.values()) {
-                    if (!"video".equals(holder.mConsumer.getKind())) {
-                        continue;
+                () -> {
+                    for (ConsumerHolder holder : mConsumers.values()) {
+                        if (!"video".equals(holder.mConsumer.getKind())) {
+                            continue;
+                        }
+                        pauseConsumer(holder.mConsumer);
                     }
-                    pauseConsumer(holder.mConsumer);
-                }
-                mStore.setAudioOnlyState(true);
-                mStore.setAudioOnlyInProgress(false);
-            });
+                    mStore.setAudioOnlyState(true);
+                    mStore.setAudioOnlyInProgress(false);
+                });
     }
 
     /**
@@ -358,16 +359,16 @@ public class RoomClient extends RoomMessageHandler {
             enableCam();
         }
         mWorkHandler.post(
-            () -> {
-                for (ConsumerHolder holder : mConsumers.values()) {
-                    if (!"video".equals(holder.mConsumer.getKind())) {
-                        continue;
+                () -> {
+                    for (ConsumerHolder holder : mConsumers.values()) {
+                        if (!"video".equals(holder.mConsumer.getKind())) {
+                            continue;
+                        }
+                        resumeConsumer(holder.mConsumer);
                     }
-                    resumeConsumer(holder.mConsumer);
-                }
-                mStore.setAudioOnlyState(false);
-                mStore.setAudioOnlyInProgress(false);
-            });
+                    mStore.setAudioOnlyState(false);
+                    mStore.setAudioOnlyInProgress(false);
+                });
     }
 
     /**
@@ -381,14 +382,14 @@ public class RoomClient extends RoomMessageHandler {
         }
         mStore.setAudioMutedState(true);
         mWorkHandler.post(
-            () -> {
-                for (ConsumerHolder holder : mConsumers.values()) {
-                    if (!"audio".equals(holder.mConsumer.getKind())) {
-                        continue;
+                () -> {
+                    for (ConsumerHolder holder : mConsumers.values()) {
+                        if (!"audio".equals(holder.mConsumer.getKind())) {
+                            continue;
+                        }
+                        pauseConsumer(holder.mConsumer);
                     }
-                    pauseConsumer(holder.mConsumer);
-                }
-            });
+                });
     }
 
     /**
@@ -402,14 +403,14 @@ public class RoomClient extends RoomMessageHandler {
         }
         mStore.setAudioMutedState(false);
         mWorkHandler.post(
-            () -> {
-                for (ConsumerHolder holder : mConsumers.values()) {
-                    if (!"audio".equals(holder.mConsumer.getKind())) {
-                        continue;
+                () -> {
+                    for (ConsumerHolder holder : mConsumers.values()) {
+                        if (!"audio".equals(holder.mConsumer.getKind())) {
+                            continue;
+                        }
+                        resumeConsumer(holder.mConsumer);
                     }
-                    resumeConsumer(holder.mConsumer);
-                }
-            });
+                });
     }
 
     /**
@@ -423,27 +424,27 @@ public class RoomClient extends RoomMessageHandler {
         }
         mStore.setRestartIceInProgress(true);
         mWorkHandler.post(
-            () -> {
-                try {
-                    if (mSendTransport != null) {
-                        String iceParameters =
-                            mProtoo.syncRequest(
-                                "restartIce", req -> jsonPut(req, "transportId", mSendTransport.getId()));
-                        mSendTransport.restartIce(iceParameters);
+                () -> {
+                    try {
+                        if (mSendTransport != null) {
+                            String iceParameters =
+                                    mProtoo.syncRequest(
+                                            "restartIce", req -> jsonPut(req, "transportId", mSendTransport.getId()));
+                            mSendTransport.restartIce(iceParameters);
+                        }
+                        if (mRecvTransport != null) {
+                            String iceParameters =
+                                    mProtoo.syncRequest(
+                                            "restartIce", req -> jsonPut(req, "transportId", mRecvTransport.getId()));
+                            mRecvTransport.restartIce(iceParameters);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        logError("restartIce() | failed:", e);
+                        mStore.addNotify("error", "ICE restart failed: " + e.getMessage());
                     }
-                    if (mRecvTransport != null) {
-                        String iceParameters =
-                            mProtoo.syncRequest(
-                                "restartIce", req -> jsonPut(req, "transportId", mRecvTransport.getId()));
-                        mRecvTransport.restartIce(iceParameters);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    logError("restartIce() | failed:", e);
-                    mStore.addNotify("error", "ICE restart failed: " + e.getMessage());
-                }
-                mStore.setRestartIceInProgress(false);
-            });
+                    mStore.setRestartIceInProgress(false);
+                });
     }
 
     @Async
@@ -460,7 +461,7 @@ public class RoomClient extends RoomMessageHandler {
 
     @Async
     public void setConsumerPreferredLayers(
-        String consumerId, String spatialLayer, String temporalLayer) {
+            String consumerId, String spatialLayer, String temporalLayer) {
         Logger.d(TAG, "setConsumerPreferredLayers()");
         // TODO: layer
     }
@@ -472,17 +473,17 @@ public class RoomClient extends RoomMessageHandler {
             return;
         }
         mWorkHandler.post(
-            () -> {
-                try {
-                    mProtoo.syncRequest(
-                        "requestConsumerKeyFrame", req -> jsonPut(req, "consumerId", "consumerId"));
-                    mStore.addNotify("Keyframe requested for video consumer");
-                } catch (ProtooException e) {
-                    e.printStackTrace();
-                    logError("restartIce() | failed:", e);
-                    mStore.addNotify("error", "ICE restart failed: " + e.getMessage());
-                }
-            });
+                () -> {
+                    try {
+                        mProtoo.syncRequest(
+                                "requestConsumerKeyFrame", req -> jsonPut(req, "consumerId", "consumerId"));
+                        mStore.addNotify("Keyframe requested for video consumer");
+                    } catch (ProtooException e) {
+                        e.printStackTrace();
+                        logError("restartIce() | failed:", e);
+                        mStore.addNotify("error", "ICE restart failed: " + e.getMessage());
+                    }
+                });
     }
 
     @Async
@@ -522,23 +523,23 @@ public class RoomClient extends RoomMessageHandler {
         mPreferences.edit().putString("displayName", displayName).apply();
 
         mWorkHandler.post(
-            () -> {
-                try {
-                    mProtoo.syncRequest(
-                        "changeDisplayName", req -> jsonPut(req, "displayName", displayName));
-                    mDisplayName = displayName;
-                    mStore.setDisplayName(displayName);
-                    mStore.addNotify("Display name change");
-                } catch (ProtooException e) {
-                    e.printStackTrace();
-                    logError("changeDisplayName() | failed:", e);
-                    mStore.addNotify("error", "Could not change display name: " + e.getMessage());
+                () -> {
+                    try {
+                        mProtoo.syncRequest(
+                                "changeDisplayName", req -> jsonPut(req, "displayName", displayName));
+                        mDisplayName = displayName;
+                        mStore.setDisplayName(displayName);
+                        mStore.addNotify("Display name change");
+                    } catch (ProtooException e) {
+                        e.printStackTrace();
+                        logError("changeDisplayName() | failed:", e);
+                        mStore.addNotify("error", "Could not change display name: " + e.getMessage());
 
-                    // We need to refresh the component for it to render the previous
-                    // displayName again.
-                    mStore.setDisplayName(mDisplayName);
-                }
-            });
+                        // We need to refresh the component for it to render the previous
+                        // displayName again.
+                        mStore.setDisplayName(mDisplayName);
+                    }
+                });
     }
 
     @Async
@@ -642,38 +643,38 @@ public class RoomClient extends RoomMessageHandler {
         }
         this.mClosed = true;
         mWorkHandler.post(
-            () -> {
-                Logger.e(TAG, "close() start mClosed：" + mClosed);
-                // Close mProtoo Protoo
-                if (mProtoo != null) {
-                    mProtoo.close();
-                    mProtoo = null;
-                }
+                () -> {
+                    Logger.e(TAG, "close() start mClosed：" + mClosed);
+                    // Close mProtoo Protoo
+                    if (mProtoo != null) {
+                        mProtoo.close();
+                        mProtoo = null;
+                    }
 
-                // dispose all transport and device.
-                disposeTransportDevice();
-                Logger.e(TAG, "close() mid mClosed：" + mClosed);
-                // dispose audio track.
-                if (mLocalAudioTrack != null) {
-                    mLocalAudioTrack.setEnabled(false);
-                    mLocalAudioTrack.dispose();
-                    mLocalAudioTrack = null;
-                }
+                    // dispose all transport and device.
+                    disposeTransportDevice();
+                    Logger.e(TAG, "close() mid mClosed：" + mClosed);
+                    // dispose audio track.
+                    if (mLocalAudioTrack != null) {
+                        mLocalAudioTrack.setEnabled(false);
+                        mLocalAudioTrack.dispose();
+                        mLocalAudioTrack = null;
+                    }
 
-                // dispose video track.
-                if (mLocalVideoTrack != null) {
-                    mLocalVideoTrack.setEnabled(false);
-                    mLocalVideoTrack.dispose();
-                    mLocalVideoTrack = null;
-                }
+                    // dispose video track.
+                    if (mLocalVideoTrack != null) {
+                        mLocalVideoTrack.setEnabled(false);
+                        mLocalVideoTrack.dispose();
+                        mLocalVideoTrack = null;
+                    }
 
-                // dispose peerConnection.
-                mPeerConnectionUtils.dispose();
+                    // dispose peerConnection.
+                    mPeerConnectionUtils.dispose();
 
-                // quit worker handler thread.
-                mWorkHandler.getLooper().quit();
-                Logger.e(TAG, "close() end mClosed：" + mClosed);
-            });
+                    // quit worker handler thread.
+                    mWorkHandler.getLooper().quit();
+                    Logger.e(TAG, "close() end mClosed：" + mClosed);
+                });
 
         // dispose request.
         mCompositeDisposable.dispose();
@@ -712,119 +713,119 @@ public class RoomClient extends RoomMessageHandler {
      * 连接WebSocket 回调监听
      */
     private Protoo.Listener peerListener =
-        new Protoo.Listener() {
-            @Override
-            public void onOpen() {
-                //websocket 连接成功 加入房间
-                mWorkHandler.post(() -> {
-                    joinImpl();
-                    if (null != connectCallback) {
-                        connectCallback.onConnectSuc();
+            new Protoo.Listener() {
+                @Override
+                public void onOpen() {
+                    //websocket 连接成功 加入房间
+                    mWorkHandler.post(() -> {
+                        joinImpl();
+                        if (null != connectCallback) {
+                            connectCallback.onConnectSuc();
+                        }
+                    });
+                }
+
+                @Override
+                public void onFail() {
+                    // websocket 连接失败
+                    mWorkHandler.post(
+                            () -> {
+                                mStore.addNotify("error", "WebSocket connection failed");
+                                mStore.setRoomState(ConnectionState.CONNECTING);
+                                if (null != connectCallback) {
+                                    connectCallback.onConnectFail();
+                                }
+                            });
+                }
+
+                //WebSocket 连接 成功后消息的接收 请求消息
+                @Override
+                public void onRequest(
+                        @NonNull Message.Request request, @NonNull Protoo.ServerRequestHandler handler) {
+                    Logger.d(TAG, "onRequest() " + request.getData().toString() + ",mClosed:" + mClosed);
+                    if (mClosed) {
+                        return;
                     }
-                });
-            }
-
-            @Override
-            public void onFail() {
-                // websocket 连接失败
-                mWorkHandler.post(
-                    () -> {
-                        mStore.addNotify("error", "WebSocket connection failed");
-                        mStore.setRoomState(ConnectionState.CONNECTING);
-                        if (null != connectCallback) {
-                            connectCallback.onConnectFail();
-                        }
-                    });
-            }
-
-            //WebSocket 连接 成功后消息的接收 请求消息
-            @Override
-            public void onRequest(
-                @NonNull Message.Request request, @NonNull Protoo.ServerRequestHandler handler) {
-                Logger.d(TAG, "onRequest() " + request.getData().toString() + ",mClosed:" + mClosed);
-                if (mClosed) {
-                    return;
-                }
-                mWorkHandler.post(
-                    () -> {
-                        try {
-                            switch (request.getMethod()) {
-                                case "newConsumer": {
-                                    onNewConsumer(request, handler);
-                                    break;
+                    mWorkHandler.post(
+                            () -> {
+                                try {
+                                    switch (request.getMethod()) {
+                                        case "newConsumer": {
+                                            onNewConsumer(request, handler);
+                                            break;
+                                        }
+                                        case "newDataConsumer": {
+                                            onNewDataConsumer(request, handler);
+                                            break;
+                                        }
+                                        default: {
+                                            handler.reject(403, "unknown protoo request.method " + request.getMethod());
+                                            Logger.w(TAG, "unknown protoo request.method " + request.getMethod());
+                                        }
+                                    }
+                                } catch (Exception e) {
+                                    Logger.e(TAG, "handleRequestError.", e);
                                 }
-                                case "newDataConsumer": {
-                                    onNewDataConsumer(request, handler);
-                                    break;
-                                }
-                                default: {
-                                    handler.reject(403, "unknown protoo request.method " + request.getMethod());
-                                    Logger.w(TAG, "unknown protoo request.method " + request.getMethod());
-                                }
-                            }
-                        } catch (Exception e) {
-                            Logger.e(TAG, "handleRequestError.", e);
-                        }
-                    });
-            }
-
-            //WebSocket 连接 成功后消息的接收 通知消息
-            @Override
-            public void onNotification(@NonNull Message.Notification notification) {
-                Logger.d(
-                    TAG,
-                    "onNotification() "
-                        + notification.getMethod()
-                        + ", "
-                        + notification.getData().toString() + ",mClosed:" + mClosed);
-                if (mClosed) {
-                    return;
+                            });
                 }
-                mWorkHandler.post(
-                    () -> {
-                        try {
-                            handleNotification(notification);
-                        } catch (Exception e) {
-                            Logger.e(TAG, "handleNotification error.", e);
-                        }
-                    });
-            }
 
-            //websocket 连接中断
-            @Override
-            public void onDisconnected() {
-                mWorkHandler.post(
-                    () -> {
-                        mStore.addNotify("error", "WebSocket disconnected");
-                        mStore.setRoomState(ConnectionState.CONNECTING);
-
-                        // Close All Transports created by device.
-                        // All will reCreated After ReJoin.
-                        disposeTransportDevice();
-                        if (null != connectCallback) {
-                            connectCallback.onConnectDisconnected();
-                        }
-                    });
-            }
-
-            //websocket 连接关闭
-            @Override
-            public void onClose() {
-                if (mClosed) {
-                    return;
+                //WebSocket 连接 成功后消息的接收 通知消息
+                @Override
+                public void onNotification(@NonNull Message.Notification notification) {
+                    Logger.d(
+                            TAG,
+                            "onNotification() "
+                                    + notification.getMethod()
+                                    + ", "
+                                    + notification.getData().toString() + ",mClosed:" + mClosed);
+                    if (mClosed) {
+                        return;
+                    }
+                    mWorkHandler.post(
+                            () -> {
+                                try {
+                                    handleNotification(notification);
+                                } catch (Exception e) {
+                                    Logger.e(TAG, "handleNotification error.", e);
+                                }
+                            });
                 }
-                mWorkHandler.post(
-                    () -> {
-                        if (mClosed) {
-                            return;
-                        }
-                        close();
-                        if (null != connectCallback) {
-                            connectCallback.onConnectClose();
-                        }
-                    });
-            }
-        };
+
+                //websocket 连接中断
+                @Override
+                public void onDisconnected() {
+                    mWorkHandler.post(
+                            () -> {
+                                mStore.addNotify("error", "WebSocket disconnected");
+                                mStore.setRoomState(ConnectionState.CONNECTING);
+
+                                // Close All Transports created by device.
+                                // All will reCreated After ReJoin.
+                                disposeTransportDevice();
+                                if (null != connectCallback) {
+                                    connectCallback.onConnectDisconnected();
+                                }
+                            });
+                }
+
+                //websocket 连接关闭
+                @Override
+                public void onClose() {
+                    if (mClosed) {
+                        return;
+                    }
+                    mWorkHandler.post(
+                            () -> {
+                                if (mClosed) {
+                                    return;
+                                }
+                                close();
+                                if (null != connectCallback) {
+                                    connectCallback.onConnectClose();
+                                }
+                            });
+                }
+            };
 
     /**
      * WebSocket连接成功 加入房间
@@ -852,15 +853,15 @@ public class RoomClient extends RoomMessageHandler {
             // Join now into the room. 加入房间
             // TODO(HaiyangWu): Don't send our RTP capabilities if we don't want to consume.
             String joinResponse =
-                mProtoo.syncRequest(
-                    "join",
-                    req -> {
-                        jsonPut(req, "displayName", mDisplayName);
-                        jsonPut(req, "device", mOptions.getDevice().toJSONObject());
-                        jsonPut(req, "rtpCapabilities", toJsonObject(rtpCapabilities));
-                        // TODO (HaiyangWu): add sctpCapabilities
-                        jsonPut(req, "sctpCapabilities", "");
-                    });
+                    mProtoo.syncRequest(
+                            "join",
+                            req -> {
+                                jsonPut(req, "displayName", mDisplayName);
+                                jsonPut(req, "device", mOptions.getDevice().toJSONObject());
+                                jsonPut(req, "rtpCapabilities", toJsonObject(rtpCapabilities));
+                                // TODO (HaiyangWu): add sctpCapabilities
+                                jsonPut(req, "sctpCapabilities", "");
+                            });
 //      mOptions.isUseDataChannel() ? mMediasoupDevice.getRtpCapabilities() : "";
             Logger.d(TAG, "joinImpl() joinResponse：" + joinResponse);
             mStore.setRoomState(ConnectionState.CONNECTED);//设置状态 已经连接
@@ -934,19 +935,19 @@ public class RoomClient extends RoomMessageHandler {
                 mLocalAudioTrack.setEnabled(true);
             }
             mMicProducer =
-                mSendTransport.produce(
-                    producer -> {
-                        Logger.e(TAG, "onTransportClose(), micProducer");
-                        if (isConnecting()) {
-                            if (mMicProducer != null) {
-                                mStore.removeProducer(mMicProducer.getId());
-                                mMicProducer = null;
-                            }
-                        }
-                    },
-                    mLocalAudioTrack,
-                    null,
-                    null);
+                    mSendTransport.produce(
+                            producer -> {
+                                Logger.e(TAG, "onTransportClose(), micProducer");
+                                if (isConnecting()) {
+                                    if (mMicProducer != null) {
+                                        mStore.removeProducer(mMicProducer.getId());
+                                        mMicProducer = null;
+                                    }
+                                }
+                            },
+                            mLocalAudioTrack,
+                            null,
+                            null);
             mStore.addProducer(mMicProducer);
             Logger.d(TAG, "mMicProducer," + mMicProducer.getId() + "," + mMicProducer.getKind());
         } catch (MediasoupException e) {
@@ -1026,7 +1027,7 @@ public class RoomClient extends RoomMessageHandler {
         mMicProducer.resume();
         try {
             mProtoo.syncRequest(
-                "resumeProducer", req -> jsonPut(req, "producerId", mMicProducer.getId()));
+                    "resumeProducer", req -> jsonPut(req, "producerId", mMicProducer.getId()));
             mStore.setProducerResumed(mMicProducer.getId());
         } catch (ProtooException e) {
             e.printStackTrace();
@@ -1066,19 +1067,19 @@ public class RoomClient extends RoomMessageHandler {
                 mLocalVideoTrack.setEnabled(true);
             }
             mCamProducer =
-                mSendTransport.produce(
-                    producer -> {
-                        Logger.e(TAG, "onTransportClose(), camProducer");
-                        if (isConnecting()) {
-                            if (mCamProducer != null) {
-                                mStore.removeProducer(mCamProducer.getId());
-                                mCamProducer = null;
-                            }
-                        }
-                    },
-                    mLocalVideoTrack,
-                    null,
-                    null);
+                    mSendTransport.produce(
+                            producer -> {
+                                Logger.e(TAG, "onTransportClose(), camProducer");
+                                if (isConnecting()) {
+                                    if (mCamProducer != null) {
+                                        mStore.removeProducer(mCamProducer.getId());
+                                        mCamProducer = null;
+                                    }
+                                }
+                            },
+                            mLocalVideoTrack,
+                            null,
+                            null);
             mStore.addProducer(mCamProducer);
             Logger.d(TAG, "mCamProducer," + mCamProducer.getId() + "," + mCamProducer.getKind());
         } catch (MediasoupException e) {
@@ -1126,15 +1127,15 @@ public class RoomClient extends RoomMessageHandler {
     private void createSendTransport() throws ProtooException, JSONException, MediasoupException {
         Logger.d(TAG, "createSendTransport()");
         String res =
-            mProtoo.syncRequest(
-                "createWebRtcTransport",
-                (req -> {
-                    jsonPut(req, "forceTcp", mOptions.isForceTcp());
-                    jsonPut(req, "producing", true);//生产 true 自己相关
-                    jsonPut(req, "consuming", false);//消费 true 他人相关
-                    // TODO: sctpCapabilities
-                    jsonPut(req, "sctpCapabilities", "");
-                }));
+                mProtoo.syncRequest(
+                        "createWebRtcTransport",
+                        (req -> {
+                            jsonPut(req, "forceTcp", mOptions.isForceTcp());
+                            jsonPut(req, "producing", true);//生产 true 自己相关
+                            jsonPut(req, "consuming", false);//消费 true 他人相关
+                            // TODO: sctpCapabilities
+                            jsonPut(req, "sctpCapabilities", "");
+                        }));
 
         JSONObject info = new JSONObject(res);
 
@@ -1146,8 +1147,8 @@ public class RoomClient extends RoomMessageHandler {
         String sctpParameters = info.optString("sctpParameters");
 
         mSendTransport =
-            mMediasoupDevice.createSendTransport(
-                sendTransportListener, id, iceParameters, iceCandidates, dtlsParameters);
+                mMediasoupDevice.createSendTransport(
+                        sendTransportListener, id, iceParameters, iceCandidates, dtlsParameters);
     }
 
     /**
@@ -1162,15 +1163,15 @@ public class RoomClient extends RoomMessageHandler {
         Logger.d(TAG, "createRecvTransport()");
 
         String res =
-            mProtoo.syncRequest(
-                "createWebRtcTransport",
-                req -> {
-                    jsonPut(req, "forceTcp", mOptions.isForceTcp());
-                    jsonPut(req, "producing", false);//生产 true 自己相关
-                    jsonPut(req, "consuming", true);//消费 true 他人相关
-                    // TODO (HaiyangWu): add sctpCapabilities
-                    jsonPut(req, "sctpCapabilities", "");
-                });
+                mProtoo.syncRequest(
+                        "createWebRtcTransport",
+                        req -> {
+                            jsonPut(req, "forceTcp", mOptions.isForceTcp());
+                            jsonPut(req, "producing", false);//生产 true 自己相关
+                            jsonPut(req, "consuming", true);//消费 true 他人相关
+                            // TODO (HaiyangWu): add sctpCapabilities
+                            jsonPut(req, "sctpCapabilities", "");
+                        });
 
         JSONObject info = new JSONObject(res);
         Logger.d(TAG, "device#createRecvTransport() " + info);
@@ -1181,94 +1182,94 @@ public class RoomClient extends RoomMessageHandler {
         String sctpParameters = info.optString("sctpParameters");
 
         mRecvTransport =
-            mMediasoupDevice.createRecvTransport(
-                recvTransportListener, id, iceParameters, iceCandidates, dtlsParameters);
+                mMediasoupDevice.createRecvTransport(
+                        recvTransportListener, id, iceParameters, iceCandidates, dtlsParameters);
     }
 
     /**
      * 创建发送 音视频 参数和ice相关  回调监听
      */
     private SendTransport.Listener sendTransportListener =
-        new SendTransport.Listener() {
+            new SendTransport.Listener() {
 
-            private String listenerTAG = TAG + "_SendTrans";
+                private String listenerTAG = TAG + "_SendTrans";
 
-            @Override
-            public String onProduce(
-                Transport transport, String kind, String rtpParameters, String appData) {
-                if (mClosed) {
-                    return "";
+                @Override
+                public String onProduce(
+                        Transport transport, String kind, String rtpParameters, String appData) {
+                    if (mClosed) {
+                        return "";
+                    }
+                    Logger.d(listenerTAG, "onProduce() ");
+                    String producerId =
+                            fetchProduceId(
+                                    req -> {
+                                        jsonPut(req, "transportId", transport.getId());
+                                        jsonPut(req, "kind", kind);
+                                        jsonPut(req, "rtpParameters", toJsonObject(rtpParameters));
+                                        jsonPut(req, "appData", appData);
+                                    });
+                    Logger.d(listenerTAG, "producerId: " + producerId);
+                    return producerId;
                 }
-                Logger.d(listenerTAG, "onProduce() ");
-                String producerId =
-                    fetchProduceId(
-                        req -> {
-                            jsonPut(req, "transportId", transport.getId());
-                            jsonPut(req, "kind", kind);
-                            jsonPut(req, "rtpParameters", toJsonObject(rtpParameters));
-                            jsonPut(req, "appData", appData);
-                        });
-                Logger.d(listenerTAG, "producerId: " + producerId);
-                return producerId;
-            }
 
-            @Override
-            public void onConnect(Transport transport, String dtlsParameters) {
-                if (mClosed) {
-                    return;
+                @Override
+                public void onConnect(Transport transport, String dtlsParameters) {
+                    if (mClosed) {
+                        return;
+                    }
+                    Logger.d(listenerTAG + "_send", "onConnect()");
+                    mCompositeDisposable.add(
+                            mProtoo
+                                    .request(
+                                            "connectWebRtcTransport",
+                                            req -> {
+                                                jsonPut(req, "transportId", transport.getId());
+                                                jsonPut(req, "dtlsParameters", toJsonObject(dtlsParameters));
+                                            })
+                                    .subscribe(
+                                            d -> Logger.d(listenerTAG, "connectWebRtcTransport res: " + d),
+                                            t -> logError("connectWebRtcTransport for mSendTransport failed", t)));
                 }
-                Logger.d(listenerTAG + "_send", "onConnect()");
-                mCompositeDisposable.add(
-                    mProtoo
-                        .request(
-                            "connectWebRtcTransport",
-                            req -> {
-                                jsonPut(req, "transportId", transport.getId());
-                                jsonPut(req, "dtlsParameters", toJsonObject(dtlsParameters));
-                            })
-                        .subscribe(
-                            d -> Logger.d(listenerTAG, "connectWebRtcTransport res: " + d),
-                            t -> logError("connectWebRtcTransport for mSendTransport failed", t)));
-            }
 
-            @Override
-            public void onConnectionStateChange(Transport transport, String connectionState) {
-                Logger.d(listenerTAG, "onConnectionStateChange: " + connectionState);
-            }
-        };
+                @Override
+                public void onConnectionStateChange(Transport transport, String connectionState) {
+                    Logger.d(listenerTAG, "onConnectionStateChange: " + connectionState);
+                }
+            };
 
     /**
      * 创建接收 音视频 参数和ice相关 回调监听
      */
     private RecvTransport.Listener recvTransportListener =
-        new RecvTransport.Listener() {
+            new RecvTransport.Listener() {
 
-            private String listenerTAG = TAG + "_RecvTrans";
+                private String listenerTAG = TAG + "_RecvTrans";
 
-            @Override
-            public void onConnect(Transport transport, String dtlsParameters) {
-                if (mClosed) {
-                    return;
+                @Override
+                public void onConnect(Transport transport, String dtlsParameters) {
+                    if (mClosed) {
+                        return;
+                    }
+                    Logger.d(listenerTAG, "onConnect()");
+                    mCompositeDisposable.add(
+                            mProtoo
+                                    .request(
+                                            "connectWebRtcTransport",
+                                            req -> {
+                                                jsonPut(req, "transportId", transport.getId());
+                                                jsonPut(req, "dtlsParameters", toJsonObject(dtlsParameters));
+                                            })
+                                    .subscribe(
+                                            d -> Logger.d(listenerTAG, "connectWebRtcTransport res: " + d),
+                                            t -> logError("connectWebRtcTransport for mRecvTransport failed", t)));
                 }
-                Logger.d(listenerTAG, "onConnect()");
-                mCompositeDisposable.add(
-                    mProtoo
-                        .request(
-                            "connectWebRtcTransport",
-                            req -> {
-                                jsonPut(req, "transportId", transport.getId());
-                                jsonPut(req, "dtlsParameters", toJsonObject(dtlsParameters));
-                            })
-                        .subscribe(
-                            d -> Logger.d(listenerTAG, "connectWebRtcTransport res: " + d),
-                            t -> logError("connectWebRtcTransport for mRecvTransport failed", t)));
-            }
 
-            @Override
-            public void onConnectionStateChange(Transport transport, String connectionState) {
-                Logger.d(listenerTAG, "onConnectionStateChange: " + connectionState);
-            }
-        };
+                @Override
+                public void onConnectionStateChange(Transport transport, String connectionState) {
+                    Logger.d(listenerTAG, "onConnectionStateChange: " + connectionState);
+                }
+            };
 
     /**
      * 获取生成id
@@ -1316,18 +1317,18 @@ public class RoomClient extends RoomMessageHandler {
 
             //添加一个Consumer（消费者）到C 层
             Consumer consumer =
-                mRecvTransport.consume(
-                    c -> {
-                        if (isConnecting()) {
-                            mConsumers.remove(c.getId());
-                            Logger.w(TAG, "onTransportClose for consume");
-                        }
-                    },
-                    id,
-                    producerId,
-                    kind,
-                    rtpParameters,
-                    appData);
+                    mRecvTransport.consume(
+                            c -> {
+                                if (isConnecting()) {
+                                    mConsumers.remove(c.getId());
+                                    Logger.w(TAG, "onTransportClose for consume");
+                                }
+                            },
+                            id,
+                            producerId,
+                            kind,
+                            rtpParameters,
+                            appData);
 
             mConsumers.put(consumer.getId(), new ConsumerHolder(peerId, consumer));
             mStore.addConsumer(peerId, type, consumer, producerPaused);

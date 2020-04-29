@@ -50,7 +50,7 @@ public class MeView extends FrameLayout {
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public MeView(
-        @NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+            @NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
         init(context);
     }
@@ -135,24 +135,24 @@ public class MeView extends FrameLayout {
 
         // register click listener.
         info.setOnClickListener(
-            view -> {
-                Boolean showInfo = props.getShowInfo().get();
-                props.getShowInfo().set(showInfo != null && showInfo ? Boolean.FALSE : Boolean.TRUE);
-            });
+                view -> {
+                    Boolean showInfo = props.getShowInfo().get();
+                    props.getShowInfo().set(showInfo != null && showInfo ? Boolean.FALSE : Boolean.TRUE);
+                });
 
         meDisplayName.setOnEditorActionListener(
-            (textView, actionId, keyEvent) -> {
-                if (actionId == EditorInfo.IME_ACTION_DONE) {
-                    //修改自己名字
-                    roomClient.changeDisplayName(textView.getText().toString().trim());
-                    return true;
-                }
-                return false;
-            });
+                (textView, actionId, keyEvent) -> {
+                    if (actionId == EditorInfo.IME_ACTION_DONE) {
+                        //修改自己名字
+                        roomClient.changeDisplayName(textView.getText().toString().trim());
+                        return true;
+                    }
+                    return false;
+                });
         stats.setOnClickListener(
-            view -> {
-                // TODO(HaiyangWU): Handle inner click event;
-            });
+                view -> {
+                    // TODO(HaiyangWU): Handle inner click event;
+                });
 
         //SurfaceView 层次覆盖关系
         videoRenderer.setZOrderMediaOverlay(true);
@@ -162,33 +162,33 @@ public class MeView extends FrameLayout {
 
         // register click listener. 是否静音
         mic.setOnClickListener(
-            view -> {
-                if (MeProps.DeviceState.ON.equals(props.getMicState().get())) {
-                    roomClient.muteMic();
-                } else {
-                    roomClient.unmuteMic();
-                }
-            });
+                view -> {
+                    if (MeProps.DeviceState.ON.equals(props.getMicState().get())) {
+                        roomClient.muteMic();
+                    } else {
+                        roomClient.unmuteMic();
+                    }
+                });
         //是否是否打开摄像头
         cam.setOnClickListener(
-            view -> {
-                if (MeProps.DeviceState.ON.equals(props.getCamState().get())) {
-                    roomClient.disableCam();
-                } else {
-                    roomClient.enableCam();
-                }
-            });
+                view -> {
+                    if (MeProps.DeviceState.ON.equals(props.getCamState().get())) {
+                        roomClient.disableCam();
+                    } else {
+                        roomClient.enableCam();
+                    }
+                });
         //前后摄像头切换
         changeCam.setOnClickListener(view -> roomClient.changeCam());
         //屏幕共享 （功能暂未实现）
         share.setOnClickListener(
-            view -> {
-                if (MeProps.DeviceState.ON.equals(props.getShareState().get())) {
-                    roomClient.disableShare();
-                } else {
-                    roomClient.enableShare();
-                }
-            });
+                view -> {
+                    if (MeProps.DeviceState.ON.equals(props.getShareState().get())) {
+                        roomClient.disableShare();
+                    } else {
+                        roomClient.enableShare();
+                    }
+                });
     }
 
     private void setMeCameraFace(MeProps props) {
@@ -197,7 +197,7 @@ public class MeView extends FrameLayout {
             return;
         }
 //        isCamFront = "front".endsWith(MediasoupLoaderUtils.getInstance().getCurCameraFace());
-        boolean isFrontCamera = props.getMe().get().isFrontCamera();
+        boolean isFrontCamera = null == props.getMe().get() ? true : props.getMe().get().isFrontCamera();
         videoRenderer.setMirror(isFrontCamera);
 //        videoRenderer.setEnableHardwareScaler(true);
     }
