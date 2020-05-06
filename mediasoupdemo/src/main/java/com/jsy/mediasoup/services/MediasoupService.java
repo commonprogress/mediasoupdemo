@@ -369,7 +369,7 @@ public class MediasoupService extends LifecycleService implements RoomManagement
     @Override
     public void onFinishServiceActivity() {
         try {
-            if (null != roomBinder) {
+            if (null != roomBinder && isBindService) {
                 roomBinder.onFinishServiceActivity();
             } else {
                 stopSelf(-1);

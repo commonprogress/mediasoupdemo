@@ -319,7 +319,7 @@ public class WebSocketTransport extends AbsWebSocketTransport {
      */
     @Override
     public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
-      Logger.d(TAG, "onMessage()");
+      Logger.d(TAG, "onMessage() text:" + text);
       if (mClosed) {
         return;
       }

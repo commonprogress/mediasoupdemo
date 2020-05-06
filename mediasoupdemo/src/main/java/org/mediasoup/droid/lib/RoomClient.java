@@ -637,7 +637,7 @@ public class RoomClient extends RoomMessageHandler {
      */
     @Async
     public void close() {
-        Logger.e(TAG, "close() mClosed：" + mClosed);
+        Logger.e(TAG, "close() mClosed：start1:" + mClosed);
         if (this.mClosed) {
             return;
         }
@@ -681,6 +681,7 @@ public class RoomClient extends RoomMessageHandler {
 
         // Set room state.
         mStore.setRoomState(ConnectionState.CLOSED);
+        Logger.e(TAG, "close() mClosed：end1:" + mClosed);
     }
 
     /**

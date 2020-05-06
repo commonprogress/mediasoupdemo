@@ -12,10 +12,11 @@ public class UrlFactory {
    */
 //  private static final String HOSTNAME = "v3demo.mediasoup.org";
 //    private static final String HOSTNAME = "192.168.3.66";
-  private static final String HOSTNAME = "192.168.3.21";
+//  private static final String HOSTNAME = "192.168.3.21";
 //    private static final String HOSTNAME = "192.168.3.22";
 //    private static final String HOSTNAME = "192.168.1.150";
-//private static final String HOSTNAME = "192.168.0.102";
+//private static final String HOSTNAME = "192.168.0.103";
+  private static final String HOSTNAME = "192.168.0.107";
   /**
    * 端口号
    */
