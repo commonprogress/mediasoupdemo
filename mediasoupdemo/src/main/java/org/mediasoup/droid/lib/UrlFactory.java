@@ -10,12 +10,13 @@ public class UrlFactory {
   /**
    * 域名
    */
-  private static final String HOSTNAME = "v3demo.mediasoup.org";
+//  private static final String HOSTNAME = "v3demo.mediasoup.org";
 //    private static final String HOSTNAME = "192.168.3.66";
 //  private static final String HOSTNAME = "192.168.3.21";
 //    private static final String HOSTNAME = "192.168.3.22";
 //    private static final String HOSTNAME = "192.168.1.150";
-//  private static final String HOSTNAME = "192.168.0.102";
+//private static final String HOSTNAME = "192.168.0.103";
+  private static final String HOSTNAME = "192.168.0.107";
   /**
    * 端口号
    */
@@ -52,8 +53,8 @@ public class UrlFactory {
   public static String getProtooUrl(
           String roomId, String peerId, boolean forceH264, boolean forceVP9) {
     String url =
-        String.format(
-            Locale.US, "wss://%s:%d/?roomId=%s&peerId=%s", HOSTNAME, PORT, roomId, peerId);
+            String.format(
+                    Locale.US, "wss://%s:%d/?roomId=%s&peerId=%s", HOSTNAME, PORT, roomId, peerId);
     if (forceH264) {
       url += "&forceH264=true";
     } else if (forceVP9) {

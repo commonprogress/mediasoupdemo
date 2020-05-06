@@ -44,9 +44,9 @@ public class Peers {
    * @param peerId
    */
   public void removePeer(String peerId) {
-      if(isContainsCurPeer(peerId)) {
-          mPeersInfo.remove(peerId);
-      }
+    if(isContainsCurPeer(peerId)) {
+      mPeersInfo.remove(peerId);
+    }
   }
 
   /**
@@ -55,7 +55,7 @@ public class Peers {
    * @param displayName
    */
   public void setPeerDisplayName(String peerId, String displayName) {
-     Peer peer = getPeer(peerId);
+    Peer peer = getPeer(peerId);
     if (peer == null) {
       Logger.e(TAG, "setPeerDisplayName no Protoo found");
       return;
@@ -70,13 +70,13 @@ public class Peers {
    * @param isAudioEnabled
    */
   public void updatePeerVideoAudioState(String peerId, boolean isVideoVisible, boolean isAudioEnabled) {
-      Peer peer = getPeer(peerId);
-      if (peer == null) {
-          Logger.e(TAG, "updatePeerVideoAudioState no Peer found for update Video Audio state");
-          return;
-      }
-      peer.setVideoVisible(isVideoVisible);
-      peer.setAudioEnabled(isAudioEnabled);
+    Peer peer = getPeer(peerId);
+    if (peer == null) {
+      Logger.e(TAG, "updatePeerVideoAudioState no Peer found for update Video Audio state");
+      return;
+    }
+    peer.setVideoVisible(isVideoVisible);
+    peer.setAudioEnabled(isAudioEnabled);
   }
 
   /**
@@ -113,7 +113,7 @@ public class Peers {
    * @return
    */
   public Peer getPeer(String peerId) {
-      return isContainsCurPeer(peerId) ? mPeersInfo.get(peerId) : null;
+    return isContainsCurPeer(peerId) ? mPeersInfo.get(peerId) : null;
   }
 
   /**
@@ -122,7 +122,7 @@ public class Peers {
    * @return
    */
   public boolean isContainsCurPeer(String peerId) {
-      return !TextUtils.isEmpty(peerId) && mPeersInfo.containsKey(peerId);
+    return !TextUtils.isEmpty(peerId) && mPeersInfo.containsKey(peerId);
   }
 
   /**

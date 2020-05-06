@@ -12,6 +12,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.GridLayout;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
@@ -32,6 +33,7 @@ import com.jsy.mediasoup.services.MediasoupAidlInterface;
 import com.jsy.mediasoup.services.MediasoupService;
 import com.jsy.mediasoup.services.RoomAidlInterface;
 import com.jsy.mediasoup.utils.LogUtils;
+import com.jsy.mediasoup.view.MeView;
 import com.jsy.mediasoup.vm.EdiasProps;
 import com.jsy.mediasoup.vm.MeProps;
 import com.nabinbhandari.android.permissions.PermissionHandler;
@@ -54,13 +56,15 @@ import java.util.Map;
 public class MediasoupMainActivity extends AppCompatActivity {
     private static final String TAG = MediasoupMainActivity.class.getSimpleName();
     private EditText roomNameEdit;
-    private GridLayout gridLayout;
-    private CardView cardView;
-    private RecyclerView recyclerView;
+    private GridLayout peerVideoGrid;
+    private CardView selfVideoView;
+    private RecyclerView connectUserView, peerVideoView;
     private PropsChangeAndNotify changeAndNotify;
     private int roomMode;
     private MediasoupAidlInterface mediasoupBinder;
+    private PeersVideoAdapter peersVideoAdapter;
     private ConnectPeerAdapter connectPeerAdapter;
+    private SelfMediasoupView selfView;
 
     ServiceConnection serviceConnection = new ServiceConnection() {
 
@@ -146,7 +150,17 @@ public class MediasoupMainActivity extends AppCompatActivity {
                     boolean isAudioBeingSent = MeProps.DeviceState.ON.equals(meProps.getMicState().get()) ? true : false;
                     boolean isVideoBeingSent = MeProps.DeviceState.ON.equals(meProps.getCamState().get()) ? true : false;
                     List<Info> peerUsers = (null == curPeerUsers || curPeerUsers.isEmpty()) ? getMeInfo(meProps) : curPeerUsers;
+                    int size = null == peerUsers ? 0 : peerUsers.size();
                     refreshMediasoupView(meProps.getMe().get().getId(), isVideoBeingSent, peerUsers);
+//                    recyclerMediasoupView(meProps.getMe().get().getId(), isVideoBeingSent, peerUsers);
+                    List<Peer> peersList = new ArrayList<>();
+                    for (int i = 0; i < size; i++) {
+                        Info info = peerUsers.get(i);
+                        if (null != info && (info instanceof Peer)) {
+                            peersList.add((Peer) info);
+                        }
+                    }
+                    setConnectPeer(peersList, isVideoBeingSent);
                 }
             }
         });
@@ -162,6 +176,7 @@ public class MediasoupMainActivity extends AppCompatActivity {
                     }
                     boolean isVideoBeingSent = MeProps.DeviceState.ON.equals(mMeProps.getCamState().get()) ? true : false;
                     refreshMediasoupView(mMeProps.getMe().get().getId(), isVideoBeingSent, peerUsers);
+//                    recyclerMediasoupView(mMeProps.getMe().get().getId(), isVideoBeingSent, peerUsers);
                     setConnectPeer(peersList, isVideoBeingSent);
                 }
             }
@@ -190,16 +205,75 @@ public class MediasoupMainActivity extends AppCompatActivity {
 
     private View createMediasoupView(Info info, boolean isSelf) {
         if (isSelf) {
-            return new UserMediasoupView.SelfMediasoupView(this, this, (Me) info, changeAndNotify).addChildView();
+            return new SelfMediasoupView(this, this, (Me) info, changeAndNotify).addChildView();
         } else {
-            return new UserMediasoupView.OtherMediasoupView(this, this, (Peer) info, changeAndNotify).addChildView();
+            return new OtherMediasoupView(this, this, (Peer) info, changeAndNotify).addChildView();
         }
+    }
+
+    private void recyclerMediasoupView(String selfId, boolean isVideoBeingSent, List<Info> peerUsers) {
+        this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                peerVideoView.setVisibility(View.VISIBLE);
+                peerVideoGrid.setVisibility(View.GONE);
+                curPeerUsers = peerUsers;
+                List<Info> videoUsers = new ArrayList<>();
+                int size = null == peerUsers ? 0 : peerUsers.size();
+                Me selfInfo = null;
+                for (int i = 0; i < size; i++) {
+                    Info info = peerUsers.get(i);
+                    if (info instanceof Me) {
+                        if (isVideoBeingSent) {
+                            selfInfo = (Me) info;
+                        }
+                    } else if (info instanceof Peer) {
+                        if (MediasoupLoaderUtils.getInstance().getPeerVideoState(info)) {
+                            videoUsers.add(info);
+                        }
+                    }
+                }
+                if (null != selfInfo && isVideoBeingSent) {
+                    selfVideoView.removeAllViews();
+                    if (null == selfView) {
+                        selfView = (SelfMediasoupView) createMediasoupView(selfInfo, true);
+                    }
+                    selfView.setLayoutParams(
+                            new ViewGroup.LayoutParams(
+                                    ViewGroup.LayoutParams.MATCH_PARENT,
+                                    ViewGroup.LayoutParams.MATCH_PARENT
+                            )
+                    );
+                    selfVideoView.addView(selfView);
+                    selfVideoView.setVisibility(View.VISIBLE);
+                } else {
+                    selfVideoView.removeAllViews();
+                    selfVideoView.setVisibility(View.GONE);
+                }
+
+                if (null == peersVideoAdapter) {
+                    peersVideoAdapter = new PeersVideoAdapter(MediasoupMainActivity.this, MediasoupMainActivity.this, changeAndNotify);
+                    GridLayoutManager layoutManager = new GridLayoutManager(MediasoupMainActivity.this, 2);
+                    peerVideoView.setLayoutManager(layoutManager);
+                    peerVideoView.setAdapter(peersVideoAdapter);
+                }
+                int viewSize = null == videoUsers ? 0 : videoUsers.size();
+                LogUtils.i(TAG, "recyclerMediasoupView size:" + size + ",viewSize:" + viewSize + ",isVideoBeingSent:" + isVideoBeingSent);
+                if (viewSize > 0) {
+                    peersVideoAdapter.setPeers(videoUsers);
+                } else {
+                    peersVideoAdapter.clearAll();
+                }
+            }
+        });
     }
 
     private void refreshMediasoupView(String selfId, boolean isVideoBeingSent, List<Info> peerUsers) {
         this.runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                peerVideoView.setVisibility(View.GONE);
+                peerVideoGrid.setVisibility(View.VISIBLE);
                 curPeerUsers = peerUsers;
                 List<Info> videoUsers = new ArrayList<>();
                 int size = null == peerUsers ? 0 : peerUsers.size();
@@ -220,35 +294,46 @@ public class MediasoupMainActivity extends AppCompatActivity {
                 for (int i = 0; i < videoSize; i++) {
                     Info info = videoUsers.get(i);
                     View view = viewMap.containsKey(info.getId()) ? viewMap.get(info.getId()) : null;
-                    if (null == view) {
+                    if (null == view && null != info && !TextUtils.isEmpty(info.getId())) {
                         view = createMediasoupView(info, info.getId().equals(selfId));
                         viewMap.put(info.getId(), view);
                     }
-                    views.add(view);
+                    if (null != view) {
+                        views.add(view);
+                    }
                 }
                 int viewSize = null == views ? 0 : views.size();
                 if (viewMap.containsKey(selfId)) {
                     View selfView = viewMap.get(selfId);
                     if (viewSize == 2 && isVideoBeingSent) {
-                        cardView.removeAllViews();
-                        gridLayout.removeView(selfView);
-                        selfView.setLayoutParams(
-                                new ViewGroup.LayoutParams(
-                                        ViewGroup.LayoutParams.MATCH_PARENT,
-                                        ViewGroup.LayoutParams.MATCH_PARENT
-                                )
-                        );
-                        cardView.addView(selfView);
-                        cardView.setVisibility(View.VISIBLE);
+                        View cardChildView = selfVideoView.getChildCount() == 1 ? selfVideoView.getChildAt(0) : null;
+                        LogUtils.i(TAG, "Showing card preview cardChildView:" + cardChildView);
+                        if (null == cardChildView || !(cardChildView instanceof SelfMediasoupView)) {
+                            selfVideoView.removeAllViews();
+                            peerVideoGrid.removeView(selfView);
+                            selfView.setLayoutParams(
+                                    new ViewGroup.LayoutParams(
+                                            ViewGroup.LayoutParams.MATCH_PARENT,
+                                            ViewGroup.LayoutParams.MATCH_PARENT
+                                    )
+                            );
+                            selfVideoView.addView(selfView);
+                            selfVideoView.setVisibility(View.VISIBLE);
+                        } else {
+                            peerVideoGrid.removeView(selfView);
+                            if (selfVideoView.getVisibility() != View.VISIBLE) {
+                                selfVideoView.setVisibility(View.VISIBLE);
+                            }
+                        }
                     } else {
-                        cardView.removeAllViews();
-                        cardView.setVisibility(View.GONE);
+                        selfVideoView.removeAllViews();
+                        selfVideoView.setVisibility(View.GONE);
                     }
                 }
                 List<View> gridViews = new ArrayList<>();
                 for (int i = 0; i < viewSize; i++) {
                     View view = views.get(i);
-                    if (view instanceof UserMediasoupView.SelfMediasoupView) {
+                    if (view instanceof SelfMediasoupView) {
                         if (viewSize == 2 && isVideoBeingSent) {
                             continue;
                         }
@@ -260,6 +345,8 @@ public class MediasoupMainActivity extends AppCompatActivity {
                 }
 
                 int gridSize = null == gridViews ? 0 : gridViews.size();
+
+                LogUtils.i(TAG, "refreshMediasoupView size:" + size + ",viewMap.size:" + viewMap.size() + ",videoSize:" + videoSize + ",viewSize:" + viewSize + ",gridSize:" + gridSize + ",isVideoBeingSent:" + isVideoBeingSent);
                 for (int i = 0; i < gridSize; i++) {
                     int row, col, span;
                     switch (i) {
@@ -309,14 +396,12 @@ public class MediasoupMainActivity extends AppCompatActivity {
 
                             break;
                     }
-
-
                 }
 
                 List<View> removeViews = new ArrayList<>();
                 List<String> removeUsers = new ArrayList<>();
                 for (Map.Entry<String, View> entry : viewMap.entrySet()) {
-                    System.out.println("key= " + entry.getKey() + " and value= " + entry.getValue());
+                    LogUtils.i(TAG, "refreshMediasoupView selfId:" + selfId + ",viewMap key= " + entry.getKey() + " ,and value= " + entry.getValue());
                     View view = entry.getValue();
                     String userId = entry.getKey();
                     if (selfId.equals(userId)) {
@@ -325,7 +410,7 @@ public class MediasoupMainActivity extends AppCompatActivity {
                             removeUsers.add(userId);
                         }
                     } else {
-                        if (!videoUsers.contains(userId)) {
+                        if (!containsVideoUsers(videoUsers, userId)) {
                             removeViews.add(view);
                             removeUsers.add(userId);
                         }
@@ -335,7 +420,7 @@ public class MediasoupMainActivity extends AppCompatActivity {
                 int removeSize = null == removeViews ? 0 : removeViews.size();
                 for (int i = 0; i < removeSize; i++) {
                     View view = removeViews.get(i);
-                    gridLayout.removeView(view);
+                    peerVideoGrid.removeView(view);
                 }
 
                 int removeUserSize = null == removeUsers ? 0 : removeUsers.size();
@@ -344,36 +429,50 @@ public class MediasoupMainActivity extends AppCompatActivity {
                         viewMap.remove(removeUsers.get(i));
                     }
                 }
-
+                LogUtils.i(TAG, "refreshMediasoupView removeSize:" + removeSize + ",removeUserSize:" + removeUserSize + ",viewMap.size:" + (viewMap.size()) + ",selfId:" + selfId);
             }
         });
     }
 
+    private boolean containsVideoUsers(List<Info> videoUsers, String userId) {
+        int size = null == videoUsers ? 0 : videoUsers.size();
+        for (int i = 0; i < size; i++) {
+            Info info = videoUsers.get(i);
+            if (!TextUtils.isEmpty(userId) && userId.equals(info.getId())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void showGridChildView(int row, int col, int span, View view) {
-        if (view.getParent() == null || view.getParent() instanceof GridLayout) {
+        if (view.getParent() == null || (view.getParent() instanceof GridLayout)) {
             GridLayout.LayoutParams params = new GridLayout.LayoutParams();
-            params.width = 0;
-            params.height = 0;
+            params.width = GridLayout.LayoutParams.MATCH_PARENT;
+            params.height = GridLayout.LayoutParams.MATCH_PARENT;
             params.rowSpec = GridLayout.spec(row, 1, GridLayout.FILL, 1f);
             params.columnSpec = GridLayout.spec(col, span, GridLayout.FILL, 1f);
             view.setLayoutParams(params);
         }
         if (view.getParent() == null) {
-            gridLayout.addView(view);
+            peerVideoGrid.addView(view);
         }
     }
 
     private void setConnectPeer(List<Peer> peersList, boolean isVideoBeingSent) {
         if (null == connectPeerAdapter) {
             connectPeerAdapter = new ConnectPeerAdapter(this);
-            recyclerView.setLayoutManager(new LinearLayoutManager(this));
-            recyclerView.setAdapter(connectPeerAdapter);
+            connectUserView.setLayoutManager(new LinearLayoutManager(this));
+            connectUserView.setAdapter(connectPeerAdapter);
         }
         int size = null == peersList ? 0 : peersList.size();
+        LogUtils.i(TAG, "setConnectPeer size:" + size + ",isVideoBeingSent:" + isVideoBeingSent);
         if (size > 1 || !isVideoBeingSent) {
             connectPeerAdapter.setPeers(peersList);
+            connectUserView.setVisibility(View.VISIBLE);
         } else {
             connectPeerAdapter.clearAll();
+            connectUserView.setVisibility(View.GONE);
         }
 
     }
@@ -419,9 +518,10 @@ public class MediasoupMainActivity extends AppCompatActivity {
         MediasoupManagement.setUserChangedHandler(userChangedHandler);
 
         setContentView(R.layout.activity_mediasoup_main);
-        recyclerView = findViewById(R.id.otheruser_recycler);
-        cardView = findViewById(R.id.selfvideo_view);
-        gridLayout = findViewById(R.id.othervideo_grid);
+        connectUserView = findViewById(R.id.otheruser_recycler);
+        peerVideoView = findViewById(R.id.othervideo_recycler);
+        selfVideoView = findViewById(R.id.selfvideo_view);
+        peerVideoGrid = findViewById(R.id.othervideo_grid);
         roomNameEdit = findViewById(R.id.roomname_edit);
     }
 
@@ -576,6 +676,11 @@ public class MediasoupMainActivity extends AppCompatActivity {
         try {
             if (null == mediasoupBinder || !mediasoupBinder.isBindService()) {
                 bindMediasoupService();
+            } else {
+                if (!mediasoupBinder.isRoomConnecting()) {
+                    initMediasoupView();
+                    checkPermissionAndJoin();
+                }
             }
         } catch (RemoteException e) {
             e.printStackTrace();
