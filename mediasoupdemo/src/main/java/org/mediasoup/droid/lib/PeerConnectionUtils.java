@@ -1,9 +1,18 @@
 package org.mediasoup.droid.lib;
 
 import android.content.Context;
+import android.hardware.Camera;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CameraMetadata;
 import android.support.annotation.MainThread;
 import android.text.TextUtils;
+import android.util.AndroidException;
 import android.util.Log;
+import android.view.Surface;
+import android.view.View;
+import android.view.WindowManager;
 
 import org.mediasoup.droid.Logger;
 import org.webrtc.AudioSource;
@@ -15,16 +24,22 @@ import org.webrtc.CameraVideoCapturer;
 import org.webrtc.DefaultVideoDecoderFactory;
 import org.webrtc.DefaultVideoEncoderFactory;
 import org.webrtc.EglBase;
+import org.webrtc.Logging;
 import org.webrtc.MediaConstraints;
 import org.webrtc.PeerConnectionFactory;
 import org.webrtc.SurfaceTextureHelper;
 import org.webrtc.ThreadUtils;
+import org.webrtc.VideoCodecInfo;
 import org.webrtc.VideoDecoderFactory;
 import org.webrtc.VideoEncoderFactory;
 import org.webrtc.VideoSource;
 import org.webrtc.VideoTrack;
 import org.webrtc.audio.AudioDeviceModule;
 import org.webrtc.audio.JavaAudioDeviceModule;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * PeerConnection通信建立流程 （@link org.mediasoup.droid.PeerConnection (没有用？)）
@@ -89,7 +104,26 @@ public class PeerConnectionUtils {
     //视频的解码格式
     VideoDecoderFactory decoderFactory =
         new DefaultVideoDecoderFactory(mEglBase.getEglBaseContext());
-
+//"packetization-mode":1,"level-asymmetry-allowed":1,"profile-level-id":"4d0032","x-google-start-bitrate":1000
+//      Map<String, String> addParams = new HashMap<>();
+//      addParams.put("level-asymmetry-allowed", "1");
+//      addParams.put("profile-level-id", "4d0032");
+//      addParams.put("packetization-mode", "1");
+//      addParams.put("x-google-start-bitrate", "1000");
+//      decoderFactory.createDecoder(new VideoCodecInfo("H264", addParams));
+//
+//      VideoCodecInfo[] videoCodecInfos = decoderFactory.getSupportedCodecs();
+//      int le = videoCodecInfos == null ? 0 : videoCodecInfos.length;
+//      for (int i = 0; i < le; i++) {
+//          VideoCodecInfo videoCodecInfo = videoCodecInfos[i];
+//          Map<String, String> params = videoCodecInfo.params;
+//          for (Map.Entry<String, String> entry : params.entrySet()) {
+//              Logger.d(TAG, "dongxl createPeerConnectionFactory() index:" + i + ",videoCodecInfo.name:" + videoCodecInfo.name + ", entry.getKey:" + entry.getKey() + ", entry.getValue:" + entry.getValue());
+//          }
+//          if (null == params || params.isEmpty()) {
+//              Logger.d(TAG, "dongxl createPeerConnectionFactory() index:" + i + ",videoCodecInfo.name:" + videoCodecInfo.name + ", params == null ");
+//          }
+//      }
     mPeerConnectionFactory =
         builder
             .setAudioDeviceModule(adm)
@@ -186,6 +220,7 @@ public class PeerConnectionUtils {
       cameraEnumerator = new Camera1Enumerator();
     }
     final String[] deviceNames = cameraEnumerator.getDeviceNames();
+      Logger.d(TAG, "createCamCapture() deviceNames:" + Arrays.toString(deviceNames));
     for (String deviceName : deviceNames) {
       boolean needFrontFacing = "front".endsWith(mPreferCameraFace);
       String selectedDeviceName = null;
@@ -222,8 +257,13 @@ public class PeerConnectionUtils {
                   @Override
                   public void onCameraOpening(String cameraName) {
                       boolean isFrontCamera = !TextUtils.isEmpty(cameraName) && cameraName.toLowerCase().contains("front");
+                      //cameraName:Camera 1, Facing front, Orientation 270
                       Logger.d(TAG, "onCameraOpening,isFrontCamera:" + isFrontCamera + ", cameraName:" + cameraName);
-                    //cameraName:Camera 1, Facing front, Orientation 270
+                      boolean isCamera2Supported = Camera2Enumerator.isSupported(context);//是否支持Camera2
+                      boolean isFrontFacing = cameraEnumerator.isFrontFacing(cameraName);
+                      String cameraId = cameraSwitchDone(context, isFrontFacing);
+                      Logger.d(TAG, "onCameraOpening,isCamera2Supported:" + isCamera2Supported + ", isFrontFacing:" + isFrontFacing + ", cameraId:" + cameraId);
+//                      frontFacingRotation(context, isCamera2Supported, isFrontFacing, cameraId);
                   }
 
                   @Override
@@ -244,6 +284,126 @@ public class PeerConnectionUtils {
       throw new IllegalStateException("Failed to create Camera Capture");
     }
   }
+
+    private void frontFacingRotation(Context context, boolean isCamera2Supported, boolean isFrontFacing, String cameraId) {
+        if (!isFrontFacing || TextUtils.isEmpty(cameraId)) {
+            return;
+        }
+        if (!isCamera2Supported) {
+            try {
+                int id = Integer.parseInt(cameraId);
+                if (id == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                    Camera.CameraInfo info = new Camera.CameraInfo();
+                    Camera.getCameraInfo(id, info);
+                    final Camera camera;
+                    try {
+                        camera = Camera.open(id);
+                    } catch (RuntimeException e) {
+                        return;
+                    }
+                    if (camera == null) {
+                        return;
+                    }
+                    final WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+                    int rotation = wm.getDefaultDisplay().getRotation();
+                    int degrees = 0;
+                    switch (rotation) {
+                        case Surface.ROTATION_0:
+                            degrees = 0;
+                            break;
+                        case Surface.ROTATION_90:
+                            degrees = 90;
+                            break;
+                        case Surface.ROTATION_180:
+                            degrees = 180;
+                            break;
+                        case Surface.ROTATION_270:
+                            degrees = 270;
+                            break;
+                    }
+
+                    int result;
+                    if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                        result = (info.orientation + degrees) % 360;
+                        result = (360 - result) % 360;  // compensate the mirror
+                    } else {  // back-facing
+                        result = (info.orientation - degrees + 360) % 360;
+                    }
+                    camera.setDisplayOrientation(result);
+                } else {
+
+                }
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+            }
+        } else {
+            try {
+                CameraManager cameraManager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
+                CameraCharacteristics characteristics = cameraManager.getCameraCharacteristics(cameraId);
+                if (characteristics != null
+                        && characteristics.get(CameraCharacteristics.LENS_FACING)
+                        == CameraMetadata.LENS_FACING_FRONT) {
+                    int sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
+
+                } else {
+
+                }
+            } catch (/* CameraAccessException */ AndroidException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public String cameraSwitchDone(Context context, boolean isFrontCamera) {
+        boolean isCamera2Supported = Camera2Enumerator.isSupported(context);//是否支持Camera2
+        Logger.w(TAG, "cameraSwitchDone() onCameraSwitchDone isFrontCamera:" + isFrontCamera + ", isCamera2Supported:" + isCamera2Supported);
+        if (!isFrontCamera) {
+            return "-1";
+        }
+        return "-1";
+//        if (isCamera2Supported) {
+//            String cameraId2 = "";
+//            CameraManager cameraManager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
+//            try {
+//                String[] cameraIds = cameraManager.getCameraIdList();
+//                for (String cameraInfoId : cameraIds) {
+//                    CameraCharacteristics characteristics = cameraManager.getCameraCharacteristics(cameraInfoId);
+//                    if (isFrontCamera && characteristics != null
+//                            && characteristics.get(CameraCharacteristics.LENS_FACING)
+//                            == CameraMetadata.LENS_FACING_FRONT) {
+//                        cameraId2 = cameraInfoId;
+//                        break;
+//                    } else if (characteristics != null
+//                            && characteristics.get(CameraCharacteristics.LENS_FACING)
+//                            == CameraMetadata.LENS_FACING_BACK) {
+//                        cameraId2 = cameraInfoId;
+//                        break;
+//                    }
+//                }
+//            } catch (/* CameraAccessException */ AndroidException e) {
+//                e.printStackTrace();
+//                Logging.e(TAG, "Camera2 access exception: " + e);
+//            }
+//            return cameraId2;
+//        } else {
+//            int cameraId = -1;
+//            try {
+//                int mCameras = Camera.getNumberOfCameras();
+//                Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
+//                for (int cameraInfoId = 0; cameraInfoId < mCameras; cameraInfoId++) {
+//                    Camera.getCameraInfo(cameraInfoId, cameraInfo);
+//                    if (cameraInfo.facing == (isFrontCamera ? Camera.CameraInfo.CAMERA_FACING_FRONT : Camera.CameraInfo.CAMERA_FACING_BACK)) {
+//                        cameraId = cameraInfoId;
+//                        break;
+//                    }
+//                }
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//                Logging.e(TAG, "Camera access exception: " + e);
+//            }
+//            return String.valueOf(cameraId);
+//        }
+    }
 
     /**
      * 切换摄像头
