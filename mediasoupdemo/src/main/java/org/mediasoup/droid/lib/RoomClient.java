@@ -127,6 +127,10 @@ public class RoomClient extends RoomMessageHandler {
         return null == connectCallback ? !isClosed() : connectCallback.isConnecting();
     }
 
+    public boolean isConnected() {
+        return null == connectCallback ? !isClosed() : connectCallback.isConnected();
+    }
+
     public RoomClient(
             Context context, RoomStore roomStore, String roomId, String peerId, String clientId, String displayName) {
         this(context, roomStore, roomId, peerId, clientId, displayName, false, false, null, null);
@@ -278,7 +282,7 @@ public class RoomClient extends RoomMessageHandler {
                             @Override
                             public void onCameraSwitchDone(boolean isFrontCamera) {
                                 Logger.w(TAG, "changeCam() onCameraSwitchDone isFrontCamera:" + isFrontCamera);
-                                mStore.cameraSwitchDone(isFrontCamera);
+//                                mStore.cameraSwitchDone(isFrontCamera);
                                 mStore.setCamInProgress(false);
                             }
 

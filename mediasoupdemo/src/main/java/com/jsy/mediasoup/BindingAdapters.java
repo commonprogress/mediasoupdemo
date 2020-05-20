@@ -180,9 +180,9 @@ public class BindingAdapters {
     }
   }
 
-  public static void render(SurfaceViewRenderer renderer, VideoTrack track) {
-    Log.d(TAG, "edias_render: " + (track != null ? "VISIBLE" : "GONE"));
-    if (track != null) {
+  public static void render(SurfaceViewRenderer renderer, VideoTrack track, boolean isConnected) {
+    Log.d(TAG, "edias_render: " + (track != null && isConnected ? "VISIBLE" : "GONE") + ", isConnected:" + isConnected);
+    if (track != null && isConnected) {
       track.addSink(renderer);
       renderer.setVisibility(View.VISIBLE);
     } else {
@@ -190,9 +190,9 @@ public class BindingAdapters {
     }
   }
 
-  public static void renderEmpty(View renderer, VideoTrack track) {
-    Log.d(TAG, "edias_render_empty: " + (track != null ? "GONE" : "VISIBLE"));
-    if (track == null) {
+  public static void renderEmpty(View renderer, VideoTrack track, boolean isConnected) {
+    Log.d(TAG, "edias_render_empty: " + (track != null && isConnected ? "GONE" : "VISIBLE") + ", isConnected:" + isConnected);
+    if (track == null || !isConnected) {
       renderer.setVisibility(View.VISIBLE);
     } else {
       renderer.setVisibility(View.GONE);

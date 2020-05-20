@@ -120,14 +120,14 @@ public class PeerView extends FrameLayout {
 
     public void setProps(PeerProps props, RoomClient roomClient) {
         // set view model into included layout
-        setPeerViewProps(props);
+        setPeerViewProps(props, null != roomClient ? roomClient.isConnected() : false);
 
         props.setOnPropsLiveDataChange(ediasProps -> {
             if(roomClient.isConnecting()) {
                 // set view model.
-                setPeerViewProps(props);
+                setPeerViewProps(props, null != roomClient ? roomClient.isConnected() : false);
                 // set view model.
-                setPeerProps(props);
+                setPeerProps(props, null != roomClient ? roomClient.isConnected() : false);
             }
         });
 
@@ -144,17 +144,17 @@ public class PeerView extends FrameLayout {
             });
 
         // set view model
-        setPeerProps(props);
+        setPeerProps(props, null != roomClient ? roomClient.isConnected() : false);
     }
 
 
-    private void setPeerViewProps(PeerProps props) {
-        LogUtils.i(TAG, "setPeerViewProps,mediasoup null == props:" + (null == props));
+    private void setPeerViewProps(PeerProps props, boolean isConnected) {
+        LogUtils.i(TAG, "setPeerViewProps,mediasoup null == props:" + (null == props) + ", isConnected:" + isConnected);
         if (null == props) {
             return;
         }
-        BindingAdapters.render(videoRenderer, props.getVideoTrack().get());
-        BindingAdapters.renderEmpty(video_hidden, props.getVideoTrack().get());
+        BindingAdapters.render(videoRenderer, props.getVideoTrack().get(), isConnected);
+        BindingAdapters.renderEmpty(video_hidden, props.getVideoTrack().get(), isConnected);
 
         audio_producer.setVisibility(!TextUtils.isEmpty(props.getAudioProducerId().get()) ? View.VISIBLE : View.GONE);
         audio_producer.setText(props.getAudioProducerId().get());
@@ -177,8 +177,8 @@ public class PeerView extends FrameLayout {
 
     }
 
-    private void setPeerProps(PeerProps props) {
-        LogUtils.i(TAG, "setPeerProps,mediasoup null == props:" + (null == props));
+    private void setPeerProps(PeerProps props, boolean isConnected) {
+        LogUtils.i(TAG, "setPeerProps,mediasoup null == props:" + (null == props) + ", isConnected:" + isConnected);
         if (null == props) {
             return;
         }

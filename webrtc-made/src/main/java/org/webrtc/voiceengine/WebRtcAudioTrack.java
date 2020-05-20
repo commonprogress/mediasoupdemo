@@ -142,37 +142,47 @@ public class WebRtcAudioTrack {
       final int sizeInBytes = byteBuffer.capacity();
 
       while (keepAlive) {
-        // Get 10ms of PCM data from the native WebRTC client. Audio data is
-        // written into the common ByteBuffer using the address that was
-        // cached at construction.
-        nativeGetPlayoutData(sizeInBytes, nativeAudioTrack);
-        // Write data until all data has been written to the audio sink.
-        // Upon return, the buffer position will have been advanced to reflect
-        // the amount of data that was successfully written to the AudioTrack.
-        assertTrue(sizeInBytes <= byteBuffer.remaining());
-        if (speakerMute) {
-          byteBuffer.clear();
-          byteBuffer.put(emptyBytes);
-          byteBuffer.position(0);
-        }
-        int bytesWritten = writeBytes(audioTrack, byteBuffer, sizeInBytes);
-        if (bytesWritten != sizeInBytes) {
-          Logging.e(TAG, "AudioTrack.write played invalid number of bytes: " + bytesWritten);
-          // If a write() returns a negative value, an error has occurred.
-          // Stop playing and report an error in this case.
-          if (bytesWritten < 0) {
-            keepAlive = false;
-            reportWebRtcAudioTrackError("AudioTrack.write failed: " + bytesWritten);
+        while(null != audioTrack && null != audioThread && keepAlive) {
+          try {
+            // Get 10ms of PCM data from the native WebRTC client. Audio data is
+            // written into the common ByteBuffer using the address that was
+            // cached at construction.
+            Logging.d(TAG, "AudioTrackThread nativeGetPlayoutData sizeInBytes: " + sizeInBytes + ",nativeAudioTrack:" + nativeAudioTrack+ ", PlayState:" + audioTrack.getPlayState());
+            nativeGetPlayoutData(sizeInBytes, nativeAudioTrack);
+            // Write data until all data has been written to the audio sink.
+            // Upon return, the buffer position will have been advanced to reflect
+            // the amount of data that was successfully written to the AudioTrack.
+            assertTrue(sizeInBytes <= byteBuffer.remaining());
+            if (speakerMute) {
+              byteBuffer.clear();
+              byteBuffer.put(emptyBytes);
+              byteBuffer.position(0);
+            }
+            int bytesWritten = writeBytes(audioTrack, byteBuffer, sizeInBytes);
+            if (bytesWritten != sizeInBytes) {
+              Logging.e(TAG, "AudioTrack.write played invalid number of bytes: " + bytesWritten);
+              // If a write() returns a negative value, an error has occurred.
+              // Stop playing and report an error in this case.
+              if (bytesWritten < 0) {
+                keepAlive = false;
+                reportWebRtcAudioTrackError("AudioTrack.write failed: " + bytesWritten);
+              }
+            }
+            // The byte buffer must be rewinded since byteBuffer.position() is
+            // increased at each call to AudioTrack.write(). If we don't do this,
+            // next call to AudioTrack.write() will fail.
+            byteBuffer.rewind();
+
+            // TODO(henrika): it is possible to create a delay estimate here by
+            // counting number of written frames and subtracting the result from
+            // audioTrack.getPlaybackHeadPosition().
+          } catch (UnsatisfiedLinkError e) {
+            e.printStackTrace();
+            stopThread();
+            reportWebRtcAudioTrackError("AudioTrackThread UnsatisfiedLinkError: " + e.getLocalizedMessage());
+            Logging.e(TAG, "AudioTrackThread nativeGetPlayoutData unsatisfiedLinkError: " + e.getLocalizedMessage());
           }
         }
-        // The byte buffer must be rewinded since byteBuffer.position() is
-        // increased at each call to AudioTrack.write(). If we don't do this,
-        // next call to AudioTrack.write() will fail.
-        byteBuffer.rewind();
-
-        // TODO(henrika): it is possible to create a delay estimate here by
-        // counting number of written frames and subtracting the result from
-        // audioTrack.getPlaybackHeadPosition().
       }
 
       // Stops playing the audio data. Since the instance was created in

@@ -105,7 +105,14 @@ public class RoomManagement implements MediasoupConnectCallback {
         if (null == connectionState) {
             return false;
         }
-        return isMediasoupCalling && (RoomClient.ConnectionState.CONNECTED.equals(connectionState) || RoomClient.ConnectionState.DISCONNECTED.equals(connectionState));
+        return isMediasoupCalling && (RoomClient.ConnectionState.CONNECTED.equals(connectionState) || RoomClient.ConnectionState.DISCONNECTED.equals(connectionState) || RoomClient.ConnectionState.CONNECTING.equals(connectionState));
+    }
+
+    public boolean isRoomConnected() {
+        if (null == connectionState) {
+            return false;
+        }
+        return isMediasoupCalling && (RoomClient.ConnectionState.CONNECTED.equals(connectionState));
     }
 
     public boolean isRoomClosed() {
@@ -342,6 +349,11 @@ public class RoomManagement implements MediasoupConnectCallback {
     @Override
     public boolean isConnecting() {
         return isRoomConnecting();
+    }
+
+    @Override
+    public boolean isConnected() {
+        return isRoomConnected();
     }
 
     public RoomProps getRoomProps() {

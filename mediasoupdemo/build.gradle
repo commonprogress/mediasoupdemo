@@ -66,12 +66,13 @@ dependencies {
 
     implementation 'com.nabinbhandari.android:permissions:3.8'
 
-//    implementation (name:'protoo-client', ext:'aar')
-    implementation project(path: ':protoo-client')
+    implementation (name:'protoo-client', ext:'aar')
+//    implementation project(path: ':protoo-client')
 //    implementation 'org.protoojs.droid:protoo-client:4.0.3'
 
-//    implementation (name:'mediasoup-client', ext:'aar')
-    implementation project(path: ':mediasoup-client')
+    implementation (name:'mediasoup-client', ext:'aar')
+    implementation (name:'webrtc-made', ext:'aar')
+//    implementation project(path: ':mediasoup-client')
 //    implementation 'org.mediasoup.droid:mediasoup-client:3.0.4-beta-1'
 
     implementation 'com.squareup.okhttp3:okhttp:4.3.0'

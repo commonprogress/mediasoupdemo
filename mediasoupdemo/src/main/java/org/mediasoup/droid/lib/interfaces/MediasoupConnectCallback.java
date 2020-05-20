@@ -14,4 +14,6 @@ public interface MediasoupConnectCallback {
     void onJoinFail();
 
     boolean isConnecting();
+
+    boolean isConnected();
 }
