@@ -16,7 +16,7 @@ public class UrlFactory {
 //    private static final String HOSTNAME = "192.168.3.22";
 //    private static final String HOSTNAME = "192.168.1.150";
 //private static final String HOSTNAME = "192.168.0.103";
-  private static final String HOSTNAME = "192.168.0.107";
+  private static final String HOSTNAME = "192.168.0.105";
   /**
    * 端口号
    */

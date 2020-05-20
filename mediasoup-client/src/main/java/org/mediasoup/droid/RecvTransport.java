@@ -31,7 +31,7 @@ public class RecvTransport extends Transport {
   }
 
   public Consumer consume(
-          Consumer.Listener listener, String id, String producerId, String kind, String rtpParameters)
+      Consumer.Listener listener, String id, String producerId, String kind, String rtpParameters)
       throws MediasoupException {
     return consume(listener, id, producerId, kind, rtpParameters, null);
   }

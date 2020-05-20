@@ -15,8 +15,7 @@ public class Producer {
   }
 
   private long mNativeProducer;
-  @Nullable
-  private MediaStreamTrack mCachedTrack;
+  @Nullable private MediaStreamTrack mCachedTrack;
 
   @CalledByNative
   public Producer(long nativeProducer) {

@@ -1,4 +1,4 @@
-package org.mediasoup.droid;
+package org.webrtc;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
@@ -20,7 +20,6 @@ public class ExampleInstrumentedTest {
     public void useAppContext() {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-
-        assertEquals("org.mediasoup.droid.test", appContext.getPackageName());
+        assertEquals("org.webrtc.test", appContext.getPackageName());
     }
 }

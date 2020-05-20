@@ -52,12 +52,12 @@ public class PeerConnectionTest extends BaseTest{
     List<org.webrtc.PeerConnection.IceServer> iceServerUris = new ArrayList<>();
     iceServerUris.add(new org.webrtc.PeerConnection.IceServer("Wrong URI"));
     org.webrtc.PeerConnection.RTCConfiguration rtcConfiguration =
-            new org.webrtc.PeerConnection.RTCConfiguration(iceServerUris);
+        new org.webrtc.PeerConnection.RTCConfiguration(iceServerUris);
 
     PeerConnection pc = new PeerConnection(listener, mPeerConnectionOptions);
     assertFalse(
-            "'pc.SetConfiguration()' fails if wrong options are provided",
-            pc.setConfiguration(rtcConfiguration));
+        "'pc.SetConfiguration()' fails if wrong options are provided",
+        pc.setConfiguration(rtcConfiguration));
     pc.dispose();
   }
 
@@ -71,19 +71,19 @@ public class PeerConnectionTest extends BaseTest{
   public void createAnswer() {
     // 'pc.CreateAnswer()' fails if no remote offer has been provided.
     exceptionException(
-            () -> mPc.createAnswer(new MediaConstraints()),
-            "PeerConnection cannot create an answer "
-                    + "in a state other than have-remote-offer or have-local-pranswer.");
+        () -> mPc.createAnswer(new MediaConstraints()),
+        "PeerConnection cannot create an answer "
+            + "in a state other than have-remote-offer or have-local-pranswer.");
   }
 
   @Test
   public void setLocalDescription() {
     // 'pc.SetRemoteDescription()' fails if incorrect SDP is provided.
     SessionDescription sessionDescription =
-            new SessionDescription(SessionDescription.Type.OFFER, "");
+        new SessionDescription(SessionDescription.Type.OFFER, "");
     exceptionException(
-            () -> mPc.setLocalDescription(sessionDescription),
-            "webrtc::CreateSessionDescription failed [:Expect line: v=]");
+        () -> mPc.setLocalDescription(sessionDescription),
+        "webrtc::CreateSessionDescription failed [:Expect line: v=]");
   }
 
   @Test
@@ -95,7 +95,7 @@ public class PeerConnectionTest extends BaseTest{
     is.close();
 
     SessionDescription sessionDescription =
-            new SessionDescription(SessionDescription.Type.OFFER, sdp);
+        new SessionDescription(SessionDescription.Type.OFFER, sdp);
     mPc.setRemoteDescription(sessionDescription);
   }
 
@@ -107,12 +107,12 @@ public class PeerConnectionTest extends BaseTest{
 
     // 'pc.SetRemoteDescription()' succeeds.
     SessionDescription sessionDescription =
-            new SessionDescription(SessionDescription.Type.OFFER, offer);
+        new SessionDescription(SessionDescription.Type.OFFER, offer);
     mPc.setRemoteDescription(sessionDescription);
 
     // 'pc.CreateAnswer()' succeeds if remote offer is provided.
     String answer = mPc.createAnswer(new MediaConstraints());
     assertFalse(
-            "'pc.CreateAnswer()' succeeds if remote offer is provided", TextUtils.isEmpty(answer));
+        "'pc.CreateAnswer()' succeeds if remote offer is provided", TextUtils.isEmpty(answer));
   }
 }

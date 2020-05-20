@@ -1,6 +1,6 @@
 package org.mediasoup.droid;
 
-import android.support.test.runner.AndroidJUnit4;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 import android.text.TextUtils;
 
 import org.json.JSONException;
@@ -66,21 +66,21 @@ public class DeviceTest extends BaseTest {
     // 'device->CreateSendTransport()' fails if not loaded".
     {
       final FakeTransportListener.FakeSendTransportListener listener =
-              new FakeTransportListener.FakeSendTransportListener();
+          new FakeTransportListener.FakeSendTransportListener();
       exceptionException(
-              () ->
-                      mDevice.createSendTransport(
-                              listener, mId, mIceParameters, mIceCandidates, mDtlsParameters));
+          () ->
+              mDevice.createSendTransport(
+                  listener, mId, mIceParameters, mIceCandidates, mDtlsParameters));
     }
 
     // 'device->CreateRecvTransport()' fails if not loaded.
     {
       final FakeTransportListener.FakeRecvTransportListener listener =
-              new FakeTransportListener.FakeRecvTransportListener();
+          new FakeTransportListener.FakeRecvTransportListener();
       exceptionException(
-              () ->
-                      mDevice.createRecvTransport(
-                              listener, mId, mIceParameters, mIceCandidates, mDtlsParameters, null));
+          () ->
+              mDevice.createRecvTransport(
+                  listener, mId, mIceParameters, mIceCandidates, mDtlsParameters, null));
     }
   }
 
@@ -102,20 +102,20 @@ public class DeviceTest extends BaseTest {
     // 'device->CreateSendTransport()' succeeds.
     {
       final FakeTransportListener.FakeSendTransportListener listener =
-              new FakeTransportListener.FakeSendTransportListener();
+          new FakeTransportListener.FakeSendTransportListener();
       SendTransport transport =
-              mDevice.createSendTransport(
-                      listener, mId, mIceParameters, mIceCandidates, mDtlsParameters);
+          mDevice.createSendTransport(
+              listener, mId, mIceParameters, mIceCandidates, mDtlsParameters);
       transport.dispose();
     }
 
     // 'device->CreateRecvTransport()' succeeds.
     {
       final FakeTransportListener.FakeRecvTransportListener listener =
-              new FakeTransportListener.FakeRecvTransportListener();
+          new FakeTransportListener.FakeRecvTransportListener();
       RecvTransport transport =
-              mDevice.createRecvTransport(
-                      listener, mId, mIceParameters, mIceCandidates, mDtlsParameters, null);
+          mDevice.createRecvTransport(
+              listener, mId, mIceParameters, mIceCandidates, mDtlsParameters, null);
       transport.dispose();
     }
   }

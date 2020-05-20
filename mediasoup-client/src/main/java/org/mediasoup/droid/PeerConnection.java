@@ -188,7 +188,7 @@ public class PeerConnection {
   }
 
   public RtpTransceiver addTransceiver(
-          MediaStreamTrack track, RtpTransceiver.RtpTransceiverInit init) {
+      MediaStreamTrack track, RtpTransceiver.RtpTransceiverInit init) {
     if (track == null) {
       throw new NullPointerException("No MediaStreamTrack specified for addTransceiver.");
     }
@@ -246,7 +246,7 @@ public class PeerConnection {
   }
 
   private static native long nativeNewPeerConnection(
-          PrivateListener nativeListener, RTCConfiguration configuration, long peerConnectionFactory);
+      PrivateListener nativeListener, RTCConfiguration configuration, long peerConnectionFactory);
 
   private static native void nativeFreeOwnedPeerConnection(long ownedPeerConnection);
 

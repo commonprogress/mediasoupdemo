@@ -17,8 +17,7 @@ public class Consumer {
 
   private long mNativeConsumer;
 
-  @Nullable
-  private MediaStreamTrack mCachedTrack;
+  @Nullable private MediaStreamTrack mCachedTrack;
 
   @CalledByNative
   public Consumer(long nativeConsumer) {

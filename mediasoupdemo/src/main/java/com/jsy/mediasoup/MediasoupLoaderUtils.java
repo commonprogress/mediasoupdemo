@@ -118,7 +118,7 @@ public class MediasoupLoaderUtils {
 
     public void mediasoupInit(Context context) {
         LogUtils.i(TAG, "mediasoupInit:" + this.hashCode());
-        Logger.setLogLevel(Logger.LogLevel.LOG_DEBUG);
+        Logger.setLogLevel(Logger.LogLevel.LOG_TRACE);
         Logger.setDefaultHandler();
         MediasoupClient.initialize(context.getApplicationContext());
         this.isInitMediasoup = true;

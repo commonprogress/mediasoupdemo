@@ -1,7 +1,8 @@
 package org.mediasoup.droid;
 
-import android.support.test.runner.AndroidJUnit4;
 import android.text.TextUtils;
+
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -65,9 +66,9 @@ public class MediasoupClientTest extends BaseTest {
     VideoTrack videoTrack;
 
     final FakeTransportListener.FakeProducerListener producerListener =
-            new FakeTransportListener.FakeProducerListener();
+        new FakeTransportListener.FakeProducerListener();
     final FakeTransportListener.FakeConsumerListener consumerListener =
-            new FakeTransportListener.FakeConsumerListener();
+        new FakeTransportListener.FakeConsumerListener();
 
     Producer audioProducer;
     Producer videoProducer;
@@ -96,11 +97,11 @@ public class MediasoupClientTest extends BaseTest {
     // 'device->CreateSendTransport()' throws if not loaded.
     {
       final FakeTransportListener.FakeRecvTransportListener listener =
-              new FakeTransportListener.FakeRecvTransportListener();
+          new FakeTransportListener.FakeRecvTransportListener();
       exceptionException(
-              () ->
-                      device.createRecvTransport(
-                              listener, mId, mIceParameters, mIceCandidates, mDtlsParameters, null));
+          () ->
+              device.createRecvTransport(
+                  listener, mId, mIceParameters, mIceCandidates, mDtlsParameters, null));
     }
 
     // device->load() with invalid routerRtpCapabilities throws.
@@ -143,14 +144,14 @@ public class MediasoupClientTest extends BaseTest {
 
       sendTransportListener = new FakeTransportListener.FakeSendTransportListener();
       sendTransport =
-              device.createSendTransport(
-                      sendTransportListener,
-                      mId,
-                      mIceParameters,
-                      mIceCandidates,
-                      mDtlsParameters,
-                      null,
-                      appData);
+          device.createSendTransport(
+              sendTransportListener,
+              mId,
+              mIceParameters,
+              mIceCandidates,
+              mDtlsParameters,
+              null,
+              appData);
 
       assertEquals(mId, sendTransport.getId());
       assertFalse(sendTransport.isClosed());
@@ -161,8 +162,8 @@ public class MediasoupClientTest extends BaseTest {
     {
       recvTransportListener = new FakeTransportListener.FakeRecvTransportListener();
       recvTransport =
-              device.createRecvTransport(
-                      recvTransportListener, mId, mIceParameters, mIceCandidates, mDtlsParameters, null);
+          device.createRecvTransport(
+              recvTransportListener, mId, mIceParameters, mIceCandidates, mDtlsParameters, null);
 
       assertEquals(mId, recvTransport.getId());
       assertFalse(recvTransport.isClosed());
@@ -189,24 +190,24 @@ public class MediasoupClientTest extends BaseTest {
 
       String codecOptions = "{\"opusStereo\":true,\"opusDtx\":true}";
       audioProducer =
-              sendTransport.produce(producerListener, audioTrack, null, codecOptions, appData);
+          sendTransport.produce(producerListener, audioTrack, null, codecOptions, appData);
 
       assertEquals(
-              ++sendTransportListener.mOnConnectExpectedTimesCalled,
-              sendTransportListener.mOnConnectTimesCalled);
+          ++sendTransportListener.mOnConnectExpectedTimesCalled,
+          sendTransportListener.mOnConnectTimesCalled);
 
       assertEquals(sendTransport.getId(), sendTransportListener.mId);
       assertEquals(
-              ++sendTransportListener.mOnProduceExpectedTimesCalled,
-              sendTransportListener.mOnProduceTimesCalled);
+          ++sendTransportListener.mOnProduceExpectedTimesCalled,
+          sendTransportListener.mOnProduceTimesCalled);
       assertEquals(appData, sendTransportListener.mAppData);
 
       assertEquals(audioProducer.getId(), sendTransportListener.mAudioProducerId);
       assertFalse(audioProducer.isClosed());
       assertEquals("audio", audioProducer.getKind());
       assertEquals(
-              RTCUtils.getNativeMediaStreamTrack(audioTrack),
-              RTCUtils.getNativeMediaStreamTrack(audioProducer.getTrack()));
+          RTCUtils.getNativeMediaStreamTrack(audioTrack),
+          RTCUtils.getNativeMediaStreamTrack(audioProducer.getTrack()));
       assertTrue(audioProducer.isPaused());
       assertEquals(0, audioProducer.getMaxSpatialLayer());
       assertEquals(appData, audioProducer.getAppData());
@@ -237,17 +238,17 @@ public class MediasoupClientTest extends BaseTest {
       videoProducer = sendTransport.produce(producerListener, videoTrack, encodings, null, null);
 
       assertEquals(
-              sendTransportListener.mOnConnectExpectedTimesCalled,
-              sendTransportListener.mOnConnectTimesCalled);
+          sendTransportListener.mOnConnectExpectedTimesCalled,
+          sendTransportListener.mOnConnectTimesCalled);
       assertEquals(
-              ++sendTransportListener.mOnProduceExpectedTimesCalled,
-              sendTransportListener.mOnProduceTimesCalled);
+          ++sendTransportListener.mOnProduceExpectedTimesCalled,
+          sendTransportListener.mOnProduceTimesCalled);
       assertEquals(videoProducer.getId(), sendTransportListener.mVideoProducerId);
       assertFalse(videoProducer.isClosed());
       assertEquals("video", videoProducer.getKind());
       assertEquals(
-              RTCUtils.getNativeMediaStreamTrack(videoTrack),
-              RTCUtils.getNativeMediaStreamTrack(videoProducer.getTrack()));
+          RTCUtils.getNativeMediaStreamTrack(videoTrack),
+          RTCUtils.getNativeMediaStreamTrack(videoProducer.getTrack()));
 
       rtpParameters = new JSONObject(videoProducer.getRtpParameters());
       assertTrue(rtpParameters.has("codecs"));
@@ -286,31 +287,31 @@ public class MediasoupClientTest extends BaseTest {
       String appData = "{\"baz\":\"BAZ\"}";
 
       JSONObject audioConsumerRemoteParameters =
-              new JSONObject(Parameters.nativeGenConsumerRemoteParameters("audio/opus"));
+          new JSONObject(Parameters.nativeGenConsumerRemoteParameters("audio/opus"));
       JSONObject videoConsumerRemoteParameters =
-              new JSONObject(Parameters.nativeGenConsumerRemoteParameters("video/VP8"));
+          new JSONObject(Parameters.nativeGenConsumerRemoteParameters("video/VP8"));
       JSONObject audioConsumer2RemoteParameters =
-              new JSONObject(Parameters.nativeGenConsumerRemoteParameters("audio/opus"));
+          new JSONObject(Parameters.nativeGenConsumerRemoteParameters("audio/opus"));
 
       {
         audioConsumer =
-                recvTransport.consume(
-                        consumerListener,
-                        audioConsumerRemoteParameters.getString("id"),
-                        audioConsumerRemoteParameters.getString("producerId"),
-                        audioConsumerRemoteParameters.getString("kind"),
-                        audioConsumerRemoteParameters.getString("rtpParameters"),
-                        appData);
+            recvTransport.consume(
+                consumerListener,
+                audioConsumerRemoteParameters.getString("id"),
+                audioConsumerRemoteParameters.getString("producerId"),
+                audioConsumerRemoteParameters.getString("kind"),
+                audioConsumerRemoteParameters.getString("rtpParameters"),
+                appData);
 
         assertEquals(
-                ++recvTransportListener.mOnConnectExpectedTimesCalled,
-                recvTransportListener.mOnConnectTimesCalled);
+            ++recvTransportListener.mOnConnectExpectedTimesCalled,
+            recvTransportListener.mOnConnectTimesCalled);
         assertEquals(recvTransport.getId(), recvTransportListener.mId);
         new JSONObject(recvTransportListener.mDtlsParameters);
 
         assertEquals(audioConsumerRemoteParameters.getString("id"), audioConsumer.getId());
         assertEquals(
-                audioConsumerRemoteParameters.getString("producerId"), audioConsumer.getProducerId());
+            audioConsumerRemoteParameters.getString("producerId"), audioConsumer.getProducerId());
 
         assertFalse(audioConsumer.isClosed());
         assertEquals("audio", audioConsumer.getKind());
@@ -326,13 +327,13 @@ public class MediasoupClientTest extends BaseTest {
         // JSONObject toString may add extra slash. replace it.
         // https://stackoverflow.com/q/13939925/2085408
         assertEquals(
-                "{\"channels\":2,\"clockRate\":48000,\"mimeType\":\"audio/opus\",\"parameters\":{\"useinbandfec\":\"1\"},\"payloadType\":100,\"rtcpFeedback\":[]}",
-                codecs.getJSONObject(0).toString().replace("\\", ""));
+            "{\"channels\":2,\"clockRate\":48000,\"mimeType\":\"audio/opus\",\"parameters\":{\"useinbandfec\":\"1\"},\"payloadType\":100,\"rtcpFeedback\":[]}",
+            codecs.getJSONObject(0).toString().replace("\\", ""));
 
         JSONArray headerExtensions = rtpParameters.getJSONArray("headerExtensions");
         assertEquals(
-                "[{\"encrypt\":false,\"id\":1,\"parameters\":{},\"uri\":\"urn:ietf:params:rtp-hdrext:ssrc-audio-level\"}]",
-                headerExtensions.toString().replace("\\", ""));
+            "[{\"encrypt\":false,\"id\":1,\"parameters\":{},\"uri\":\"urn:ietf:params:rtp-hdrext:ssrc-audio-level\"}]",
+            headerExtensions.toString().replace("\\", ""));
 
         JSONArray encodings = rtpParameters.getJSONArray("encodings");
         assertNotNull(encodings);
@@ -351,20 +352,20 @@ public class MediasoupClientTest extends BaseTest {
 
       {
         videoConsumer =
-                recvTransport.consume(
-                        consumerListener,
-                        videoConsumerRemoteParameters.getString("id"),
-                        videoConsumerRemoteParameters.getString("producerId"),
-                        videoConsumerRemoteParameters.getString("kind"),
-                        videoConsumerRemoteParameters.getString("rtpParameters"));
+            recvTransport.consume(
+                consumerListener,
+                videoConsumerRemoteParameters.getString("id"),
+                videoConsumerRemoteParameters.getString("producerId"),
+                videoConsumerRemoteParameters.getString("kind"),
+                videoConsumerRemoteParameters.getString("rtpParameters"));
 
         assertEquals(
-                recvTransportListener.mOnConnectExpectedTimesCalled,
-                recvTransportListener.mOnConnectTimesCalled);
+            recvTransportListener.mOnConnectExpectedTimesCalled,
+            recvTransportListener.mOnConnectTimesCalled);
 
         assertEquals(videoConsumerRemoteParameters.getString("id"), videoConsumer.getId());
         assertEquals(
-                videoConsumerRemoteParameters.getString("producerId"), videoConsumer.getProducerId());
+            videoConsumerRemoteParameters.getString("producerId"), videoConsumer.getProducerId());
 
         assertFalse(videoConsumer.isClosed());
         assertEquals("video", videoConsumer.getKind());
@@ -376,17 +377,17 @@ public class MediasoupClientTest extends BaseTest {
         assertNotNull(codecs);
         assertEquals(2, codecs.length());
         assertEquals(
-                "{\"clockRate\":90000,\"mimeType\":\"video/VP8\",\"parameters\":{\"x-google-start-bitrate\":\"1500\"},\"payloadType\":101,\"rtcpFeedback\":[{\"parameter\":\"\",\"type\":\"nack\"},{\"parameter\":\"pli\",\"type\":\"nack\"},{\"parameter\":\"sli\",\"type\":\"nack\"},{\"parameter\":\"rpsi\",\"type\":\"nack\"},{\"parameter\":\"app\",\"type\":\"nack\"},{\"parameter\":\"fir\",\"type\":\"ccm\"},{\"parameter\":\"\",\"type\":\"goog-remb\"}]}",
-                codecs.getJSONObject(0).toString().replace("\\", ""));
+            "{\"clockRate\":90000,\"mimeType\":\"video/VP8\",\"parameters\":{\"x-google-start-bitrate\":\"1500\"},\"payloadType\":101,\"rtcpFeedback\":[{\"parameter\":\"\",\"type\":\"nack\"},{\"parameter\":\"pli\",\"type\":\"nack\"},{\"parameter\":\"sli\",\"type\":\"nack\"},{\"parameter\":\"rpsi\",\"type\":\"nack\"},{\"parameter\":\"app\",\"type\":\"nack\"},{\"parameter\":\"fir\",\"type\":\"ccm\"},{\"parameter\":\"\",\"type\":\"goog-remb\"}]}",
+            codecs.getJSONObject(0).toString().replace("\\", ""));
 
         assertEquals(
-                "{\"clockRate\":90000,\"mimeType\":\"video/rtx\",\"parameters\":{\"apt\":101},\"payloadType\":102,\"rtcpFeedback\":[]}",
-                codecs.getJSONObject(1).toString().replace("\\", ""));
+            "{\"clockRate\":90000,\"mimeType\":\"video/rtx\",\"parameters\":{\"apt\":101},\"payloadType\":102,\"rtcpFeedback\":[]}",
+            codecs.getJSONObject(1).toString().replace("\\", ""));
 
         JSONArray headerExtensions = rtpParameters.getJSONArray("headerExtensions");
         assertEquals(
-                "[{\"encrypt\":false,\"id\":2,\"parameters\":{},\"uri\":\"urn:ietf:params:rtp-hdrext:toffset\"},{\"encrypt\":false,\"id\":3,\"parameters\":{},\"uri\":\"http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time\"}]",
-                headerExtensions.toString().replace("\\", ""));
+            "[{\"encrypt\":false,\"id\":2,\"parameters\":{},\"uri\":\"urn:ietf:params:rtp-hdrext:toffset\"},{\"encrypt\":false,\"id\":3,\"parameters\":{},\"uri\":\"http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time\"}]",
+            headerExtensions.toString().replace("\\", ""));
 
         JSONArray enc = rtpParameters.getJSONArray("encodings");
         assertNotNull(enc);
@@ -411,23 +412,23 @@ public class MediasoupClientTest extends BaseTest {
 
       {
         audioConsumer2 =
-                recvTransport.consume(
-                        consumerListener,
-                        audioConsumer2RemoteParameters.getString("id"),
-                        audioConsumer2RemoteParameters.getString("producerId"),
-                        audioConsumer2RemoteParameters.getString("kind"),
-                        audioConsumer2RemoteParameters.getString("rtpParameters"),
-                        appData);
+            recvTransport.consume(
+                consumerListener,
+                audioConsumer2RemoteParameters.getString("id"),
+                audioConsumer2RemoteParameters.getString("producerId"),
+                audioConsumer2RemoteParameters.getString("kind"),
+                audioConsumer2RemoteParameters.getString("rtpParameters"),
+                appData);
         assertEquals(
-                recvTransportListener.mOnConnectExpectedTimesCalled,
-                recvTransportListener.mOnConnectTimesCalled);
+            recvTransportListener.mOnConnectExpectedTimesCalled,
+            recvTransportListener.mOnConnectTimesCalled);
 
         assertEquals(recvTransportListener.mId, recvTransport.getId());
         new JSONObject(recvTransportListener.mDtlsParameters);
 
         assertEquals(audioConsumer2RemoteParameters.getString("id"), audioConsumer2.getId());
         assertEquals(
-                audioConsumer2RemoteParameters.getString("producerId"), audioConsumer2.getProducerId());
+            audioConsumer2RemoteParameters.getString("producerId"), audioConsumer2.getProducerId());
 
         assertFalse(audioConsumer2.isClosed());
         assertEquals("audio", audioConsumer2.getKind());
@@ -443,13 +444,13 @@ public class MediasoupClientTest extends BaseTest {
         // JSONObject toString may add extra slash. replace it.
         // https://stackoverflow.com/q/13939925/2085408
         assertEquals(
-                "{\"channels\":2,\"clockRate\":48000,\"mimeType\":\"audio/opus\",\"parameters\":{\"useinbandfec\":\"1\"},\"payloadType\":100,\"rtcpFeedback\":[]}",
-                codecs.getJSONObject(0).toString().replace("\\", ""));
+            "{\"channels\":2,\"clockRate\":48000,\"mimeType\":\"audio/opus\",\"parameters\":{\"useinbandfec\":\"1\"},\"payloadType\":100,\"rtcpFeedback\":[]}",
+            codecs.getJSONObject(0).toString().replace("\\", ""));
 
         JSONArray headerExtensions = rtpParameters.getJSONArray("headerExtensions");
         assertEquals(
-                "[{\"encrypt\":false,\"id\":1,\"parameters\":{},\"uri\":\"urn:ietf:params:rtp-hdrext:ssrc-audio-level\"}]",
-                headerExtensions.toString().replace("\\", ""));
+            "[{\"encrypt\":false,\"id\":1,\"parameters\":{},\"uri\":\"urn:ietf:params:rtp-hdrext:ssrc-audio-level\"}]",
+            headerExtensions.toString().replace("\\", ""));
 
         JSONArray encodings = rtpParameters.getJSONArray("encodings");
         assertNotNull(encodings);
@@ -470,20 +471,20 @@ public class MediasoupClientTest extends BaseTest {
     // transport.consume() with unsupported consumerRtpParameters throws.
     {
       JSONObject consumerRemoteParameters =
-              new JSONObject(Parameters.nativeGenConsumerRemoteParameters("audio/ISAC"));
+          new JSONObject(Parameters.nativeGenConsumerRemoteParameters("audio/ISAC"));
       exceptionException(
-              () -> {
-                try {
-                  recvTransport.consume(
-                          consumerListener,
-                          consumerRemoteParameters.getString("id"),
-                          consumerRemoteParameters.getString("producerId"),
-                          consumerRemoteParameters.getString("kind"),
-                          consumerRemoteParameters.getString("rtpParameters"));
-                } catch (JSONException e) {
-                  e.printStackTrace();
-                }
-              });
+          () -> {
+            try {
+              recvTransport.consume(
+                  consumerListener,
+                  consumerRemoteParameters.getString("id"),
+                  consumerRemoteParameters.getString("producerId"),
+                  consumerRemoteParameters.getString("kind"),
+                  consumerRemoteParameters.getString("rtpParameters"));
+            } catch (JSONException e) {
+              e.printStackTrace();
+            }
+          });
     }
 
     // 'sendTransport.GetStats()' succeeds.
@@ -520,8 +521,8 @@ public class MediasoupClientTest extends BaseTest {
       AudioTrack newAudioTrack = PeerConnectionUtils.createAudioTrack(mContext, "audio-track-id-2");
       audioProducer.replaceTrack(newAudioTrack);
       assertEquals(
-              RTCUtils.getNativeMediaStreamTrack(newAudioTrack),
-              RTCUtils.getNativeMediaStreamTrack(audioProducer.getTrack()));
+          RTCUtils.getNativeMediaStreamTrack(newAudioTrack),
+          RTCUtils.getNativeMediaStreamTrack(audioProducer.getTrack()));
 
       // Producer was already paused.
       assertTrue(audioProducer.isPaused());
@@ -532,8 +533,8 @@ public class MediasoupClientTest extends BaseTest {
       VideoTrack newVideoTrack = PeerConnectionUtils.createVideoTrack(mContext, "video-track-id-2");
       videoProducer.replaceTrack(newVideoTrack);
       assertEquals(
-              RTCUtils.getNativeMediaStreamTrack(newVideoTrack),
-              RTCUtils.getNativeMediaStreamTrack(videoProducer.getTrack()));
+          RTCUtils.getNativeMediaStreamTrack(newVideoTrack),
+          RTCUtils.getNativeMediaStreamTrack(videoProducer.getTrack()));
       assertFalse(videoProducer.isPaused());
 
       videoTrack.dispose();
@@ -611,8 +612,8 @@ public class MediasoupClientTest extends BaseTest {
       assertTrue(videoProducer.isClosed());
       // Audio Producer was already closed.
       assertEquals(
-              ++producerListener.mOnTransportCloseExpetecTimesCalled,
-              producerListener.mOnTransportCloseTimesCalled);
+          ++producerListener.mOnTransportCloseExpetecTimesCalled,
+          producerListener.mOnTransportCloseTimesCalled);
 
       // Audio Consumer was already closed.
       assertTrue(audioConsumer.isClosed());
@@ -623,8 +624,8 @@ public class MediasoupClientTest extends BaseTest {
       assertTrue(videoConsumer.isClosed());
       // Audio Producer was already closed.
       assertEquals(
-              consumerListener.mOnTransportCloseExpetecTimesCalled += 2,
-              consumerListener.mOnTransportCloseTimesCalled);
+          consumerListener.mOnTransportCloseExpetecTimesCalled += 2,
+          consumerListener.mOnTransportCloseTimesCalled);
     }
 
     // transport.produce() throws if closed.
@@ -635,20 +636,20 @@ public class MediasoupClientTest extends BaseTest {
     // transport.consume() throws if closed.
     {
       final JSONObject audioConsumerRemoteParameters =
-              new JSONObject(Parameters.nativeGenConsumerRemoteParameters("audio/opus"));
+          new JSONObject(Parameters.nativeGenConsumerRemoteParameters("audio/opus"));
       exceptionException(
-              () -> {
-                try {
-                  recvTransport.consume(
-                          consumerListener,
-                          audioConsumerRemoteParameters.getString("id"),
-                          audioConsumerRemoteParameters.getString("producerId"),
-                          audioConsumerRemoteParameters.getString("kind"),
-                          audioConsumerRemoteParameters.getString("rtpParameters"));
-                } catch (JSONException e) {
-                  e.printStackTrace();
-                }
-              });
+          () -> {
+            try {
+              recvTransport.consume(
+                  consumerListener,
+                  audioConsumerRemoteParameters.getString("id"),
+                  audioConsumerRemoteParameters.getString("producerId"),
+                  audioConsumerRemoteParameters.getString("kind"),
+                  audioConsumerRemoteParameters.getString("rtpParameters"));
+            } catch (JSONException e) {
+              e.printStackTrace();
+            }
+          });
     }
 
     // transport.getStats() throws if closed.
