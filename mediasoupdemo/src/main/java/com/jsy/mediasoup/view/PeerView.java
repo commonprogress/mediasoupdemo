@@ -22,6 +22,7 @@ import com.jsy.mediasoup.utils.LogUtils;
 
 import org.mediasoup.droid.lib.PeerConnectionUtils;
 import org.mediasoup.droid.lib.RoomClient;
+import org.webrtc.RendererCommon;
 import org.webrtc.SurfaceViewRenderer;
 
 /**
@@ -113,7 +114,8 @@ public class PeerView extends FrameLayout {
 
         videoRenderer.init(PeerConnectionUtils.getEglContext(), null);//
 //        videoRenderer.setMirror(true);
-//        videoRenderer.setEnableHardwareScaler(true);
+        videoRenderer.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT);
+        videoRenderer.setEnableHardwareScaler(true);
     }
 
     public void setProps(PeerProps props, RoomClient roomClient) {

@@ -24,6 +24,7 @@ import com.jsy.mediasoup.utils.LogUtils;
 import org.mediasoup.droid.lib.PeerConnectionUtils;
 import org.mediasoup.droid.lib.RoomClient;
 import org.mediasoup.droid.lib.lv.RoomStore;
+import org.webrtc.RendererCommon;
 import org.webrtc.SurfaceViewRenderer;
 
 /**
@@ -117,6 +118,8 @@ public class MeView extends FrameLayout {
         changeCam = view.findViewById(R.id.change_cam);
         share = view.findViewById(R.id.share);
         videoRenderer.init(PeerConnectionUtils.getEglContext(), null);//设置摄像头信息的渲染
+        videoRenderer.setEnableHardwareScaler(true);
+        videoRenderer.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT);
     }
 
     public void setProps(MeProps props, final RoomClient roomClient, RoomStore roomStore) {

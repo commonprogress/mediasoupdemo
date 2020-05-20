@@ -35,6 +35,7 @@ public class WebSocketTransport extends AbsWebSocketTransport {
 
   // Log tag.
   private static final String TAG = "WebSocketTransport";
+  private static final String HEADER_PROTOCOL_VALUE = "protoo";
   // Closed flag.
   private boolean mClosed;
   // Connected flag.
@@ -138,7 +139,7 @@ public class WebSocketTransport extends AbsWebSocketTransport {
     mWebSocket = null;
     Logger.d(TAG, "newWebSocket()mUrl: "+mUrl);
     mOkHttpClient.newWebSocket(
-        new Request.Builder().url(mUrl).addHeader("Sec-WebSocket-Protocol", "protoo").build(),
+        new Request.Builder().url(mUrl).addHeader("Sec-WebSocket-Protocol", HEADER_PROTOCOL_VALUE).build(),
         new ProtooWebSocketListener());
   }
 
@@ -256,7 +257,7 @@ public class WebSocketTransport extends AbsWebSocketTransport {
      */
     @Override
     public void onClosed(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
-      Logger.w(TAG, "onClosed()");
+      Logger.w(TAG, "onClosed() code:" + code + ",reason:" + reason);
       if (mClosed) {
         return;
       }
@@ -276,7 +277,7 @@ public class WebSocketTransport extends AbsWebSocketTransport {
      */
     @Override
     public void onClosing(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
-      Logger.w(TAG, "onClosing()");
+      Logger.w(TAG, "onClosing() code:" + code + ",reason:" + reason);
     }
 
     /**
@@ -288,7 +289,7 @@ public class WebSocketTransport extends AbsWebSocketTransport {
     @Override
     public void onFailure(
             @NotNull WebSocket webSocket, @NotNull Throwable t, @Nullable Response response) {
-      Logger.w(TAG, "onFailure()");
+      Logger.w(TAG, "onFailure() Throwable:" + t.getLocalizedMessage());
       if (mClosed) {
         return;
       }
@@ -296,9 +297,11 @@ public class WebSocketTransport extends AbsWebSocketTransport {
       if (scheduleReconnect()) {
         if (mListener != null) {
           if (mConnected) {
-            mListener.onFail();
-          } else {
+            //连接成功之后在断开 连接中断
             mListener.onDisconnected();
+          } else {
+            //连接中直接断开 连接失败
+            mListener.onFail();
           }
         }
       } else {

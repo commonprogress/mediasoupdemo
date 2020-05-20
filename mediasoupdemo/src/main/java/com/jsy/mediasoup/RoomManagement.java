@@ -105,7 +105,7 @@ public class RoomManagement implements MediasoupConnectCallback {
         if (null == connectionState) {
             return false;
         }
-        return isMediasoupCalling && (RoomClient.ConnectionState.CONNECTING.equals(connectionState) || RoomClient.ConnectionState.CONNECTED.equals(connectionState));
+        return isMediasoupCalling && (RoomClient.ConnectionState.CONNECTED.equals(connectionState) || RoomClient.ConnectionState.DISCONNECTED.equals(connectionState));
     }
 
     public boolean isRoomClosed() {
@@ -187,8 +187,10 @@ public class RoomManagement implements MediasoupConnectCallback {
 //        mOptions.setProduce(preferences.getBoolean("produce", true));//是否立即打开摄像头和录音？
 //        mOptions.setConsume(preferences.getBoolean("consume", true));//是否立即连接，显示对方音视频等？
         mOptions.setForceTcp(preferences.getBoolean("forceTcp", false));//是否强制tcp 否则rtc
-
+        mOptions.setForceTcp(false);
 //        mRoomId = "dongxl";
+        mForceH264 = true;
+        mForceVP9 = true;
         updateRoomOptions();
 
         // Device config. 获取上传保存的摄像头信息 默认前置摄像头

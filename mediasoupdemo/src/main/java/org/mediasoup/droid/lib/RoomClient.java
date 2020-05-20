@@ -28,7 +28,12 @@ import org.protoojs.droid.Message;
 import org.protoojs.droid.ProtooException;
 import org.webrtc.AudioTrack;
 import org.webrtc.CameraVideoCapturer;
+import org.webrtc.RTCUtils;
+import org.webrtc.RtpParameters;
 import org.webrtc.VideoTrack;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import io.reactivex.disposables.CompositeDisposable;
 
@@ -50,6 +55,8 @@ public class RoomClient extends RoomMessageHandler {
         CONNECTING,
         // connected.已经连接
         CONNECTED,
+        //disconnected and reconnecting.中断 重连中
+        DISCONNECTED,
         // mClosed.关闭
         CLOSED,
     }
@@ -798,7 +805,7 @@ public class RoomClient extends RoomMessageHandler {
                     mWorkHandler.post(
                             () -> {
                                 mStore.addNotify("error", "WebSocket disconnected");
-                                mStore.setRoomState(ConnectionState.CONNECTING);
+                                mStore.setRoomState(ConnectionState.DISCONNECTED);
 
                                 // Close All Transports created by device.
                                 // All will reCreated After ReJoin.
@@ -934,7 +941,9 @@ public class RoomClient extends RoomMessageHandler {
             if (mLocalAudioTrack == null) {
                 mLocalAudioTrack = mPeerConnectionUtils.createAudioTrack(mContext, "mic");
                 mLocalAudioTrack.setEnabled(true);
+                mPeerConnectionUtils.addAudioTrackMediaStream(mLocalAudioTrack);
             }
+            String codecOptions = "[{\"opusStereo\":true},{\"opusDtx\":true}]";
             mMicProducer =
                     mSendTransport.produce(
                             producer -> {
@@ -948,7 +957,7 @@ public class RoomClient extends RoomMessageHandler {
                             },
                             mLocalAudioTrack,
                             null,
-                            null);
+                            codecOptions);
             mStore.addProducer(mMicProducer);
             Logger.d(TAG, "mMicProducer," + mMicProducer.getId() + "," + mMicProducer.getKind());
         } catch (MediasoupException e) {
@@ -1066,7 +1075,13 @@ public class RoomClient extends RoomMessageHandler {
             if (mLocalVideoTrack == null) {
                 mLocalVideoTrack = mPeerConnectionUtils.createVideoTrack(mContext, "cam");
                 mLocalVideoTrack.setEnabled(true);
+                mPeerConnectionUtils.addVideoTrackMediaStream(mLocalVideoTrack);
             }
+            String codecOptions = "[{\"videoGoogleStartBitrate\":1000}]";
+            List<RtpParameters.Encoding> encodings = new ArrayList<>();
+            encodings.add(RTCUtils.genRtpEncodingParameters(false, 500000, 0, 60, 0, 0.0d, 0L));
+            encodings.add(RTCUtils.genRtpEncodingParameters(false, 1000000, 0, 60, 0, 0.0d, 0L));
+            encodings.add(RTCUtils.genRtpEncodingParameters(false, 1500000, 0, 60, 0, 0.0d, 0L));
             mCamProducer =
                     mSendTransport.produce(
                             producer -> {
@@ -1079,8 +1094,8 @@ public class RoomClient extends RoomMessageHandler {
                                 }
                             },
                             mLocalVideoTrack,
-                            null,
-                            null);
+                            encodings,
+                            codecOptions);
             mStore.addProducer(mCamProducer);
             Logger.d(TAG, "mCamProducer," + mCamProducer.getId() + "," + mCamProducer.getKind());
         } catch (MediasoupException e) {
