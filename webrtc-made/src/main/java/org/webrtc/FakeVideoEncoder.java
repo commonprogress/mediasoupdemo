@@ -40,16 +40,16 @@ class FakeVideoEncoder implements VideoEncoder {
     return ScalingSettings.OFF;
   }
 
-  @Override
-  public ResolutionBitrateLimits[] getResolutionBitrateLimits() {
-    ResolutionBitrateLimits resolution_bitrate_limits[] = {
-        new ResolutionBitrateLimits(/* frameSizePixels = */ 640 * 360,
-            /* minStartBitrateBps = */ 300000,
-            /* minBitrateBps = */ 200000,
-            /* maxBitrateBps = */ 1000000)};
-
-    return resolution_bitrate_limits;
-  }
+//  @Override
+//  public ResolutionBitrateLimits[] getResolutionBitrateLimits() {
+//    ResolutionBitrateLimits resolution_bitrate_limits[] = {
+//        new ResolutionBitrateLimits(/* frameSizePixels = */ 640 * 360,
+//            /* minStartBitrateBps = */ 300000,
+//            /* minBitrateBps = */ 200000,
+//            /* maxBitrateBps = */ 1000000)};
+//
+//    return resolution_bitrate_limits;
+//  }
 
   @Override
   public String getImplementationName() {

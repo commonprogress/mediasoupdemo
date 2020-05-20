@@ -15,8 +15,6 @@ import android.view.View;
 import android.view.WindowManager;
 
 import org.mediasoup.droid.Logger;
-import org.mediasoup.droid.lib.webrtc.CustomVideoDecoderFactory;
-import org.mediasoup.droid.lib.webrtc.CustomVideoEncoderFactory;
 import org.webrtc.AudioSource;
 import org.webrtc.AudioTrack;
 import org.webrtc.Camera1Enumerator;
@@ -119,8 +117,8 @@ public class PeerConnectionUtils {
 
     AudioDeviceModule adm = createJavaAudioDevice(context);
     //视频的编码格式
-    CustomVideoEncoderFactory encoderFactory =
-        new CustomVideoEncoderFactory(
+      VideoEncoderFactory encoderFactory =
+        new DefaultVideoEncoderFactory(
             mEglBase.getEglBaseContext(), true /* enableIntelVp8Encoder */, true);
 
 //      VideoCodecInfo[] encoderInfos = encoderFactory.getSupportedCodecs();
@@ -178,8 +176,8 @@ public class PeerConnectionUtils {
 //      }
 
     //视频的解码格式
-    CustomVideoDecoderFactory decoderFactory =
-        new CustomVideoDecoderFactory(mEglBase.getEglBaseContext());
+    VideoDecoderFactory decoderFactory =
+        new DefaultVideoDecoderFactory(mEglBase.getEglBaseContext());
 //"packetization-mode":1,"level-asymmetry-allowed":1,"profile-level-id":"4d0032","x-google-start-bitrate":1000
 //      Map<String, String> addParams = new HashMap<>();
 //      addParams.put("level-asymmetry-allowed", "1");
