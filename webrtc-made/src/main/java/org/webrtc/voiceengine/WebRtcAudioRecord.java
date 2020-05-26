@@ -156,22 +156,29 @@ public class WebRtcAudioRecord {
       while (keepAlive) {
         int bytesRead = audioRecord.read(byteBuffer, byteBuffer.capacity());
         if (bytesRead == byteBuffer.capacity()) {
-          if (microphoneMute) {
-            byteBuffer.clear();
-            byteBuffer.put(emptyBytes);
-          }
-          // It's possible we've been shut down during the read, and stopRecording() tried and
-          // failed to join this thread. To be a bit safer, try to avoid calling any native methods
-          // in case they've been unregistered after stopRecording() returned.
-          if (keepAlive) {
-            nativeDataIsRecorded(bytesRead, nativeAudioRecord);
-          }
-          if (audioSamplesReadyCallback != null) {
-            // Copy the entire byte buffer array.  Assume that the start of the byteBuffer is
-            // at index 0.
-            byte[] data = Arrays.copyOf(byteBuffer.array(), byteBuffer.capacity());
-            audioSamplesReadyCallback.onWebRtcAudioRecordSamplesReady(
-                new AudioSamples(audioRecord, data));
+          try {
+            if (microphoneMute) {
+              byteBuffer.clear();
+              byteBuffer.put(emptyBytes);
+            }
+            // It's possible we've been shut down during the read, and stopRecording() tried and
+            // failed to join this thread. To be a bit safer, try to avoid calling any native methods
+            // in case they've been unregistered after stopRecording() returned.
+            if (keepAlive) {
+              nativeDataIsRecorded(bytesRead, nativeAudioRecord);
+            }
+            if (audioSamplesReadyCallback != null) {
+              // Copy the entire byte buffer array.  Assume that the start of the byteBuffer is
+              // at index 0.
+              byte[] data = Arrays.copyOf(byteBuffer.array(), byteBuffer.capacity());
+              audioSamplesReadyCallback.onWebRtcAudioRecordSamplesReady(
+                  new AudioSamples(audioRecord, data));
+            }
+          } catch (UnsatisfiedLinkError e) {
+            e.printStackTrace();
+            stopThread();
+            reportWebRtcAudioRecordError("AudioRecordThread UnsatisfiedLinkError: " + e.getLocalizedMessage());
+            Logging.e(TAG, "AudioRecordThread nativeDataIsRecorded unsatisfiedLinkError: " + e.getLocalizedMessage());
           }
         } else {
           String errorMessage = "AudioRecord.read failed: " + bytesRead;
