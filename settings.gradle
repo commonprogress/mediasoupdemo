@@ -1,3 +1,4 @@
+include ':audioeffect'
 include ':webrtc-made'
 include ':app', ':library'
 include ':protoo-client'
