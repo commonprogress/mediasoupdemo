@@ -151,8 +151,8 @@ public class MediasoupMainActivity extends AppCompatActivity {
                     boolean isVideoBeingSent = MeProps.DeviceState.ON.equals(meProps.getCamState().get()) ? true : false;
                     List<Info> peerUsers = (null == curPeerUsers || curPeerUsers.isEmpty()) ? getMeInfo(meProps) : curPeerUsers;
                     int size = null == peerUsers ? 0 : peerUsers.size();
-                    refreshMediasoupView(meProps.getMe().get().getId(), isVideoBeingSent, peerUsers);
-//                    recyclerMediasoupView(meProps.getMe().get().getId(), isVideoBeingSent, peerUsers);
+//                    refreshMediasoupView(meProps.getMe().get().getId(), isVideoBeingSent, peerUsers);
+                    recyclerMediasoupView(meProps.getMe().get().getId(), isVideoBeingSent, peerUsers);
                     List<Peer> peersList = new ArrayList<>();
                     for (int i = 0; i < size; i++) {
                         Info info = peerUsers.get(i);
@@ -175,8 +175,8 @@ public class MediasoupMainActivity extends AppCompatActivity {
                         peerUsers.addAll(peersList);
                     }
                     boolean isVideoBeingSent = MeProps.DeviceState.ON.equals(mMeProps.getCamState().get()) ? true : false;
-                    refreshMediasoupView(mMeProps.getMe().get().getId(), isVideoBeingSent, peerUsers);
-//                    recyclerMediasoupView(mMeProps.getMe().get().getId(), isVideoBeingSent, peerUsers);
+//                    refreshMediasoupView(mMeProps.getMe().get().getId(), isVideoBeingSent, peerUsers);
+                    recyclerMediasoupView(mMeProps.getMe().get().getId(), isVideoBeingSent, peerUsers);
                     setConnectPeer(peersList, isVideoBeingSent);
                 }
             }
@@ -234,24 +234,30 @@ public class MediasoupMainActivity extends AppCompatActivity {
                     }
                 }
                 if (null != selfInfo && isVideoBeingSent) {
-                    selfVideoView.removeAllViews();
-                    if (null == selfView) {
-                        selfView = (SelfMediasoupView) createMediasoupView(selfInfo, true);
+                    View childView = selfVideoView.getChildCount() == 1 ? selfVideoView.getChildAt(0) : null;
+                    if (null != childView && (childView instanceof SelfMediasoupView)) {
+                        selfVideoView.setVisibility(View.VISIBLE);
+                    } else {
+                        selfVideoView.removeAllViews();
+                        if (null == selfView) {
+                            selfView = (SelfMediasoupView) createMediasoupView(selfInfo, true);
+                        }
+                        selfView.setLayoutParams(
+                                new ViewGroup.LayoutParams(
+                                        ViewGroup.LayoutParams.MATCH_PARENT,
+                                        ViewGroup.LayoutParams.MATCH_PARENT
+                                )
+                        );
+                        selfVideoView.addView(selfView);
+                        selfVideoView.setVisibility(View.VISIBLE);
                     }
-                    selfView.setLayoutParams(
-                            new ViewGroup.LayoutParams(
-                                    ViewGroup.LayoutParams.MATCH_PARENT,
-                                    ViewGroup.LayoutParams.MATCH_PARENT
-                            )
-                    );
-                    selfVideoView.addView(selfView);
-                    selfVideoView.setVisibility(View.VISIBLE);
                 } else {
                     selfVideoView.removeAllViews();
                     selfVideoView.setVisibility(View.GONE);
                 }
 
                 if (null == peersVideoAdapter) {
+                    peerVideoView.setHasFixedSize(true);
                     peersVideoAdapter = new PeersVideoAdapter(MediasoupMainActivity.this, MediasoupMainActivity.this, changeAndNotify);
                     GridLayoutManager layoutManager = new GridLayoutManager(MediasoupMainActivity.this, 2);
                     peerVideoView.setLayoutManager(layoutManager);

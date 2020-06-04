@@ -24,6 +24,7 @@ import com.jsy.mediasoup.utils.LogUtils;
 import org.mediasoup.droid.lib.PeerConnectionUtils;
 import org.mediasoup.droid.lib.RoomClient;
 import org.mediasoup.droid.lib.lv.RoomStore;
+import org.webrtc.RendererCommon;
 import org.webrtc.SurfaceViewRenderer;
 
 /**
@@ -117,19 +118,21 @@ public class MeView extends FrameLayout {
         changeCam = view.findViewById(R.id.change_cam);
         share = view.findViewById(R.id.share);
         videoRenderer.init(PeerConnectionUtils.getEglContext(), null);//设置摄像头信息的渲染
+        videoRenderer.setEnableHardwareScaler(true);
+        videoRenderer.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT);
     }
 
     public void setProps(MeProps props, final RoomClient roomClient, RoomStore roomStore) {
         // set view model.
-        setPeerViewProps(props);
-        setMeCameraFace(props);
+        setPeerViewProps(props, null != roomClient ? roomClient.isConnected() : false);
+        setMeCameraFace(props, null != roomClient ? roomClient.isConnected() : false);
         props.setOnPropsLiveDataChange(ediasProps -> {
             if(roomClient.isConnecting()) {
                 // set view model.
-                setPeerViewProps(props);
-                setMeCameraFace(props);
+                setPeerViewProps(props, null != roomClient ? roomClient.isConnected() : false);
+                setMeCameraFace(props, null != roomClient ? roomClient.isConnected() : false);
                 // set view model.
-                setMeProps(props);
+                setMeProps(props, null != roomClient ? roomClient.isConnected() : false);
             }
         });
 
@@ -158,7 +161,7 @@ public class MeView extends FrameLayout {
         videoRenderer.setZOrderMediaOverlay(true);
 
         // set view model.
-        setMeProps(props);
+        setMeProps(props, null != roomClient ? roomClient.isConnected() : false);
 
         // register click listener. 是否静音
         mic.setOnClickListener(
@@ -191,24 +194,24 @@ public class MeView extends FrameLayout {
                 });
     }
 
-    private void setMeCameraFace(MeProps props) {
-        LogUtils.i(TAG, "setMeCameraFace,mediasoup null == props:" + (null == props));
+    private void setMeCameraFace(MeProps props, boolean isConnected) {
+        LogUtils.i(TAG, "setMeCameraFace,mediasoup null == props:" + (null == props) + ", isConnected:" + isConnected);
         if (null == props) {
             return;
         }
 //        isCamFront = "front".endsWith(MediasoupLoaderUtils.getInstance().getCurCameraFace());
-        boolean isFrontCamera = null == props.getMe().get() ? true : props.getMe().get().isFrontCamera();
-        videoRenderer.setMirror(isFrontCamera);
+//        boolean isFrontCamera = null == props.getMe().get() ? true : props.getMe().get().isFrontCamera();
+//        videoRenderer.setMirror(isFrontCamera);
 //        videoRenderer.setEnableHardwareScaler(true);
     }
 
-    private void setPeerViewProps(MeProps props) {
-        LogUtils.i(TAG, "setPeerViewProps,mediasoup null == props:" + (null == props));
+    private void setPeerViewProps(MeProps props, boolean isConnected) {
+        LogUtils.i(TAG, "setPeerViewProps,mediasoup null == props:" + (null == props) + ", isConnected:" + isConnected);
         if (null == props) {
             return;
         }
-        BindingAdapters.render(videoRenderer, props.getVideoTrack().get());
-        BindingAdapters.renderEmpty(video_hidden, props.getVideoTrack().get());
+        BindingAdapters.render(videoRenderer, props.getVideoTrack().get(), isConnected);
+        BindingAdapters.renderEmpty(video_hidden, props.getVideoTrack().get(), isConnected);
 
         audio_producer.setVisibility(!TextUtils.isEmpty(props.getAudioProducerId().get()) ? View.VISIBLE : View.GONE);
         audio_producer.setText(props.getAudioProducerId().get());
@@ -229,8 +232,8 @@ public class MeView extends FrameLayout {
         peer_display_name.setVisibility(!props.isMe() ? View.VISIBLE : View.GONE);
     }
 
-    private void setMeProps(MeProps props) {
-        LogUtils.i(TAG, "setPeerViewProps,mediasoup null == props:" + (null == props));
+    private void setMeProps(MeProps props, boolean isConnected) {
+        LogUtils.i(TAG, "setPeerViewProps,mediasoup null == props:" + (null == props) + ", isConnected:" + isConnected);
         if (null == props) {
             return;
         }

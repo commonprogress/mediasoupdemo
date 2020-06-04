@@ -52,6 +52,11 @@ public class PeersVideoAdapter extends RecyclerView.Adapter<PeersVideoAdapter.Pe
         return null == peers ? 0 : peers.size();
     }
 
+    @Override
+    public long getItemId(int position) {
+        return position;
+    }
+
     @NonNull
     @Override
     public PeerViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {

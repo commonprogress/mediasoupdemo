@@ -812,11 +812,13 @@ public class MediasoupLoaderUtils {
      * 加入的状态
      *
      * @param state initial state.初始化
-     *              NEW  1,
+     *              NEW  0,
      *              connecting or reconnecting.连接或者重连中
-     *              CONNECTING 2,
+     *              CONNECTING 1,
      *              connected.已经连接
-     *              CONNECTED 3,
+     *              CONNECTED 2,
+     *              disconnected and reconnecting.中断 重连中
+     *              DISCONNECTED 3,
      *              mClosed.关闭
      *              CLOSED 4,
      */

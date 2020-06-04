@@ -71,8 +71,10 @@ dependencies {
 //    implementation 'org.protoojs.droid:protoo-client:4.0.3'
 
 //    implementation (name:'mediasoup-client', ext:'aar')
+//    implementation (name:'webrtc-made', ext:'aar')
     implementation project(path: ':mediasoup-client')
 //    implementation 'org.mediasoup.droid:mediasoup-client:3.0.8-beta-1'
+
 
     implementation 'com.squareup.okhttp3:okhttp:4.3.0'
     implementation("com.squareup.okhttp3:logging-interceptor:4.3.0")
