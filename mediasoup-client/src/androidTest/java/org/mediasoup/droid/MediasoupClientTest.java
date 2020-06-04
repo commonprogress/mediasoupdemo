@@ -1,8 +1,7 @@
 package org.mediasoup.droid;
 
+import android.support.test.runner.AndroidJUnit4;
 import android.text.TextUtils;
-
-import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import org.json.JSONArray;
 import org.json.JSONException;
