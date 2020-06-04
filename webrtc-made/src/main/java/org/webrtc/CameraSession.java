@@ -59,10 +59,13 @@ interface CameraSession {
     final Matrix transformMatrix = new Matrix();
     // Perform mirror and rotation around (0.5, 0.5) since that is the center of the texture.
     transformMatrix.preTranslate(/* dx= */ 0.5f, /* dy= */ 0.5f);
-    if (mirror) {
-      transformMatrix.preScale(/* sx= */ -1f, /* sy= */ 1f);
-    }
-    transformMatrix.preRotate(rotation);
+//    if (mirror) {
+//      transformMatrix.preScale(/* sx= */ -1f, /* sy= */ 1f);
+//    }
+//    transformMatrix.preRotate(rotation);
+
+    int degrees = mirror ? Math.abs(180 + rotation) % 360 : rotation;
+    transformMatrix.preRotate(degrees);
     transformMatrix.preTranslate(/* dx= */ -0.5f, /* dy= */ -0.5f);
 
     // The width and height are not affected by rotation since Camera2Session has set them to the

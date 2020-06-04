@@ -407,8 +407,35 @@ abstract class CameraCapturer implements CameraVideoCapturer {
       });
       currentSession = null;
 
+      boolean isLastBack = cameraEnumerator.isBackFacing(cameraName);
+      boolean isLastFront = cameraEnumerator.isFrontFacing(cameraName);
       int cameraNameIndex = Arrays.asList(deviceNames).indexOf(cameraName);
-      cameraName = deviceNames[(cameraNameIndex + 1) % deviceNames.length];
+//      cameraName = deviceNames[(cameraNameIndex + 1) % deviceNames.length];
+
+      boolean isContinue = true;
+      while (isContinue) {
+        cameraNameIndex++;
+        String curName = deviceNames[(cameraNameIndex) % deviceNames.length];
+        boolean isCurBack = cameraEnumerator.isBackFacing(curName);
+        boolean isCurFront = cameraEnumerator.isFrontFacing(curName);
+        Logging.d(TAG, "switchCamera mid lastName:" + cameraName + ", isLastBack:" + isLastBack + ", isLastFront:" + isLastFront + ", cameraNameIndex:" + cameraNameIndex + ", curName:" + curName + ", isCurBack:" + isCurBack + ", isCurFront:" + isCurFront + ", deviceNames.length:" + deviceNames.length);
+        if (isLastFront) {
+          if (isCurBack || !isCurFront) {
+            cameraName = curName;
+            isContinue = false;
+          }
+        } else if (isLastBack) {
+          if (isCurFront || !isCurBack) {
+            cameraName = curName;
+            isContinue = false;
+          }
+        } else {
+          if (isCurBack || isCurFront) {
+            cameraName = curName;
+            isContinue = false;
+          }
+        }
+      }
 
       sessionOpening = true;
       openAttemptsRemaining = 1;
