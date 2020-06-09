@@ -177,7 +177,7 @@ abstract class CameraCapturer implements CameraVideoCapturer {
   // -------------------------
   @Nullable private Handler cameraThreadHandler;
   private Context applicationContext;
-  private org.webrtc.CapturerObserver capturerObserver;
+  private CapturerObserver capturerObserver;
   @Nullable private SurfaceTextureHelper surfaceHelper;
 
   private final Object stateLock = new Object();
@@ -231,7 +231,7 @@ abstract class CameraCapturer implements CameraVideoCapturer {
 
   @Override
   public void initialize(@Nullable SurfaceTextureHelper surfaceTextureHelper,
-      Context applicationContext, org.webrtc.CapturerObserver capturerObserver) {
+      Context applicationContext, CapturerObserver capturerObserver) {
     this.applicationContext = applicationContext;
     this.capturerObserver = capturerObserver;
     this.surfaceHelper = surfaceTextureHelper;

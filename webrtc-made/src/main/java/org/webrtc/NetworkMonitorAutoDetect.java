@@ -662,7 +662,7 @@ public class NetworkMonitorAutoDetect extends BroadcastReceiver {
       NetworkCallback tempNetworkCallback = new NetworkCallback();
       try {
         connectivityManagerDelegate.requestMobileNetwork(tempNetworkCallback);
-      } catch (java.lang.SecurityException e) {
+      } catch (SecurityException e) {
         Logging.w(TAG, "Unable to obtain permission to request a cellular network.");
         tempNetworkCallback = null;
       }

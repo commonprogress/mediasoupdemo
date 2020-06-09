@@ -184,6 +184,7 @@ public class MediasoupMainActivity extends AppCompatActivity {
             @Override
             public void onObserveNotify(Notify notify) {
                 if (notify != null) {
+                    LogUtils.e(TAG, "==onObserveNotify notify.getType():" + notify.getType() + ", notify.getText():" + notify.getText() + ", notify.getTimeout():" + notify.getTimeout());
                     if ("error".equals(notify.getType())) {
                         Toast toast = Toast.makeText(MediasoupMainActivity.this, notify.getText(), notify.getTimeout());
                         TextView toastMessage = toast.getView().findViewById(android.R.id.message);

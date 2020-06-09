@@ -947,7 +947,7 @@ public class RoomClient extends RoomMessageHandler {
                 mLocalAudioTrack.setEnabled(true);
                 mPeerConnectionUtils.addAudioTrackMediaStream(mLocalAudioTrack);
             }
-            String codecOptions = "[{\"opusStereo\":true},{\"opusDtx\":true}]";
+//            String codecOptions = "[{\"opusStereo\":true},{\"opusDtx\":true}]";
             mMicProducer =
                     mSendTransport.produce(
                             producer -> {
@@ -961,7 +961,7 @@ public class RoomClient extends RoomMessageHandler {
                             },
                             mLocalAudioTrack,
                             null,
-                            codecOptions);
+                            /*codecOptions*/null);
             mStore.addProducer(mMicProducer);
             Logger.d(TAG, "mMicProducer," + mMicProducer.getId() + "," + mMicProducer.getKind());
         } catch (MediasoupException e) {
@@ -1081,11 +1081,11 @@ public class RoomClient extends RoomMessageHandler {
                 mLocalVideoTrack.setEnabled(true);
                 mPeerConnectionUtils.addVideoTrackMediaStream(mLocalVideoTrack);
             }
-            String codecOptions = "[{\"videoGoogleStartBitrate\":1000}]";
-            List<RtpParameters.Encoding> encodings = new ArrayList<>();
-            encodings.add(RTCUtils.genRtpEncodingParameters(null, false, 500000, 0, 60, 0, 0.0d, 0L));
-            encodings.add(RTCUtils.genRtpEncodingParameters(null, false, 1000000, 0, 60, 0, 0.0d, 0L));
-            encodings.add(RTCUtils.genRtpEncodingParameters(null, false, 1500000, 0, 60, 0, 0.0d, 0L));
+//            String codecOptions = "[{\"videoGoogleStartBitrate\":1000}]";
+//            List<RtpParameters.Encoding> encodings = new ArrayList<>();
+//            encodings.add(RTCUtils.genRtpEncodingParameters(null, false, 500000, 0, 60, 0, 0.0d, 0L));
+//            encodings.add(RTCUtils.genRtpEncodingParameters(null, false, 1000000, 0, 60, 0, 0.0d, 0L));
+//            encodings.add(RTCUtils.genRtpEncodingParameters(null, false, 1500000, 0, 60, 0, 0.0d, 0L));
             mCamProducer =
                     mSendTransport.produce(
                             producer -> {
@@ -1098,8 +1098,8 @@ public class RoomClient extends RoomMessageHandler {
                                 }
                             },
                             mLocalVideoTrack,
-                            encodings,
-                            codecOptions);
+                            /*encodings*/null,
+                            /*codecOptions*/ null);
             mStore.addProducer(mCamProducer);
             Logger.d(TAG, "mCamProducer," + mCamProducer.getId() + "," + mCamProducer.getKind());
         } catch (MediasoupException e) {

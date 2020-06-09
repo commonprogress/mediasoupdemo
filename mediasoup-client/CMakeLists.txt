@@ -59,6 +59,9 @@ add_subdirectory("deps/libmediasoupclient")
 set_source_files_properties(${SOURCE_FILES}
 	PROPERTIES COMPILE_FLAGS -Wall -Wextra -Wpedantic)
 
+include_directories(SYSTEM "${LIBWEBRTC_INCLUDE_PATH}")
+include_directories(SYSTEM "${LIBWEBRTC_INCLUDE_PATH}/third_party")
+include_directories(SYSTEM "${LIBWEBRTC_INCLUDE_PATH}/third_party/ffmpeg")
 include_directories(SYSTEM "${LIBWEBRTC_INCLUDE_PATH}/third_party/abseil-cpp")
 
 # Private (implementation) header files.
@@ -69,6 +72,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 	"${PROJECT_SOURCE_DIR}/deps/libmediasoupclient/test/include"
 	"${PROJECT_SOURCE_DIR}/deps/libmediasoupclient/deps/libsdptransform/include"
 	"${LIBWEBRTC_INCLUDE_PATH}"
+    "${LIBWEBRTC_INCLUDE_PATH}/third_party"
+    "${LIBWEBRTC_INCLUDE_PATH}/third_party/ffmpeg"
 	"${LIBWEBRTC_INCLUDE_PATH}/third_party/abseil-cpp"
 )
 

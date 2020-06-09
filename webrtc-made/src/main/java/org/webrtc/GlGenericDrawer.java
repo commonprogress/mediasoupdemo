@@ -55,7 +55,7 @@ class GlGenericDrawer implements RendererCommon.GlDrawer {
      * the shader that needs to happen every frame.
      */
     void onPrepareShader(GlShader shader, float[] texMatrix, int frameWidth, int frameHeight,
-        int viewportWidth, int viewportHeight);
+                         int viewportWidth, int viewportHeight);
   }
 
   private static final String INPUT_VERTEX_COORDINATE_NAME = "in_pos";

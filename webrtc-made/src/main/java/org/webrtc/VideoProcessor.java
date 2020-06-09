@@ -63,7 +63,7 @@ public interface VideoProcessor extends CapturerObserver {
    * dropped. Returns a new frame. The caller is responsible for releasing the returned frame.
    */
   public static @Nullable VideoFrame applyFrameAdaptationParameters(
-      VideoFrame frame, FrameAdaptationParameters parameters) {
+          VideoFrame frame, FrameAdaptationParameters parameters) {
     if (parameters.drop) {
       return null;
     }

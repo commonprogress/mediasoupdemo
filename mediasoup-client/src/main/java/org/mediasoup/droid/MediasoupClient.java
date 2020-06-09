@@ -9,6 +9,7 @@ public class MediasoupClient {
 
   static {
     System.loadLibrary("mediasoupclient_so");
+    System.loadLibrary("ffmpeg");
   }
 
   public static void initialize(Context appContext) {

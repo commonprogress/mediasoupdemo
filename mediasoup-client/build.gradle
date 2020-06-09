@@ -20,6 +20,7 @@ android {
 
         externalNativeBuild {
             cmake {
+                // "-DANDROID_ALLOW_UNDEFINED_SYMBOLS=true",
                 // Passes optional arguments to CMake.
                 arguments "-DLIBWEBRTC_INCLUDE_PATH=" + WEBRTC_INC_PATH,
                         "-DLIBWEBRTC_BINARY_PATH=" + WEBRTC_LIB_PATH,

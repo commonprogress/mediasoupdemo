@@ -185,7 +185,7 @@ class EglBase10Impl implements EglBase10 {
   }
 
   @Override
-  public org.webrtc.EglBase.Context getEglBaseContext() {
+  public EglBase.Context getEglBaseContext() {
     return new Context(eglContext);
   }
 

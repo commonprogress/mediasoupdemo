@@ -122,8 +122,8 @@ public class PeerConnectionFactory {
         return this;
       }
 
-      public PeerConnectionFactory.InitializationOptions createInitializationOptions() {
-        return new PeerConnectionFactory.InitializationOptions(applicationContext, fieldTrials,
+      public InitializationOptions createInitializationOptions() {
+        return new InitializationOptions(applicationContext, fieldTrials,
             enableInternalTracer, nativeLibraryLoader, nativeLibraryName, loggable,
             loggableSeverity);
       }

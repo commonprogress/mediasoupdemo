@@ -10,6 +10,8 @@
 
 package org.webrtc;
 
+import org.webrtc.VideoCapturer;
+
 public class JavaVideoSourceTestHelper {
   @CalledByNative
   public static void startCapture(CapturerObserver observer, boolean success) {

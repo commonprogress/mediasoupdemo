@@ -63,7 +63,7 @@ class EglBase14Impl implements EglBase14 {
                                                                  : egl14Context.getHandle();
     }
 
-    public Context(android.opengl.EGLContext eglContext) {
+    public Context(EGLContext eglContext) {
       this.egl14Context = eglContext;
     }
   }

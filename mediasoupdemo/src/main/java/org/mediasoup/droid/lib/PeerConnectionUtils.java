@@ -89,7 +89,7 @@ public class PeerConnectionUtils {
 
   private final ThreadUtils.ThreadChecker mThreadChecker;
   private PeerConnectionFactory mPeerConnectionFactory;
-  private MediaStream mMediaStream;
+//  private MediaStream mMediaStream;
   private AudioSource mAudioSource;
   private VideoSource mVideoSource;
   private CameraVideoCapturer mCamCapture;
@@ -119,7 +119,7 @@ public class PeerConnectionUtils {
     //视频的编码格式
       VideoEncoderFactory encoderFactory =
         new DefaultVideoEncoderFactory(
-            mEglBase.getEglBaseContext(), true /* enableIntelVp8Encoder */, true);
+            mEglBase.getEglBaseContext(), false /* enableIntelVp8Encoder */, true);
 
 //      VideoCodecInfo[] encoderInfos = encoderFactory.getSupportedCodecs();
 //      int lentch = encoderInfos == null ? 0 : encoderInfos.length;
@@ -279,7 +279,7 @@ public class PeerConnectionUtils {
             .setVideoEncoderFactory(encoderFactory)
             .setVideoDecoderFactory(decoderFactory)
             .createPeerConnectionFactory();
-      mMediaStream = mPeerConnectionFactory.createLocalMediaStream(MEDIA_STREAM_ID);
+//      mMediaStream = mPeerConnectionFactory.createLocalMediaStream(MEDIA_STREAM_ID);
   }
 
     /**
@@ -612,7 +612,7 @@ public class PeerConnectionUtils {
   }
 
   public void addAudioTrackMediaStream(AudioTrack audioTrack){
-      mMediaStream.addTrack(audioTrack);
+//      mMediaStream.addTrack(audioTrack);
   }
 
     /**
@@ -633,7 +633,7 @@ public class PeerConnectionUtils {
   }
 
   public void addVideoTrackMediaStream(VideoTrack videoTrack){
-      mMediaStream.addTrack(videoTrack);
+//      mMediaStream.addTrack(videoTrack);
   }
 
     /**
@@ -660,10 +660,10 @@ public class PeerConnectionUtils {
       mAudioSource = null;
     }
 
-    if(null != mMediaStream){
-        mMediaStream.dispose();
-        mMediaStream = null;
-    }
+//    if(null != mMediaStream){
+//        mMediaStream.dispose();
+//        mMediaStream = null;
+//    }
 
     if (mPeerConnectionFactory != null) {
       mPeerConnectionFactory.dispose();

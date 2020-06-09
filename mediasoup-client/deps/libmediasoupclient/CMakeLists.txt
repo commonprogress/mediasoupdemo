@@ -122,13 +122,21 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/include
 target_include_directories(${PROJECT_NAME} PUBLIC
 	"${PROJECT_SOURCE_DIR}/deps/libsdptransform/include"
 	"${LIBWEBRTC_INCLUDE_PATH}"
+	"${LIBWEBRTC_INCLUDE_PATH}/third_party"
+	"${LIBWEBRTC_INCLUDE_PATH}/third_party/ffmpeg"
 	"${LIBWEBRTC_INCLUDE_PATH}/third_party/abseil-cpp"
 )
+
+add_library(ffmpeg SHARED IMPORTED)
+set_target_properties(ffmpeg
+		PROPERTIES IMPORTED_LOCATION
+		${LIBWEBRTC_BINARY_PATH}/${ANDROID_ABI}/libffmpeg.so)
 
 # Public (interface) dependencies.
 if("${ANDROID_ABI}" STREQUAL "")
 	target_link_libraries(${PROJECT_NAME} PUBLIC
 		sdptransform
+		ffmpeg
 		${LIBWEBRTC_BINARY_PATH}/libwebrtc${CMAKE_STATIC_LIBRARY_SUFFIX}
 	)
 else()
@@ -138,6 +146,7 @@ else()
 
 	target_link_libraries(${PROJECT_NAME} PUBLIC
 			sdptransform
+			ffmpeg
 			${webrtc}
 			)
 endif()

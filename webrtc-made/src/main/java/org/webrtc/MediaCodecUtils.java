@@ -50,9 +50,9 @@ class MediaCodecUtils {
 
   // Color formats supported by hardware encoder - in order of preference.
   static final int[] ENCODER_COLOR_FORMATS = {
-      MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Planar,
-      MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420SemiPlanar,
-      MediaCodecInfo.CodecCapabilities.COLOR_QCOM_FormatYUV420SemiPlanar,
+      CodecCapabilities.COLOR_FormatYUV420Planar,
+      CodecCapabilities.COLOR_FormatYUV420SemiPlanar,
+      CodecCapabilities.COLOR_QCOM_FormatYUV420SemiPlanar,
       MediaCodecUtils.COLOR_QCOM_FORMATYUV420PackedSemiPlanar32m};
 
   // Color formats supported by texture mode encoding - in order of preference.
@@ -60,7 +60,7 @@ class MediaCodecUtils {
 
   private static int[] getTextureColorFormats() {
     if (Build.VERSION.SDK_INT >= 18) {
-      return new int[] {MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface};
+      return new int[] {CodecCapabilities.COLOR_FormatSurface};
     } else {
       return new int[] {};
     }

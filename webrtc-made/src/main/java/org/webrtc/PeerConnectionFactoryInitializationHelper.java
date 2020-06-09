@@ -11,7 +11,6 @@
 package org.webrtc;
 
 import android.content.Context;
-
 import org.webrtc.PeerConnectionFactory.InitializationOptions;
 
 public class PeerConnectionFactoryInitializationHelper {

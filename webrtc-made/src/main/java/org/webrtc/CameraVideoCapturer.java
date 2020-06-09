@@ -83,7 +83,7 @@ public interface CameraVideoCapturer extends VideoCapturer {
    */
   @Deprecated
   default void addMediaRecorderToCamera(
-      MediaRecorder mediaRecorder, MediaRecorderHandler resultHandler) {
+          MediaRecorder mediaRecorder, MediaRecorderHandler resultHandler) {
     throw new UnsupportedOperationException("Deprecated and not implemented.");
   }
 

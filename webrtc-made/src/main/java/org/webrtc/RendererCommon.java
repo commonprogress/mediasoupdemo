@@ -44,11 +44,11 @@ public class RendererCommon {
      * The coordinates specify the viewport location on the surface target.
      */
     void drawOes(int oesTextureId, float[] texMatrix, int frameWidth, int frameHeight,
-        int viewportX, int viewportY, int viewportWidth, int viewportHeight);
+                 int viewportX, int viewportY, int viewportWidth, int viewportHeight);
     void drawRgb(int textureId, float[] texMatrix, int frameWidth, int frameHeight, int viewportX,
-        int viewportY, int viewportWidth, int viewportHeight);
+                 int viewportY, int viewportWidth, int viewportHeight);
     void drawYuv(int[] yuvTextures, float[] texMatrix, int frameWidth, int frameHeight,
-        int viewportX, int viewportY, int viewportWidth, int viewportHeight);
+                 int viewportX, int viewportY, int viewportWidth, int viewportHeight);
 
     /**
      * Release all GL resources. This needs to be done manually, otherwise resources may leak.

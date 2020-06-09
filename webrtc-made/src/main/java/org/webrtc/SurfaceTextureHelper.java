@@ -57,7 +57,7 @@ public class SurfaceTextureHelper {
    * closer to actual creation time.
    */
   public static SurfaceTextureHelper create(final String threadName,
-      final EglBase.Context sharedContext, boolean alignTimestamps, final YuvConverter yuvConverter,
+      final Context sharedContext, boolean alignTimestamps, final YuvConverter yuvConverter,
       FrameRefMonitor frameRefMonitor) {
     final HandlerThread thread = new HandlerThread(threadName);
     thread.start();
@@ -85,10 +85,10 @@ public class SurfaceTextureHelper {
   /**
    * Same as above with alignTimestamps set to false and yuvConverter set to new YuvConverter.
    *
-   * @see #create(String, EglBase.Context, boolean, YuvConverter, FrameRefMonitor)
+   * @see #create(String, Context, boolean, YuvConverter, FrameRefMonitor)
    */
   public static SurfaceTextureHelper create(
-      final String threadName, final EglBase.Context sharedContext) {
+      final String threadName, final Context sharedContext) {
     return create(threadName, sharedContext, /* alignTimestamps= */ false, new YuvConverter(),
         /*frameRefMonitor=*/null);
   }
@@ -96,10 +96,10 @@ public class SurfaceTextureHelper {
   /**
    * Same as above with yuvConverter set to new YuvConverter.
    *
-   * @see #create(String, EglBase.Context, boolean, YuvConverter, FrameRefMonitor)
+   * @see #create(String, Context, boolean, YuvConverter, FrameRefMonitor)
    */
   public static SurfaceTextureHelper create(
-      final String threadName, final EglBase.Context sharedContext, boolean alignTimestamps) {
+      final String threadName, final Context sharedContext, boolean alignTimestamps) {
     return create(
         threadName, sharedContext, alignTimestamps, new YuvConverter(), /*frameRefMonitor=*/null);
   }
@@ -107,10 +107,10 @@ public class SurfaceTextureHelper {
   /**
    * Create a SurfaceTextureHelper without frame ref monitor.
    *
-   * @see #create(String, EglBase.Context, boolean, YuvConverter, FrameRefMonitor)
+   * @see #create(String, Context, boolean, YuvConverter, FrameRefMonitor)
    */
   public static SurfaceTextureHelper create(final String threadName,
-      final EglBase.Context sharedContext, boolean alignTimestamps, YuvConverter yuvConverter) {
+      final Context sharedContext, boolean alignTimestamps, YuvConverter yuvConverter) {
     return create(
         threadName, sharedContext, alignTimestamps, yuvConverter, /*frameRefMonitor=*/null);
   }
@@ -358,7 +358,7 @@ public class SurfaceTextureHelper {
     if (timestampAligner != null) {
       timestampNs = timestampAligner.translateTimestamp(timestampNs);
     }
-    final VideoFrame.TextureBuffer buffer =
+    final TextureBuffer buffer =
         new TextureBufferImpl(textureWidth, textureHeight, TextureBuffer.Type.OES, oesTextureId,
             RendererCommon.convertMatrixToAndroidGraphicsMatrix(transformMatrix), handler,
             yuvConverter, textureRefCountMonitor);

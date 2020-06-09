@@ -197,7 +197,7 @@ public interface EglBase {
    * and shared context.
    */
   public static EglBase10 createEgl10(
-      javax.microedition.khronos.egl.EGLContext sharedContext, int[] configAttributes) {
+          javax.microedition.khronos.egl.EGLContext sharedContext, int[] configAttributes) {
     return new EglBase10Impl(sharedContext, configAttributes);
   }
 
@@ -220,7 +220,7 @@ public interface EglBase {
    * and shared context.
    */
   public static EglBase14 createEgl14(
-      android.opengl.EGLContext sharedContext, int[] configAttributes) {
+          android.opengl.EGLContext sharedContext, int[] configAttributes) {
     return new EglBase14Impl(sharedContext, configAttributes);
   }
 

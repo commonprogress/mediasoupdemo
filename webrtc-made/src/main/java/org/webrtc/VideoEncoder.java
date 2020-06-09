@@ -37,7 +37,7 @@ public interface VideoEncoder {
     public Settings(int numberOfCores, int width, int height, int startBitrate, int maxFramerate,
         int numberOfSimulcastStreams, boolean automaticResizeOn) {
       this(numberOfCores, width, height, startBitrate, maxFramerate, numberOfSimulcastStreams,
-          automaticResizeOn, new VideoEncoder.Capabilities(false /* lossNotification */));
+          automaticResizeOn, new Capabilities(false /* lossNotification */));
     }
 
     @CalledByNative("Settings")

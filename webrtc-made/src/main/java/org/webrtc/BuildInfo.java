@@ -11,6 +11,7 @@
 package org.webrtc;
 
 import android.os.Build;
+import org.webrtc.CalledByNative;
 
 public final class BuildInfo {
   public static String getDevice() {

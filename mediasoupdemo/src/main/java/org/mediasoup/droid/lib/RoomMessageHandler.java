@@ -53,14 +53,14 @@ class RoomMessageHandler {
       case "producerScore":
         {
           // {"producerId":"bdc2e83e-5294-451e-a986-a29c7d591d73","score":[{"score":10,"ssrc":196184265}]}
-          String producerId = data.getString("producerId");
+          String producerId = data.optString("producerId");
           JSONArray score = data.getJSONArray("score");
           mStore.setProducerScore(producerId, score);
           break;
         }
       case "newPeer":
         {
-          String id = data.getString("id");
+          String id = data.optString("id");
           String displayName = data.optString("displayName");
           mStore.addPeer(id, data);
           mStore.addNotify(displayName + " has joined the room");
@@ -68,13 +68,13 @@ class RoomMessageHandler {
         }
       case "peerClosed":
         {
-          String peerId = data.getString("peerId");
+          String peerId = data.optString("peerId");
           mStore.removePeer(peerId);
           break;
         }
       case "peerDisplayNameChanged":
         {
-          String peerId = data.getString("peerId");
+          String peerId = data.optString("peerId");
           String displayName = data.optString("displayName");
           String oldDisplayName = data.optString("oldDisplayName");
           mStore.setPeerDisplayName(peerId, displayName);
@@ -83,7 +83,7 @@ class RoomMessageHandler {
         }
       case "consumerClosed":
         {
-          String consumerId = data.getString("consumerId");
+          String consumerId = data.optString("consumerId");
           ConsumerHolder holder = mConsumers.remove(consumerId);
           if (holder == null) {
             break;
@@ -95,7 +95,7 @@ class RoomMessageHandler {
         }
       case "consumerPaused":
         {
-          String consumerId = data.getString("consumerId");
+          String consumerId = data.optString("consumerId");
           ConsumerHolder holder = mConsumers.get(consumerId);
           if (holder == null) {
             break;
@@ -105,7 +105,7 @@ class RoomMessageHandler {
         }
       case "consumerResumed":
         {
-          String consumerId = data.getString("consumerId");
+          String consumerId = data.optString("consumerId");
           ConsumerHolder holder = mConsumers.get(consumerId);
           if (holder == null) {
             break;
@@ -115,7 +115,7 @@ class RoomMessageHandler {
         }
       case "consumerLayersChanged":
         {
-          String consumerId = data.getString("consumerId");
+          String consumerId = data.optString("consumerId");
           int spatialLayer = data.optInt("spatialLayer");
           int temporalLayer = data.optInt("temporalLayer");
           ConsumerHolder holder = mConsumers.get(consumerId);
@@ -127,7 +127,7 @@ class RoomMessageHandler {
         }
       case "consumerScore":
         {
-          String consumerId = data.getString("consumerId");
+          String consumerId = data.optString("consumerId");
           JSONArray score = data.optJSONArray("score");
           ConsumerHolder holder = mConsumers.get(consumerId);
           if (holder == null) {
@@ -139,15 +139,22 @@ class RoomMessageHandler {
       case "dataConsumerClosed":
         {
           // TODO(HaiyangWu); support data consumer
-          // String dataConsumerId = data.getString("dataConsumerId");
+          // String dataConsumerId = data.optString("dataConsumerId");
           break;
         }
       case "activeSpeaker":
         {
-          String peerId = data.getString("peerId");
+          String peerId = data.optString("peerId");
           mStore.setRoomActiveSpeaker(peerId);
           break;
         }
+      case "downlinkBwe":
+      {
+        String desired = data.optString("desiredBitrate");
+        String effectiveDesired = data.optString("effectiveDesiredBitrate");
+        String available = data.optString("availableBitrate");
+        break;
+      }
       default:
         {
           Logger.e(TAG, "unknown protoo notification.method " + notification.getMethod());
