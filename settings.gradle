@@ -1,6 +1,6 @@
-include ':audioeffect'
+//include ':audioeffect'
 include ':webrtc-made'
-include ':app', ':library'
+//include ':app', ':library'
 include ':protoo-client'
 include ':mediasoup-client'
 include ':mediasoupdemo'

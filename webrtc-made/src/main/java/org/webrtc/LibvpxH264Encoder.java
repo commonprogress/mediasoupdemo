@@ -10,11 +10,18 @@
 
 package org.webrtc;
 
-public class LibH264Decoder extends WrappedNativeVideoDecoder {
+public class LibvpxH264Encoder extends WrappedNativeVideoEncoder {
   @Override
-  public long createNativeVideoDecoder() {
-    return nativeCreateDecoder();
+  public long createNativeVideoEncoder() {
+    return nativeCreateEncoder();
   }
 
-  static native long nativeCreateDecoder();
+  static native long nativeCreateEncoder();
+
+  @Override
+  public boolean isHardwareEncoder() {
+    return false;
+  }
+
+  static native boolean nativeIsSupported();
 }

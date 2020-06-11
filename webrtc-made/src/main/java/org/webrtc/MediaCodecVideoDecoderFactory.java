@@ -132,15 +132,16 @@ class MediaCodecVideoDecoderFactory implements VideoDecoderFactory {
   }
 
   private boolean isH264HighProfileSupported(MediaCodecInfo info) {
-    String name = info.getName();
-    // Support H.264 HP decoding on QCOM chips for Android L and above.
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && name.startsWith(QCOM_PREFIX)) {
-      return true;
-    }
-    // Support H.264 HP decoding on Exynos chips for Android M and above.
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && name.startsWith(EXYNOS_PREFIX)) {
-      return true;
-    }
-    return false;
+//    String name = info.getName();
+//    // Support H.264 HP decoding on QCOM chips for Android L and above.
+//    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && name.startsWith(QCOM_PREFIX)) {
+//      return true;
+//    }
+//    // Support H.264 HP decoding on Exynos chips for Android M and above.
+//    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && name.startsWith(EXYNOS_PREFIX)) {
+//      return true;
+//    }
+//    return false;
+    return true;
   }
 }

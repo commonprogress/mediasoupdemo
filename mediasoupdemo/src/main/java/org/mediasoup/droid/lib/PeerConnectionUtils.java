@@ -119,7 +119,7 @@ public class PeerConnectionUtils {
     //视频的编码格式
       VideoEncoderFactory encoderFactory =
         new DefaultVideoEncoderFactory(
-            mEglBase.getEglBaseContext(), false /* enableIntelVp8Encoder */, true);
+            mEglBase.getEglBaseContext(), true /* enableIntelVp8Encoder */, true);
 
 //      VideoCodecInfo[] encoderInfos = encoderFactory.getSupportedCodecs();
 //      int lentch = encoderInfos == null ? 0 : encoderInfos.length;

@@ -15,7 +15,7 @@ public class UrlFactory {
 //  private static final String HOSTNAME = "192.168.3.21";
 //    private static final String HOSTNAME = "192.168.3.22";
 //    private static final String HOSTNAME = "192.168.1.150";
-private static final String HOSTNAME = "192.168.0.103";
+private static final String HOSTNAME = "192.168.0.102";
 //  private static final String HOSTNAME = "192.168.0.105";
 //  private static final String HOSTNAME = "192.168.0.107";
   /**
@@ -56,11 +56,11 @@ private static final String HOSTNAME = "192.168.0.103";
     String url =
             String.format(
                     Locale.US, "wss://%s:%d/?roomId=%s&peerId=%s", HOSTNAME, PORT, roomId, peerId);
-    if (forceH264) {
+//    if (forceH264) {
       url += "&forceH264=true";
-    } else if (forceVP9) {
-      url += "&forceVP9=true";
-    }
+//    } else if (forceVP9) {
+//      url += "&forceVP9=true";
+//    }
     return url;
   }
 }

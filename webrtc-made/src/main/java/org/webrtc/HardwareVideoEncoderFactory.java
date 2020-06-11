@@ -226,16 +226,18 @@ public class HardwareVideoEncoderFactory implements VideoEncoderFactory {
   }
 
   private boolean isHardwareSupportedInCurrentSdkH264(MediaCodecInfo info) {
+    //OMX.hisi.、OMX.MTK.
     // First, H264 hardware might perform poorly on this model.
-    if (H264_HW_EXCEPTION_MODELS.contains(Build.MODEL)) {
-      return false;
-    }
-    String name = info.getName();
-    // QCOM H264 encoder is supported in KITKAT or later.
-    return (name.startsWith(QCOM_PREFIX) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
-        // Exynos H264 encoder is supported in LOLLIPOP or later.
-        || (name.startsWith(EXYNOS_PREFIX)
-               && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP);
+    return true;
+//    if (H264_HW_EXCEPTION_MODELS.contains(Build.MODEL)) {
+//      return false;
+//    }
+//    String name = info.getName();
+//    // QCOM H264 encoder is supported in KITKAT or later.
+//    return (name.startsWith(QCOM_PREFIX) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
+//        // Exynos H264 encoder is supported in LOLLIPOP or later.
+//        || (name.startsWith(EXYNOS_PREFIX)
+//               && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP);
   }
 
   private boolean isMediaCodecAllowed(MediaCodecInfo info) {

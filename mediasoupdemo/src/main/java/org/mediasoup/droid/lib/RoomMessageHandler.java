@@ -54,7 +54,7 @@ class RoomMessageHandler {
         {
           // {"producerId":"bdc2e83e-5294-451e-a986-a29c7d591d73","score":[{"score":10,"ssrc":196184265}]}
           String producerId = data.optString("producerId");
-          JSONArray score = data.getJSONArray("score");
+          JSONArray score = data.optJSONArray("score");
           mStore.setProducerScore(producerId, score);
           break;
         }
