@@ -11,7 +11,11 @@
 package org.webrtc;
 
 import static org.webrtc.MediaCodecUtils.EXYNOS_PREFIX;
+import static org.webrtc.MediaCodecUtils.INTEL_PREFIX;
+import static org.webrtc.MediaCodecUtils.NVIDIA_PREFIX;
 import static org.webrtc.MediaCodecUtils.QCOM_PREFIX;
+import static org.webrtc.MediaCodecUtils.HARDWARE_IMPLEMENTATION_PREFIXES;
+import static org.webrtc.MediaCodecUtils.H264_HW_EXCEPTION_MODELS;
 
 import android.media.MediaCodecInfo;
 import android.media.MediaCodecInfo.CodecCapabilities;
@@ -132,16 +136,33 @@ class MediaCodecVideoDecoderFactory implements VideoDecoderFactory {
   }
 
   private boolean isH264HighProfileSupported(MediaCodecInfo info) {
-//    String name = info.getName();
-//    // Support H.264 HP decoding on QCOM chips for Android L and above.
-//    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && name.startsWith(QCOM_PREFIX)) {
-//      return true;
-//    }
-//    // Support H.264 HP decoding on Exynos chips for Android M and above.
-//    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && name.startsWith(EXYNOS_PREFIX)) {
-//      return true;
-//    }
-//    return false;
-    return true;
+    int sdkInt = Build.VERSION.SDK_INT;
+    String name = info.getName();
+    Logging.w(TAG, "isH264HighProfileSupported name:"  + name + " ,sdkInt:" + sdkInt);
+    if (sdkInt < Build.VERSION_CODES.LOLLIPOP) {
+      return false;
+    }
+
+    if (H264_HW_EXCEPTION_MODELS.contains(Build.MODEL)) {
+      return false;
+    }
+
+    if (sdkInt >= Build.VERSION_CODES.M) {
+      for (String prefix : HARDWARE_IMPLEMENTATION_PREFIXES) {
+        if (name.startsWith(prefix)) {
+          return true;
+        }
+      }
+    }
+
+    // Support H.264 HP decoding on QCOM chips for Android L and above.
+    if (sdkInt >= Build.VERSION_CODES.LOLLIPOP && name.startsWith(QCOM_PREFIX)) {
+      return true;
+    }
+    // Support H.264 HP decoding on Exynos chips for Android M and above.
+    if (sdkInt >= Build.VERSION_CODES.M && (name.startsWith(EXYNOS_PREFIX) || name.startsWith(INTEL_PREFIX) || name.startsWith(NVIDIA_PREFIX))) {
+      return true;
+    }
+    return false;
   }
 }

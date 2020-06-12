@@ -55,6 +55,11 @@ endif()
 # set(LIBWEBRTC_BINARY_PATH ${LIBWEBRTC_BINARY_ANDROID_PATH}/${ANDROID_ABI} CACHE STRING "libwebrtc binary path" FORCE)
 add_subdirectory("deps/libmediasoupclient")
 
+add_library(ffmpeg SHARED IMPORTED)
+set_target_properties(ffmpeg
+		PROPERTIES IMPORTED_LOCATION
+		${LIBWEBRTC_BINARY_PATH}/${ANDROID_ABI}/libffmpeg.so)
+
 # Add some compile flags to our source files.
 set_source_files_properties(${SOURCE_FILES}
 	PROPERTIES COMPILE_FLAGS -Wall -Wextra -Wpedantic)
@@ -89,5 +94,6 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 	android
 	log
 	OpenSLES
+	ffmpeg
 	mediasoupclient
 )

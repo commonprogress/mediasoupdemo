@@ -56,11 +56,11 @@ private static final String HOSTNAME = "192.168.0.102";
     String url =
             String.format(
                     Locale.US, "wss://%s:%d/?roomId=%s&peerId=%s", HOSTNAME, PORT, roomId, peerId);
-//    if (forceH264) {
+    if (forceH264) {
       url += "&forceH264=true";
-//    } else if (forceVP9) {
-//      url += "&forceVP9=true";
-//    }
+    } else if (forceVP9) {
+      url += "&forceVP9=true";
+    }
     return url;
   }
 }

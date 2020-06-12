@@ -26,7 +26,9 @@ public class SoftwareVideoDecoderFactory implements VideoDecoderFactory {
   @Nullable
   @Override
   public VideoDecoder createDecoder(VideoCodecInfo codecType) {
-    Logging.w("SoftwareVideoDecoderFactory", "end createDecoder test codecType.getName():" + codecType.getName());
+    Logging.w("SoftwareVideoDecoderFactory", "createEncoder codecType.name:" + codecType.name
+            + " ,Vp9IsSupported:" + LibvpxVp9Encoder.nativeIsSupported()
+            + " ,VH264IsSupported:" + LibvpxH264Encoder.nativeIsSupported());
     if (codecType.getName().equalsIgnoreCase("VP8")) {
       return new LibvpxVp8Decoder();
     }
@@ -46,8 +48,9 @@ public class SoftwareVideoDecoderFactory implements VideoDecoderFactory {
   }
 
   static VideoCodecInfo[] supportedCodecs() {
+    Logging.w("SoftwareVideoDecoderFactory", "supportedCodecs Vp9IsSupported:"  + LibvpxVp9Encoder.nativeIsSupported()
+            + " ,VH264IsSupported:" + LibvpxH264Encoder.nativeIsSupported());
     List<VideoCodecInfo> codecs = new ArrayList<VideoCodecInfo>();
-    Logging.w("SoftwareVideoDecoderFactory", "end supportedCodecs");
     codecs.add(new VideoCodecInfo("VP8", new HashMap<>()));
     if (LibvpxVp9Decoder.nativeIsSupported()) {
       codecs.add(new VideoCodecInfo("VP9", new HashMap<>()));

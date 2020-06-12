@@ -15,6 +15,9 @@ DEST_DIR="./jars"
 
 HOST_OS=$(uname)
 
+rm -rf $DEST_DIR 2> /dev/null
+rm -rf $WEBRTC_RB 2> /dev/null
+
 #if [ "$HOST_OS" == "Darwin" ]; then
 #if [ "$HOST_OS" == "Linux" ]; then
 #	echo "Packaging header files"
@@ -26,8 +29,8 @@ HOST_OS=$(uname)
 #	find webrtc_checkout/src -type f -iname "*.java" -exec scripts/cpheader.sh {} $WEBRTC_RB \;
 #	find webrtc_checkout/src -type f -iname "*.sha1" -exec scripts/cpheader.sh {} $WEBRTC_RB \;
 #	find webrtc_checkout/src -type f -iname "*.md" -exec scripts/cpheader.sh {} $WEBRTC_RB \;
-#	 find webrtc_checkout/src -type f -iname "DEPS*" -exec scripts/cpheader.sh {} $WEBRTC_RB \;
-#	 find webrtc_checkout/src -type f -iname "OWNERS*" -exec scripts/cpheader.sh {} $WEBRTC_RB \;
+#	find webrtc_checkout/src -type f -iname "DEPS*" -exec scripts/cpheader.sh {} $WEBRTC_RB \;
+#	find webrtc_checkout/src -type f -iname "OWNERS*" -exec scripts/cpheader.sh {} $WEBRTC_RB \;
 #	find webrtc_checkout/src -type f -iname "*.gn" -exec scripts/cpheader.sh {} $WEBRTC_RB \;
 #	find webrtc_checkout/src -type f -iname "*.h" -exec scripts/cpheader.sh {} $WEBRTC_RB \;
 #	zip -9r webrtc_${WEBRTC_RB}_headers.zip $WEBRTC_RB version.txt
@@ -36,19 +39,21 @@ HOST_OS=$(uname)
 if [ "$HOST_OS" == "Linux" ]; then
 #if [ "$HOST_OS" == "Darwin" ]; then
 	echo "Packaging header files"
-	rm -r $WEBRTC_RB 2> /dev/null
+	rm -rf $WEBRTC_RB 2> /dev/null
 	mkdir -p $WEBRTC_RB/include
 	echo WEBRTC_RELEASE=$WEBRTC_RELEASE > $WEBRTC_RB/version.txt
 	echo WEBRTC_COMMIT=$WEBRTC_COMMIT >> $WEBRTC_RB/version.txt
 	find webrtc_checkout/src -type f -iname "*.h" -exec scripts/cpheader.sh {} $WEBRTC_RB \;
 #        find webrtc_checkout/src -type f -exec scripts/cpheader.sh {} $WEBRTC_RB \;
+  rm -r webrtc_${WEBRTC_RB}_headers.zip 2> /dev/null
 	zip -9r webrtc_${WEBRTC_RB}_headers.zip $WEBRTC_RB version.txt
 
 fi
 
 for OS in $AVS_OS; do
 	echo "Packaging $OS files"
-	rm -r $WEBRTC_RB 2> /dev/null
+	rm -rf $WEBRTC_RB 2> /dev/null
+  rm -r webrtc_${WEBRTC_RB}_${OS}.zip 2> /dev/null
 
 	for p in webrtc_checkout/src/out/${OS}*; do
 		dst=$WEBRTC_RB/lib/${p/webrtc_checkout\/src\/out\//}
@@ -58,7 +63,7 @@ for OS in $AVS_OS; do
 		fi
 
 		if [ -e $p/libffmpeg.so ]; then
-			mkdir -p $dst
+#			mkdir -p $dst
 			cp $p/libffmpeg.so $dst/
 		fi
 
@@ -87,6 +92,8 @@ for OS in $AVS_OS; do
 	fi
 done
 
+rm -rf $DEST_DIR 2> /dev/null
 echo "Copying zips to $DEST_DIR"
 mkdir -p $DEST_DIR
 cp *.zip $DEST_DIR
+rm -rf $WEBRTC_RB 2> /dev/null

@@ -16,7 +16,10 @@ import android.media.MediaCodecInfo;
 import android.media.MediaCodecInfo.CodecCapabilities;
 import android.os.Build;
 import android.support.annotation.Nullable;
+
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /** Container class for static constants and helpers used with MediaCodec. */
@@ -30,7 +33,15 @@ class MediaCodecUtils {
   static final String INTEL_PREFIX = "OMX.Intel.";
   static final String NVIDIA_PREFIX = "OMX.Nvidia.";
   static final String QCOM_PREFIX = "OMX.qcom.";
+  static final String[] HARDWARE_IMPLEMENTATION_PREFIXES = {"OMX.MTK.", "OMX.hisi.", "OMX.google.", "OMX.ittiam.",
+          "OMX.rk.", "OMX.SEC.", "OMX.IMG.", "OMX.k3.", "OMX.TI.", "OMX.LG.", "OMX.amlogic."};
   static final String[] SOFTWARE_IMPLEMENTATION_PREFIXES = {"OMX.google.", "OMX.SEC."};
+
+  // List of devices with poor H.264 encoder quality.
+  // HW H.264 encoder on below devices has poor bitrate control - actual
+  // bitrates deviates a lot from the target value.
+  static final List<String> H264_HW_EXCEPTION_MODELS =
+          Arrays.asList("SAMSUNG-SGH-I337", "Nexus 7", "Nexus 4");
 
   // NV12 color format supported by QCOM codec, but not declared in MediaCodec -
   // see /hardware/qcom/media/mm-core/inc/OMX_QCOMExtns.h

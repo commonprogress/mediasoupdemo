@@ -12,7 +12,9 @@ package org.webrtc;
 
 import static org.webrtc.MediaCodecUtils.EXYNOS_PREFIX;
 import static org.webrtc.MediaCodecUtils.INTEL_PREFIX;
+import static org.webrtc.MediaCodecUtils.NVIDIA_PREFIX;
 import static org.webrtc.MediaCodecUtils.QCOM_PREFIX;
+import static org.webrtc.MediaCodecUtils.HARDWARE_IMPLEMENTATION_PREFIXES;
 
 import android.media.MediaCodecInfo;
 import android.media.MediaCodecList;
@@ -226,18 +228,31 @@ public class HardwareVideoEncoderFactory implements VideoEncoderFactory {
   }
 
   private boolean isHardwareSupportedInCurrentSdkH264(MediaCodecInfo info) {
-    //OMX.hisi.、OMX.MTK.
+    int sdkInt = Build.VERSION.SDK_INT;
+    String name = info.getName();
+    Logging.w(TAG, "isHardwareSupportedInCurrentSdkH264 name:"  + name + " ,sdkInt:" + sdkInt);
+    if (sdkInt < Build.VERSION_CODES.KITKAT) {
+      return false;
+    }
     // First, H264 hardware might perform poorly on this model.
-    return true;
 //    if (H264_HW_EXCEPTION_MODELS.contains(Build.MODEL)) {
 //      return false;
 //    }
-//    String name = info.getName();
-//    // QCOM H264 encoder is supported in KITKAT or later.
-//    return (name.startsWith(QCOM_PREFIX) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
-//        // Exynos H264 encoder is supported in LOLLIPOP or later.
-//        || (name.startsWith(EXYNOS_PREFIX)
-//               && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP);
+    if (org.webrtc.MediaCodecUtils.H264_HW_EXCEPTION_MODELS.contains(Build.MODEL)) {
+      return false;
+    }
+
+    if (sdkInt >= Build.VERSION_CODES.LOLLIPOP) {
+      for (String prefix : HARDWARE_IMPLEMENTATION_PREFIXES) {
+        if (name.startsWith(prefix)) {
+          return true;
+        }
+      }
+    }
+    // QCOM H264 encoder is supported in KITKAT or later.
+    return (name.startsWith(QCOM_PREFIX) && sdkInt >= Build.VERSION_CODES.KITKAT)
+            // Exynos H264 encoder is supported in LOLLIPOP or later.
+            || (sdkInt >= Build.VERSION_CODES.LOLLIPOP && (name.startsWith(EXYNOS_PREFIX) || name.startsWith(INTEL_PREFIX) || name.startsWith(NVIDIA_PREFIX)));
   }
 
   private boolean isMediaCodecAllowed(MediaCodecInfo info) {

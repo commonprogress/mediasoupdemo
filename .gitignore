@@ -8,3 +8,6 @@
 /captures
 /.idea/
 /gradle/wrapper/
+/audioeffect/build/generated/source/buildConfig/debug/com/waz/audioeffect/
+/audioeffect/.externalNativeBuild/cmake/debug/x86/
+/audioeffect/build/
