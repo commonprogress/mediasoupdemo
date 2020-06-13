@@ -86,7 +86,7 @@ public class PeerAdapter extends RecyclerView.Adapter<PeerAdapter.PeerViewHolder
         layoutParams.height = getItemHeight();
         holder.mPeerView.setLayoutParams(layoutParams);
         // bind
-        holder.bind(mLifecycleOwner, mRoomClient, mPeers.get(position));
+        holder.bind(mLifecycleOwner, mRoomClient, mRoomStore, mPeers.get(position));
     }
 
     @Override
@@ -118,10 +118,10 @@ public class PeerAdapter extends RecyclerView.Adapter<PeerAdapter.PeerViewHolder
             mPeerProps = peerProps;
         }
 
-        void bind(LifecycleOwner owner, RoomClient roomClient, @NonNull Peer peer) {
+        void bind(LifecycleOwner owner, RoomClient roomClient, RoomStore roomStore, @NonNull Peer peer) {
             Logger.d(TAG, "bind() mediasoup id: " + peer.getId() + ", name: " + peer.getDisplayName());
             mPeerProps.connect(owner, peer.getId());
-            mPeerView.setProps(mPeerProps, roomClient);
+            mPeerView.setProps(mPeerProps, roomClient, roomStore);
         }
     }
 }

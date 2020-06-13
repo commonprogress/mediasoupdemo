@@ -1,5 +1,7 @@
 package org.mediasoup.droid.lib;
 
+import android.text.TextUtils;
+
 import java.util.Random;
 
 public class Utils {
@@ -17,5 +19,12 @@ public class Utils {
     for (int i = 0; i < sizeOfRandomString; ++i)
       sb.append(ALLOWED_CHARACTERS.charAt(random.nextInt(ALLOWED_CHARACTERS.length())));
     return sb.toString();
+  }
+
+  public static boolean isEmptyString(String str) {
+    if (TextUtils.isEmpty(str)) {
+      return true;
+    }
+    return str.equals("null");
   }
 }

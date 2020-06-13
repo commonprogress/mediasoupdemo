@@ -23,37 +23,41 @@ import com.jsy.mediasoup.utils.LogUtils;
 
 import org.mediasoup.droid.lib.PeerConnectionUtils;
 import org.mediasoup.droid.lib.RoomClient;
+import org.mediasoup.droid.lib.Utils;
 import org.mediasoup.droid.lib.lv.RoomStore;
+import org.mediasoup.droid.lib.model.Me;
 import org.webrtc.RendererCommon;
 import org.webrtc.SurfaceViewRenderer;
+import org.webrtc.VideoTrack;
 
 /**
  * 自己view 信息
  */
-public class MeView extends FrameLayout {
+public class MeView extends BaseFrameLayout {
     private static final String TAG = MeView.class.getSimpleName();
     private boolean isNeat;
+    private MeProps mMeProps;
+    private RoomClient mRoomClient;
+    private RoomStore mRoomStore;
+    private boolean isAddVideoTrack;
+    private Me curMe;
 
     public MeView(@NonNull Context context) {
         super(context);
-        init(context);
     }
 
     public MeView(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
-        init(context);
     }
 
     public MeView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        init(context);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public MeView(
             @NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
-        init(context);
     }
 
     private FrameLayout peerView;
@@ -81,20 +85,19 @@ public class MeView extends FrameLayout {
     private ImageView changeCam;
     private ImageView share;
 
-    public void setNeatView(boolean isNeat) {
-        this.isNeat = isNeat;
-        if (isNeat) {
-            controls.setVisibility(GONE);
-            box.setVisibility(GONE);
-            peer.setVisibility(GONE);
-            icons.setVisibility(GONE);
-        }
+
+    @Override
+    protected View addChildRootView() {
+        return LayoutInflater.from(mContext).inflate(R.layout.view_me, this, true);
     }
 
-    private void init(Context context) {
-        View view = LayoutInflater.from(context).inflate(R.layout.view_me, this, true);
-        peerView = view.findViewById(R.id.peer_view);
-        videoRenderer = peerView.findViewById(R.id.video_renderer);
+    @Override
+    protected void initView() {
+        if (null == rootView) {
+            LogUtils.e(TAG, "initView null == rootView ,mediasoup ");
+        }
+        peerView = rootView.findViewById(R.id.peer_view);
+
         video_hidden = peerView.findViewById(R.id.video_hidden);
         icons = peerView.findViewById(R.id.icons);
         stats = peerView.findViewById(R.id.stats);
@@ -112,22 +115,72 @@ public class MeView extends FrameLayout {
         device_version = peerView.findViewById(R.id.device_version);
         peer_display_name = peerView.findViewById(R.id.peer_display_name);
 
-        controls = view.findViewById(R.id.controls);
-        mic = view.findViewById(R.id.mic);
-        cam = view.findViewById(R.id.cam);
-        changeCam = view.findViewById(R.id.change_cam);
-        share = view.findViewById(R.id.share);
-        videoRenderer.init(PeerConnectionUtils.getEglContext(), null);//设置摄像头信息的渲染
+        controls = rootView.findViewById(R.id.controls);
+        mic = rootView.findViewById(R.id.mic);
+        cam = rootView.findViewById(R.id.cam);
+        changeCam = rootView.findViewById(R.id.change_cam);
+        share = rootView.findViewById(R.id.share);
+    }
+
+    private void initSurfaceRenderer() {
+        if (null == peerView) {
+            LogUtils.e(TAG, "initSurfaceRenderer null == peerView , mediasoup ");
+        }
+        if (null != videoRenderer) {
+            LogUtils.e(TAG, "initSurfaceRenderer null != videoRenderer ,mediasoup ");
+            return;
+        }
+        isAddVideoTrack = false;
+        try {
+            videoRenderer = peerView.findViewById(R.id.video_renderer);
+            videoRenderer.init(PeerConnectionUtils.getEglContext(), null);//设置摄像头信息的渲染
+        } catch (Exception e) {
+            e.printStackTrace();
+            videoRenderer.release();
+            videoRenderer = peerView.findViewById(R.id.video_renderer);
+            videoRenderer.init(PeerConnectionUtils.getEglContext(), null);//设置摄像头信息的渲染
+        }
         videoRenderer.setEnableHardwareScaler(true);
+        //SurfaceView 层次覆盖关系
+        videoRenderer.setZOrderMediaOverlay(true);
         videoRenderer.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT);
     }
 
+    public void setNeatView(boolean isNeat) {
+        this.isNeat = isNeat;
+        if (isNeat) {
+            controls.setVisibility(GONE);
+            box.setVisibility(GONE);
+            peer.setVisibility(GONE);
+            icons.setVisibility(GONE);
+        }
+    }
+
+    @Override
+    protected void loadViewData(boolean isAgain) {
+        LogUtils.i(TAG, "loadViewData,mediasoup isAddVideoTrack:" + isAddVideoTrack + ", isAgain:" + isAgain);
+        initSurfaceRenderer();
+        if (isAgain) {
+            curMe = null == mMeProps ? null : (null == mMeProps.getMe() ? null : mMeProps.getMe().get());
+            setPeerViewProps(mMeProps, null != mRoomClient ? mRoomClient.isConnected() : false);
+            setMeCameraFace(mMeProps, null != mRoomClient ? mRoomClient.isConnected() : false);
+            // set view model.
+            setMeProps(mMeProps, null != mRoomClient ? mRoomClient.isConnected() : false);
+        }
+    }
+
     public void setProps(MeProps props, final RoomClient roomClient, RoomStore roomStore) {
+        LogUtils.i(TAG, "loadViewData,mediasoup  setProps isAddVideoTrack:" + isAddVideoTrack);
+        this.mMeProps = props;
+        this.mRoomClient = roomClient;
+        this.mRoomStore = roomStore;
+        isAddVideoTrack = false;
+        curMe = null == mMeProps ? null : (null == mMeProps.getMe() ? null : mMeProps.getMe().get());
         // set view model.
         setPeerViewProps(props, null != roomClient ? roomClient.isConnected() : false);
         setMeCameraFace(props, null != roomClient ? roomClient.isConnected() : false);
         props.setOnPropsLiveDataChange(ediasProps -> {
-            if(roomClient.isConnecting()) {
+            if (!isReleaseView() && roomClient.isConnecting()) {
                 // set view model.
                 setPeerViewProps(props, null != roomClient ? roomClient.isConnected() : false);
                 setMeCameraFace(props, null != roomClient ? roomClient.isConnected() : false);
@@ -156,12 +209,6 @@ public class MeView extends FrameLayout {
                 view -> {
                     // TODO(HaiyangWU): Handle inner click event;
                 });
-
-        //SurfaceView 层次覆盖关系
-        videoRenderer.setZOrderMediaOverlay(true);
-
-        // set view model.
-        setMeProps(props, null != roomClient ? roomClient.isConnected() : false);
 
         // register click listener. 是否静音
         mic.setOnClickListener(
@@ -210,8 +257,27 @@ public class MeView extends FrameLayout {
         if (null == props) {
             return;
         }
-        BindingAdapters.render(videoRenderer, props.getVideoTrack().get(), isConnected);
-        BindingAdapters.renderEmpty(video_hidden, props.getVideoTrack().get(), isConnected);
+
+        Me me = null == props ? null : (null == props.getMe() ? null : props.getMe().get());
+        VideoTrack videoTrack = null == props ? null : (null == props.getVideoTrack() ? null : props.getVideoTrack().get());
+        MeProps.DeviceState camState = null == props ? null : (null == props.getCamState() ? null : props.getCamState().get());
+        int step = 0;
+        if (null == videoRenderer || null == me || null == videoTrack || !isConnected) {
+            isAddVideoTrack = BindingAdapters.render(videoRenderer, videoTrack, isConnected);
+            BindingAdapters.renderEmpty(video_hidden, videoTrack, isConnected);
+            step = 1;
+        } else {
+            if (!isAddVideoTrack || videoRenderer.getVisibility() != VISIBLE || video_hidden.getVisibility() == VISIBLE || null == curMe || Utils.isEmptyString(me.getId()) || !me.getId().equals(curMe.getId())) {
+                isAddVideoTrack = BindingAdapters.render(videoRenderer, videoTrack, isConnected);
+                BindingAdapters.renderEmpty(video_hidden, videoTrack, isConnected);
+                step = 2;
+            } else {
+                step = 3;
+            }
+        }
+        LogUtils.i(TAG, "setPeerViewProps,mediasoup null == videoTrack:" + (null == videoTrack) + ",step:" + step + ", isConnected:" + isConnected + ", isAddVideoTrack:" + isAddVideoTrack + ",camState:" + camState + ", null == me:" + (null == me) + ", null == curMe:" + (null == curMe) + ",null == props:" + (null == props));
+        this.curMe = me;
+
 
         audio_producer.setVisibility(!TextUtils.isEmpty(props.getAudioProducerId().get()) ? View.VISIBLE : View.GONE);
         audio_producer.setText(props.getAudioProducerId().get());
@@ -247,8 +313,27 @@ public class MeView extends FrameLayout {
             changeCam.setClickable(!(props.getMe().get().isCamInProgress() || props.getMe().get().isShareInProgress()));
             share.setClickable(!(props.getMe().get().isCamInProgress() || props.getMe().get().isShareInProgress()));
         } else {
-            LogUtils.i(TAG, "setMeProps,null == props.getMe().get()");
+            LogUtils.i(TAG, "setMeProps,mediasoup null == props.getMe().get()");
         }
     }
 
+
+    @Override
+    protected void releaseViewData() {
+        LogUtils.i(TAG, "releaseViewData ,mediasoup  :" + this);
+        releaseRenderer();
+    }
+
+    public void clearEglRendererImage() {
+        if (null != videoRenderer) {
+            videoRenderer.clearImage();
+        }
+    }
+
+    public void releaseRenderer() {
+        if (null != videoRenderer) {
+            videoRenderer.release();
+        }
+        videoRenderer = null;
+    }
 }

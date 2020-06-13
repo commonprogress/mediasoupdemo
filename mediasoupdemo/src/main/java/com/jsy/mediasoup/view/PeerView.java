@@ -22,36 +22,44 @@ import com.jsy.mediasoup.utils.LogUtils;
 
 import org.mediasoup.droid.lib.PeerConnectionUtils;
 import org.mediasoup.droid.lib.RoomClient;
+import org.mediasoup.droid.lib.Utils;
+import org.mediasoup.droid.lib.lv.RoomStore;
+import org.mediasoup.droid.lib.model.Info;
+import org.mediasoup.droid.lib.model.Peer;
 import org.webrtc.RendererCommon;
 import org.webrtc.SurfaceViewRenderer;
+import org.webrtc.VideoTrack;
 
 /**
  * 其他user view 信息
  */
-public class PeerView extends FrameLayout {
+public class PeerView extends BaseFrameLayout {
     private static final String TAG = PeerView.class.getSimpleName();
+    private static final long REFRESH_TRACK_INTERVAL = 10 * 60 * 1000;
     private boolean isNeat;
+    private PeerProps mPeerProps;
+    private RoomClient mRoomClient;
+    private RoomStore mRoomStore;
+    private boolean isAddVideoTrack;
+    private Peer curPeer;
+    private long lastAddTrackTime;
 
     public PeerView(@NonNull Context context) {
         super(context);
-        init(context);
     }
 
     public PeerView(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
-        init(context);
     }
 
     public PeerView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        init(context);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public PeerView(
-        @NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+            @NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
-        init(context);
     }
 
     private FrameLayout peerView;
@@ -77,20 +85,19 @@ public class PeerView extends FrameLayout {
     private ImageView mic_off;
     private ImageView cam_off;
 
-    public void setNeatView(boolean isNeat) {
-        this.isNeat = isNeat;
-        if (isNeat) {
-            controls_state.setVisibility(GONE);
-            box.setVisibility(GONE);
-            peer.setVisibility(GONE);
-            icons.setVisibility(GONE);
-        }
+    @Override
+    protected View addChildRootView() {
+        return LayoutInflater.from(mContext).inflate(R.layout.view_peer, this, true);
     }
 
-    private void init(Context context) {
-        View view = LayoutInflater.from(context).inflate(R.layout.view_peer, this, true);
-        peerView = view.findViewById(R.id.peer_view);
-        videoRenderer = peerView.findViewById(R.id.video_renderer);
+    @Override
+    protected void initView() {
+        lastAddTrackTime = System.currentTimeMillis();
+        if (null == rootView) {
+            LogUtils.e(TAG, "initView null == rootView ,mediasoup");
+        }
+        peerView = rootView.findViewById(R.id.peer_view);
+
         video_hidden = peerView.findViewById(R.id.video_hidden);
         icons = peerView.findViewById(R.id.icons);
         stats = peerView.findViewById(R.id.stats);
@@ -108,22 +115,71 @@ public class PeerView extends FrameLayout {
         device_version = peerView.findViewById(R.id.device_version);
         peer_display_name = peerView.findViewById(R.id.peer_display_name);
 
-        controls_state = view.findViewById(R.id.controls_state);
-        mic_off = view.findViewById(R.id.mic_off);
-        cam_off = view.findViewById(R.id.cam_off);
-
-        videoRenderer.init(PeerConnectionUtils.getEglContext(), null);//
-//        videoRenderer.setMirror(true);
-        videoRenderer.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT);
-        videoRenderer.setEnableHardwareScaler(true);
+        controls_state = rootView.findViewById(R.id.controls_state);
+        mic_off = rootView.findViewById(R.id.mic_off);
+        cam_off = rootView.findViewById(R.id.cam_off);
     }
 
-    public void setProps(PeerProps props, RoomClient roomClient) {
+    private void initSurfaceRenderer() {
+        if (null == peerView) {
+            LogUtils.e(TAG, "initSurfaceRenderer ,mediasoup null == peerView");
+        }
+        if (null != videoRenderer) {
+            LogUtils.e(TAG, "initSurfaceRenderer ,mediasoup null != videoRenderer");
+            return;
+        }
+        isAddVideoTrack = false;
+        try {
+            videoRenderer = peerView.findViewById(R.id.video_renderer);
+            videoRenderer.init(PeerConnectionUtils.getEglContext(), null);//
+        } catch (Exception e) {
+            e.printStackTrace();
+            videoRenderer.release();
+            videoRenderer = peerView.findViewById(R.id.video_renderer);
+            videoRenderer.init(PeerConnectionUtils.getEglContext(), null);//
+        }
+//        videoRenderer.setMirror(true);
+        videoRenderer.setEnableHardwareScaler(true);
+        videoRenderer.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT);
+    }
+
+    public void setNeatView(boolean isNeat) {
+        this.isNeat = isNeat;
+        if (isNeat) {
+            controls_state.setVisibility(GONE);
+            box.setVisibility(GONE);
+            peer.setVisibility(GONE);
+            icons.setVisibility(GONE);
+        }
+    }
+
+    @Override
+    protected void loadViewData(boolean isAgain) {
+        LogUtils.i(TAG, "loadViewData,mediasoup isAddVideoTrack:" + isAddVideoTrack + ", isAgain:" + isAgain);
+        initSurfaceRenderer();
+        if (isAgain) {
+            Info curInfo = null == mPeerProps ? null : (null == mPeerProps.getPeer() ? null : mPeerProps.getPeer().get());
+            curPeer = null == curInfo ? null : (Peer) curInfo;
+            // set view model into included layout
+            setPeerViewProps(mPeerProps, null != mRoomClient ? mRoomClient.isConnected() : false);
+            // set view model
+            setPeerProps(mPeerProps, null != mRoomClient ? mRoomClient.isConnected() : false);
+        }
+    }
+
+    public void setProps(PeerProps props, RoomClient roomClient, RoomStore roomStore) {
+        LogUtils.i(TAG, "loadViewData,mediasoup  setProps isAddVideoTrack:" + isAddVideoTrack);
+        this.mPeerProps = props;
+        this.mRoomClient = roomClient;
+        this.mRoomStore = roomStore;
+        isAddVideoTrack = false;
+        Info curInfo = null == props ? null : (null == props.getPeer() ? null : props.getPeer().get());
+        curPeer = null == curInfo ? null : (Peer) curInfo;
         // set view model into included layout
         setPeerViewProps(props, null != roomClient ? roomClient.isConnected() : false);
 
         props.setOnPropsLiveDataChange(ediasProps -> {
-            if(roomClient.isConnecting()) {
+            if (!isReleaseView() && roomClient.isConnecting()) {
                 // set view model.
                 setPeerViewProps(props, null != roomClient ? roomClient.isConnected() : false);
                 // set view model.
@@ -133,15 +189,15 @@ public class PeerView extends FrameLayout {
 
         // register click listener.
         info.setOnClickListener(
-            view -> {
-                Boolean showInfo = props.getShowInfo().get();
-                props.getShowInfo().set(showInfo != null && showInfo ? Boolean.FALSE : Boolean.TRUE);
-            });
+                view -> {
+                    Boolean showInfo = props.getShowInfo().get();
+                    props.getShowInfo().set(showInfo != null && showInfo ? Boolean.FALSE : Boolean.TRUE);
+                });
 
         stats.setOnClickListener(
-            view -> {
-                // TODO(HaiyangWU): Handle inner click event;
-            });
+                view -> {
+                    // TODO(HaiyangWU): Handle inner click event;
+                });
 
         // set view model
         setPeerProps(props, null != roomClient ? roomClient.isConnected() : false);
@@ -153,8 +209,26 @@ public class PeerView extends FrameLayout {
         if (null == props) {
             return;
         }
-        BindingAdapters.render(videoRenderer, props.getVideoTrack().get(), isConnected);
-        BindingAdapters.renderEmpty(video_hidden, props.getVideoTrack().get(), isConnected);
+        Peer user = null == props ? null : (null == props.getPeer() ? null : (Peer) props.getPeer().get());
+        VideoTrack videoTrack = null == props ? null : (null == props.getVideoTrack() ? null : props.getVideoTrack().get());
+        boolean isPropVideoVisible = null == props ? false : (null == props.getVideoVisible() ? false : props.getVideoVisible().get());
+        boolean isPeerVideoVisible = null == user ? false : user.isVideoVisible();
+        int step = 0;
+        if (null == videoRenderer || null == user || null == videoTrack || !isConnected) {
+            isAddVideoTrack = BindingAdapters.render(videoRenderer, videoTrack, isConnected);
+            BindingAdapters.renderEmpty(video_hidden, videoTrack, isConnected);
+            step = 1;
+        } else {
+            if (!isAddVideoTrack || isNeedRefreshVideoTrack() || videoRenderer.getVisibility() != VISIBLE || video_hidden.getVisibility() == VISIBLE || null == curPeer || Utils.isEmptyString(user.getId()) || !user.getId().equals(curPeer.getId())) {
+                isAddVideoTrack = BindingAdapters.render(videoRenderer, videoTrack, isConnected);
+                BindingAdapters.renderEmpty(video_hidden, videoTrack, isConnected);
+                step = 2;
+            } else {
+                step = 3;
+            }
+        }
+        LogUtils.i(TAG, "setPeerViewProps,mediasoup null == videoTrack:" + (null == videoTrack) + ", step:" + step + ", null == videoRenderer:" + (null == videoRenderer) + ", isConnected:" + isConnected + ", isAddVideoTrack:" + isAddVideoTrack + ", isPropVideoVisible:" + isPropVideoVisible + ", isPeerVideoVisible:" + isPeerVideoVisible + ", null == user:" + (null == user) + ", null == curPeer:" + (null == curPeer) + ", null == props:" + (null == props));
+        this.curPeer = user;
 
         audio_producer.setVisibility(!TextUtils.isEmpty(props.getAudioProducerId().get()) ? View.VISIBLE : View.GONE);
         audio_producer.setText(props.getAudioProducerId().get());
@@ -184,5 +258,33 @@ public class PeerView extends FrameLayout {
         }
         mic_off.setVisibility(!props.getAudioEnabled().get() ? View.VISIBLE : View.GONE);
         cam_off.setVisibility(!props.getVideoVisible().get() ? View.VISIBLE : View.GONE);
+    }
+
+    private boolean isNeedRefreshVideoTrack() {
+        long curTime = System.currentTimeMillis();
+        if (curTime - lastAddTrackTime > REFRESH_TRACK_INTERVAL) {
+            lastAddTrackTime = curTime;
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    protected void releaseViewData() {
+        LogUtils.i(TAG, "releaseViewData ,mediasoup " + this);
+        releaseRenderer();
+    }
+
+    public void clearEglRendererImage() {
+        if (null != videoRenderer) {
+            videoRenderer.clearImage();
+        }
+    }
+
+    public void releaseRenderer() {
+        if (null != videoRenderer) {
+            videoRenderer.release();
+        }
+        videoRenderer = null;
     }
 }

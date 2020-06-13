@@ -77,8 +77,9 @@ public class PeersVideoAdapter extends RecyclerView.Adapter<PeersVideoAdapter.Pe
 //        peerViewHolder.peerView.setNeatView(false);
         Peer peer = (Peer) peers.get(i);
         RoomClient mRoomClient = MediasoupLoaderUtils.getInstance().getRoomClient();
+        RoomStore mRoomStore = MediasoupLoaderUtils.getInstance().getRoomStore();
         peerViewHolder.peerProps.connect(lifecycleOwner, peer.getId());
-        peerViewHolder.peerView.setProps(peerViewHolder.peerProps, mRoomClient);
+        peerViewHolder.peerView.setProps(peerViewHolder.peerProps, mRoomClient, mRoomStore);
     }
 
     class PeerViewHolder extends RecyclerView.ViewHolder {

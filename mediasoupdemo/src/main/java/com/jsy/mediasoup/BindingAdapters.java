@@ -1,12 +1,12 @@
 package com.jsy.mediasoup;
 
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.jsy.mediasoup.utils.LogUtils;
 import com.jsy.mediasoup.vm.MeProps;
 
 import org.mediasoup.droid.lib.RoomClient;
@@ -64,7 +64,7 @@ public class BindingAdapters {
 
   public static void restartIce(
           ImageView view, boolean restart_ice_in_progress, Animation animation) {
-    Log.d(TAG, "restartIce() " + restart_ice_in_progress);
+    LogUtils.d(TAG, "restartIce() " + restart_ice_in_progress);
     view.setEnabled(!restart_ice_in_progress);
     if (restart_ice_in_progress) {
       view.startAnimation(animation);
@@ -112,7 +112,7 @@ public class BindingAdapters {
     if (state == null) {
       return;
     }
-    Log.d(TAG, "edias_mic_state: " + state.name());
+    LogUtils.d(TAG, "edias_mic_state: " + state.name());
     if (MeProps.DeviceState.ON.equals(state)) {
       imageView.setBackgroundResource(R.drawable.bg_media_box_on);
     } else {
@@ -136,7 +136,7 @@ public class BindingAdapters {
     if (state == null) {
       return;
     }
-    Log.d(TAG, "edias_cam_state: " + state.name());
+    LogUtils.d(TAG, "edias_cam_state: " + state.name());
     if (MeProps.DeviceState.ON.equals(state)) {
       imageView.setBackgroundResource(R.drawable.bg_media_box_on);
     } else {
@@ -160,7 +160,7 @@ public class BindingAdapters {
     if (state == null) {
       return;
     }
-    Log.d(TAG, "edias_change_came_state: " + state.name());
+    LogUtils.d(TAG, "edias_change_came_state: " + state.name());
     if (MeProps.DeviceState.ON.equals(state)) {
       view.setEnabled(true);
     } else {
@@ -172,7 +172,7 @@ public class BindingAdapters {
     if (state == null) {
       return;
     }
-    Log.d(TAG, "edias_share_state: " + state.name());
+    LogUtils.d(TAG, "edias_share_state: " + state.name());
     if (MeProps.DeviceState.ON.equals(state)) {
       view.setEnabled(true);
     } else {
@@ -180,18 +180,23 @@ public class BindingAdapters {
     }
   }
 
-  public static void render(SurfaceViewRenderer renderer, VideoTrack track, boolean isConnected) {
-    Log.d(TAG, "edias_render: " + (track != null && isConnected ? "VISIBLE" : "GONE") + ", isConnected:" + isConnected);
-    if (track != null && isConnected) {
-      track.addSink(renderer);
-      renderer.setVisibility(View.VISIBLE);
-    } else {
-      renderer.setVisibility(View.GONE);
+  public static boolean render(SurfaceViewRenderer renderer, VideoTrack track, boolean isConnected) {
+    LogUtils.d(TAG, "edias_render: " + (track != null && isConnected ? "VISIBLE" : "GONE") + ", isConnected:" + isConnected + ", null == renderer:" + (null == renderer));
+    if(null != renderer ) {
+      if (track != null && isConnected) {
+        track.addSink(renderer);
+        renderer.setVisibility(View.VISIBLE);
+        return true;
+      } else {
+        renderer.setVisibility(View.GONE);
+        return false;
+      }
     }
+    return false;
   }
 
   public static void renderEmpty(View renderer, VideoTrack track, boolean isConnected) {
-    Log.d(TAG, "edias_render_empty: " + (track != null && isConnected ? "GONE" : "VISIBLE") + ", isConnected:" + isConnected);
+    LogUtils.d(TAG, "edias_render_empty: " + (track != null && isConnected ? "GONE" : "VISIBLE") + ", isConnected:" + isConnected);
     if (track == null || !isConnected) {
       renderer.setVisibility(View.VISIBLE);
     } else {

@@ -9,11 +9,11 @@ import android.hardware.camera2.CameraMetadata;
 import android.support.annotation.MainThread;
 import android.text.TextUtils;
 import android.util.AndroidException;
-import android.util.Log;
 import android.view.Surface;
 import android.view.View;
 import android.view.WindowManager;
 
+import com.jsy.mediasoup.utils.LogUtils;
 import org.mediasoup.droid.Logger;
 import org.webrtc.AudioSource;
 import org.webrtc.AudioTrack;
@@ -317,18 +317,18 @@ public class PeerConnectionUtils {
         new JavaAudioDeviceModule.AudioTrackErrorCallback() {
           @Override
           public void onWebRtcAudioTrackInitError(String errorMessage) {
-            Log.e(TAG, "onWebRtcAudioTrackInitError: " + errorMessage);
+            LogUtils.e(TAG, "onWebRtcAudioTrackInitError: " + errorMessage);
           }
 
           @Override
           public void onWebRtcAudioTrackStartError(
-              JavaAudioDeviceModule.AudioTrackStartErrorCode errorCode, String errorMessage) {
-            Log.e(TAG, "onWebRtcAudioTrackStartError: " + errorCode + ". " + errorMessage);
+            JavaAudioDeviceModule.AudioTrackStartErrorCode errorCode, String errorMessage) {
+            LogUtils.e(TAG, "onWebRtcAudioTrackStartError: " + errorCode + ". " + errorMessage);
           }
 
           @Override
           public void onWebRtcAudioTrackError(String errorMessage) {
-            Log.e(TAG, "onWebRtcAudioTrackError: " + errorMessage);
+            LogUtils.e(TAG, "onWebRtcAudioTrackError: " + errorMessage);
           }
         };
 

@@ -51,7 +51,7 @@ public class OtherMediasoupView extends UserMediasoupView {
             RoomClient roomClient = MediasoupLoaderUtils.getInstance().getRoomClient();
             RoomStore roomStore = MediasoupLoaderUtils.getInstance().getRoomStore();
             PeerProps peerProps = changeAndNotify.getPeerPropsAndChange(lifecycleOwner, roomClient, roomStore, peer);
-            peerView.setProps(peerProps, roomClient);
+            peerView.setProps(peerProps, roomClient, roomStore);
         }
         return peerView;
     }
