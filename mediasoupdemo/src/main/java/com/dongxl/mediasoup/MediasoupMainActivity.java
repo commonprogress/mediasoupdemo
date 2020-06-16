@@ -1,13 +1,16 @@
 package com.dongxl.mediasoup;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.CardView;
@@ -22,18 +25,13 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.jsy.mediasoup.MediasoupConstant;
-import com.jsy.mediasoup.MediasoupLoaderUtils;
-import com.jsy.mediasoup.MediasoupManagement;
-import com.jsy.mediasoup.PropsChangeAndNotify;
-import com.jsy.mediasoup.R;
+import com.jsy.mediasoup.*;
 import com.jsy.mediasoup.interfaces.PropsLiveDataChange;
 import com.jsy.mediasoup.interfaces.RoomStoreObserveCallback;
 import com.jsy.mediasoup.services.MediasoupAidlInterface;
 import com.jsy.mediasoup.services.MediasoupService;
 import com.jsy.mediasoup.services.RoomAidlInterface;
 import com.jsy.mediasoup.utils.LogUtils;
-import com.jsy.mediasoup.view.MeView;
 import com.jsy.mediasoup.vm.EdiasProps;
 import com.jsy.mediasoup.vm.MeProps;
 import com.nabinbhandari.android.permissions.PermissionHandler;
@@ -119,6 +117,18 @@ public class MediasoupMainActivity extends AppCompatActivity {
         @Override
         public void onOtherLeave() throws RemoteException {
             LogUtils.i(TAG, "==roomBinder mediasoup onOtherLeave==");
+        }
+
+        /**
+         * 获取共享屏幕需要参数
+         */
+        @Override
+        public boolean reqShareScreenIntentData() throws RemoteException {
+            LogUtils.i(TAG, "==roomBinder mediasoup onShareScreenIntentData==");
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                return Utils.reqShareScreenIntentData(MediasoupMainActivity.this, MediasoupConstant.CAPTURE_PERMISSION_REQUEST_CODE);
+            }
+            return false;
         }
 
         @Override
@@ -667,6 +677,28 @@ public class MediasoupMainActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == MediasoupConstant.CAPTURE_PERMISSION_REQUEST_CODE) {
+            LogUtils.d(TAG, "request Share Screen done resultCode:" + resultCode + ",requestCode:" + MediasoupConstant.CAPTURE_PERMISSION_REQUEST_CODE);
+            boolean isReqSuc = resultCode == Activity.RESULT_OK && null != data;
+            if (isReqSuc) {
+                MediasoupConstant.mediaProjectionPermissionResultCode = resultCode;
+                MediasoupConstant.mediaProjectionPermissionResultData = data;
+            } else {
+                MediasoupConstant.mediaProjectionPermissionResultCode = 0;
+                MediasoupConstant.mediaProjectionPermissionResultData = null;
+            }
+            try {
+                if (null != mediasoupBinder) {
+                    mediasoupBinder.setShareScreenIntentData(isReqSuc);
+                }
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     /**
      * 加入

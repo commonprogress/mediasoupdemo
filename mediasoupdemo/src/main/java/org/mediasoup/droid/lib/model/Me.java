@@ -1,5 +1,8 @@
 package org.mediasoup.droid.lib.model;
 
+import android.os.Build;
+import android.support.annotation.RequiresApi;
+
 import java.util.Objects;
 
 /**
@@ -171,6 +174,7 @@ public class Me extends Info {
       mFrontCamera = true;
   }
 
+  @RequiresApi(api = Build.VERSION_CODES.KITKAT)
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;

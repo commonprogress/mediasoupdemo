@@ -1,56 +1,31 @@
 package org.mediasoup.droid.lib;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.hardware.Camera;
-import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CameraMetadata;
+import android.media.projection.MediaProjection;
+import android.os.Build;
 import android.support.annotation.MainThread;
+import android.support.annotation.RequiresApi;
 import android.text.TextUtils;
 import android.util.AndroidException;
 import android.view.Surface;
-import android.view.View;
 import android.view.WindowManager;
 
+import com.jsy.mediasoup.MediasoupConstant;
 import com.jsy.mediasoup.utils.LogUtils;
 import org.mediasoup.droid.Logger;
-import org.webrtc.AudioSource;
-import org.webrtc.AudioTrack;
-import org.webrtc.Camera1Enumerator;
-import org.webrtc.Camera2Enumerator;
-import org.webrtc.CameraEnumerator;
-import org.webrtc.CameraVideoCapturer;
-import org.webrtc.DefaultVideoDecoderFactory;
-import org.webrtc.DefaultVideoEncoderFactory;
-import org.webrtc.EglBase;
-import org.webrtc.EncodedImage;
-import org.webrtc.Logging;
-import org.webrtc.MediaCodecVideoDecoder;
-import org.webrtc.MediaCodecVideoEncoder;
-import org.webrtc.MediaConstraints;
-import org.webrtc.MediaStream;
-import org.webrtc.PeerConnectionFactory;
-import org.webrtc.SurfaceTextureHelper;
-import org.webrtc.ThreadUtils;
-import org.webrtc.VideoCodecInfo;
-import org.webrtc.VideoCodecStatus;
-import org.webrtc.VideoDecoder;
-import org.webrtc.VideoDecoderFactory;
-import org.webrtc.VideoDecoderFallback;
-import org.webrtc.VideoEncoder;
-import org.webrtc.VideoEncoderFactory;
-import org.webrtc.VideoEncoderFallback;
-import org.webrtc.VideoFrame;
-import org.webrtc.VideoSource;
-import org.webrtc.VideoTrack;
+import org.webrtc.*;
 import org.webrtc.audio.AudioDeviceModule;
 import org.webrtc.audio.JavaAudioDeviceModule;
 import org.webrtc.voiceengine.WebRtcAudioUtils;
 
+import java.io.IOException;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * PeerConnection通信建立流程 （@link org.mediasoup.droid.PeerConnection (没有用？)）
@@ -70,6 +45,12 @@ public class PeerConnectionUtils {
   private static final String AUDIO_TRACK_ID = "ARDAMSa0";
   private static String mPreferCameraFace;
   private static EglBase mEglBase = EglBase.create();
+
+    private int curVideoSize;
+
+    private static final int VIDEO_SIZE_HIGH = 2;
+    private static final int VIDEO_SIZE_MID = 4;
+    private static final int VIDEO_SIZE_LOW = 8;
 
     /**
      * 获得渲染器
@@ -92,7 +73,7 @@ public class PeerConnectionUtils {
 //  private MediaStream mMediaStream;
   private AudioSource mAudioSource;
   private VideoSource mVideoSource;
-  private CameraVideoCapturer mCamCapture;
+  private VideoCapturer mVideoCapturer;
 
   public PeerConnectionUtils() {
     mThreadChecker = new ThreadUtils.ThreadChecker();
@@ -355,6 +336,46 @@ public class PeerConnectionUtils {
   }
 
     /**
+     * 共享视频文件
+     *
+     * @param videoFile 本地视频文件
+     */
+    private void createFileCapturer(String videoFile) {
+        Logger.d(TAG, "createFileCapturer() videoFile:" + videoFile);
+        if (!Utils.isEmptyString(videoFile)) {
+            try {
+                mThreadChecker.checkIsOnValidThread();
+                mVideoCapturer = new FileVideoCapturer(videoFile);
+            } catch (IOException e) {
+                e.printStackTrace();
+                Logger.e(TAG, "createFileCapturer: Failed to open video file for emulated camera IOException:" + e.getLocalizedMessage());
+            }
+        }
+    }
+
+    /**
+     * 共享屏幕
+     *
+     * @param mediaProjectionPermissionResultCode
+     * @param mediaProjectionPermissionResultData
+     */
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    private void createScreenCapturer(int mediaProjectionPermissionResultCode, Intent mediaProjectionPermissionResultData) {
+        Logger.d(TAG, "createScreenCapturer() mediaProjectionPermissionResultCode:" + mediaProjectionPermissionResultCode);
+        if (null == mediaProjectionPermissionResultData || mediaProjectionPermissionResultCode != Activity.RESULT_OK) {
+            Logger.e(TAG, "createScreenCapturer: User didn't give permission to capture the screen.");
+            return;
+        }
+        mThreadChecker.checkIsOnValidThread();
+        mVideoCapturer = new ScreenCapturerAndroid(mediaProjectionPermissionResultData, new MediaProjection.Callback() {
+            @Override
+            public void onStop() {
+                Logger.e(TAG, "createScreenCapturer: User revoked permission to capture the screen.");
+            }
+        });
+    }
+
+    /**
      * 创建相机普获的画面
      *
      * @param context
@@ -386,7 +407,7 @@ public class PeerConnectionUtils {
       }
 
       if (!TextUtils.isEmpty(selectedDeviceName)) {
-        mCamCapture =
+        mVideoCapturer =
             cameraEnumerator.createCapturer(
                 selectedDeviceName,
                 new CameraVideoCapturer.CameraEventsHandler() {
@@ -431,7 +452,7 @@ public class PeerConnectionUtils {
       }
     }
 
-    if (mCamCapture == null) {
+    if (mVideoCapturer == null) {
       throw new IllegalStateException("Failed to create Camera Capture");
     }
   }
@@ -562,9 +583,9 @@ public class PeerConnectionUtils {
      */
   public void switchCam(CameraVideoCapturer.CameraSwitchHandler switchHandler) {
     Logger.d(TAG, "switchCam()");
-    mThreadChecker.checkIsOnValidThread();
-    if (mCamCapture != null) {
-      mCamCapture.switchCamera(switchHandler);
+    if (mVideoCapturer != null && mVideoCapturer instanceof CameraVideoCapturer) {
+        mThreadChecker.checkIsOnValidThread();
+        ((CameraVideoCapturer) mVideoCapturer).switchCamera(switchHandler);
     }
   }
 
@@ -575,66 +596,160 @@ public class PeerConnectionUtils {
      * @param context
      */
     @MainThread
-    private void createVideoSource(Context context) {
-        Logger.d(TAG, "createVideoSource()");
+    private void createVideoSource(Context context, RoomConstant.VideoCapturerType capturerType) {
+        Logger.d(TAG, "createVideoSource() capturerType:" + capturerType);
         mThreadChecker.checkIsOnValidThread();
         if (mPeerConnectionFactory == null) {
             createPeerConnectionFactory(context);
         }
-        if (mCamCapture == null) {
-            createCamCapture(context);
+        releaseVideoCapturer();
+        switch (capturerType) {
+            case CAMERA:
+                createCamCapture(context);
+                break;
+            case SCREEN:
+                createScreenCapturer(MediasoupConstant.mediaProjectionPermissionResultCode, MediasoupConstant.mediaProjectionPermissionResultData);
+                break;
+            case FILE:
+                createFileCapturer(MediasoupConstant.extraVideoFileAsCamera);
+                break;
         }
 
-        mVideoSource = mPeerConnectionFactory.createVideoSource(/*mCamCapture.isScreencast()*/false);
+        mVideoSource = mPeerConnectionFactory.createVideoSource(mVideoCapturer.isScreencast());
         SurfaceTextureHelper surfaceTextureHelper =
                 SurfaceTextureHelper.create("CaptureThread", mEglBase.getEglBaseContext());
 
-        mCamCapture.initialize(surfaceTextureHelper, context, mVideoSource.getCapturerObserver());
-        mCamCapture.startCapture(640, 480, 15);
+        mVideoCapturer.initialize(surfaceTextureHelper, context, mVideoSource.getCapturerObserver());
+        this.curVideoSize = VIDEO_SIZE_HIGH;
+        mVideoCapturer.startCapture(640, 480, 15);
     }
 
+    /**
+     * 改变摄像头采集的分辨率
+     *
+     * @param videoSize
+     */
+    public boolean changeCaptureFormat(int videoSize) {
+        Logger.d(TAG, "changeCaptureFormat() videoSize:" + videoSize + ",curVideoSize:" + curVideoSize);
+        if (null != mVideoCapturer && mVideoCapturer instanceof CameraVideoCapturer) {
+            mThreadChecker.checkIsOnValidThread();
+            if (curVideoSize != videoSize) {
+                if (videoSize <= VIDEO_SIZE_HIGH && curVideoSize > VIDEO_SIZE_HIGH) {
+                    mVideoCapturer.changeCaptureFormat(640, 480, 15);
+                    this.curVideoSize = videoSize;
+                    return true;
+                } else if (videoSize > VIDEO_SIZE_HIGH && videoSize <= VIDEO_SIZE_MID && (curVideoSize <= VIDEO_SIZE_HIGH || curVideoSize > VIDEO_SIZE_MID)) {
+                    mVideoCapturer.changeCaptureFormat(480, 360, 15);
+                    this.curVideoSize = videoSize;
+                    return true;
+                } else if (videoSize > VIDEO_SIZE_MID && curVideoSize <= VIDEO_SIZE_MID) {
+                    mVideoCapturer.changeCaptureFormat(320, 240, 15);
+                    this.curVideoSize = videoSize;
+                    return true;
+                }
+            }
+            this.curVideoSize = videoSize;
+        }
+        return false;
+    }
+
+    /**
+     * 停止释放VideoSource相关
+     */
+    public void releaseVideoCapturer() {
+        Logger.d(TAG, "releaseVideoCapturer()");
+        mThreadChecker.checkIsOnValidThread();
+        if (mVideoCapturer != null) {
+            try {
+                mVideoCapturer.stopCapture();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            if (!(mVideoCapturer instanceof CameraVideoCapturer)) {
+                mVideoCapturer.dispose();
+            }
+            mVideoCapturer = null;
+        }
+
+        if (mVideoSource != null) {
+            mVideoSource.dispose();
+            mVideoSource = null;
+        }
+    }
 
     /**
      * Audio track creation.
      * 创建音频轨迹
+     *
      * @param context
-     * @param id
      * @return
      */
-  public AudioTrack createAudioTrack(Context context, String id) {
-    Logger.d(TAG, "createAudioTrack()");
-    mThreadChecker.checkIsOnValidThread();
-    if (mAudioSource == null) {
-      createAudioSource(context);
+    public AudioTrack createAudioTrack(Context context) {
+        Logger.d(TAG, "createAudioTrack()");
+        mThreadChecker.checkIsOnValidThread();
+        if (mAudioSource == null) {
+            createAudioSource(context);
+        }
+        return mPeerConnectionFactory.createAudioTrack(AUDIO_TRACK_ID, mAudioSource);
     }
-    id = AUDIO_TRACK_ID;
-    return mPeerConnectionFactory.createAudioTrack(id, mAudioSource);
-  }
 
-  public void addAudioTrackMediaStream(AudioTrack audioTrack){
-//      mMediaStream.addTrack(audioTrack);
-  }
+    public void addAudioTrackMediaStream(AudioTrack audioTrack) {
+//     mMediaStream.addTrack(audioTrack);
+    }
 
     /**
      * Video track creation.
      * 创建视频轨迹
+     *
      * @param context
-     * @param id
+     * @param capturerType
      * @return
      */
-  public VideoTrack createVideoTrack(Context context, String id) {
-    Logger.d(TAG, "createVideoTrack()");
-    mThreadChecker.checkIsOnValidThread();
-    if (mVideoSource == null) {
-      createVideoSource(context);
+    public VideoTrack createVideoTrack(Context context, RoomConstant.VideoCapturerType capturerType) {
+        Logger.d(TAG, "createVideoTrack() capturerType:" + capturerType);
+        mThreadChecker.checkIsOnValidThread();
+        if (mVideoSource == null || !isCurrentVideoCapturer(capturerType)) {
+            createVideoSource(context, capturerType);
+        }
+        return mPeerConnectionFactory.createVideoTrack(VIDEO_TRACK_ID, mVideoSource);
     }
-    id = VIDEO_TRACK_ID;
-    return mPeerConnectionFactory.createVideoTrack(id, mVideoSource);
-  }
 
-  public void addVideoTrackMediaStream(VideoTrack videoTrack){
-//      mMediaStream.addTrack(videoTrack);
-  }
+    public void addVideoTrackMediaStream(VideoTrack videoTrack) {
+//    mMediaStream.addTrack(videoTrack);
+    }
+
+    /**
+     * 判断当前存在的VideoCapturer 和想要的是否一致
+     *
+     * @param capturerType
+     * @return
+     */
+    private boolean isCurrentVideoCapturer(RoomConstant.VideoCapturerType capturerType) {
+        if (null == capturerType || mVideoCapturer == null) {
+            return false;
+        }
+        return capturerType == getCurrentVideoCapturer();
+    }
+
+    /**
+     * 获取当前存在VideoCapturer 类型
+     *
+     * @return
+     */
+    public RoomConstant.VideoCapturerType getCurrentVideoCapturer() {
+        if (null == mVideoCapturer) {
+            return null;
+        } else if (mVideoCapturer instanceof CameraVideoCapturer) {
+            return RoomConstant.VideoCapturerType.CAMERA;
+        } else if (mVideoCapturer instanceof ScreenCapturerAndroid) {
+            return RoomConstant.VideoCapturerType.SCREEN;
+        } else if (mVideoCapturer instanceof FileVideoCapturer) {
+            return RoomConstant.VideoCapturerType.FILE;
+        } else {
+            return null;
+        }
+    }
+
 
     /**
      * 销毁PeerConnectionUtils 中相关的
@@ -645,20 +760,21 @@ public class PeerConnectionUtils {
   public void dispose() {
     Logger.w(TAG, "dispose()");
     mThreadChecker.checkIsOnValidThread();
-    if (mCamCapture != null) {
-      mCamCapture.dispose();
-      mCamCapture = null;
+    if (mVideoCapturer != null) {
+      mVideoCapturer.dispose();
+      mVideoCapturer = null;
     }
 
-    if (mVideoSource != null) {
-      mVideoSource.dispose();
-      mVideoSource = null;
-    }
-
-    if (mAudioSource != null) {
-      mAudioSource.dispose();
-      mAudioSource = null;
-    }
+    releaseVideoCapturer();
+//    if (mVideoSource != null) {
+//      mVideoSource.dispose();
+//      mVideoSource = null;
+//    }
+//
+//    if (mAudioSource != null) {
+//      mAudioSource.dispose();
+//      mAudioSource = null;
+//    }
 
 //    if(null != mMediaStream){
 //        mMediaStream.dispose();

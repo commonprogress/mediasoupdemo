@@ -184,6 +184,14 @@ public class RoomStore {
     me.postValue(me -> me.setCamInProgress(inProgress));
   }
 
+  /**
+   * 开启共享屏幕进度
+   * @param inProgress
+   */
+  public void setShareInProgress(boolean inProgress) {
+    me.postValue(me -> me.setShareInProgress(inProgress));
+  }
+
     /**
      * 切换摄像头完成
      * @param isFrontCamera 是否前置
@@ -206,6 +214,10 @@ public class RoomStore {
 
   public void removeProducer(String producerId) {
     producers.postValue(producers -> producers.removeProducer(producerId));
+  }
+
+  public void setProducerType(String producerId, String type) {
+    producers.postValue(producers -> producers.setProducerType(producerId, type));
   }
 
   public void setProducerScore(String producerId, JSONArray score) {
@@ -298,6 +310,10 @@ public class RoomStore {
   public void setConsumerCurrentLayers(String consumerId, int spatialLayer, int temporalLayer) {
     consumers.postValue(
         consumers -> consumers.setConsumerCurrentLayers(consumerId, spatialLayer, temporalLayer));
+  }
+
+  public void setConsumerType(String consumerId, String type) {
+    consumers.postValue(consumers -> consumers.setConsumerType(consumerId, type));
   }
 
   public void setConsumerScore(String consumerId, JSONArray score) {

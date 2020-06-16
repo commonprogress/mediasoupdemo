@@ -356,6 +356,17 @@ public class RoomManagement implements MediasoupConnectCallback {
         return isRoomConnected();
     }
 
+    /**
+     * 获取共享屏幕需要参数
+     */
+    @Override
+    public boolean reqShareScreenIntentData() {
+        if (null != managementCallback) {
+            return managementCallback.reqShareScreenIntentData();
+        }
+        return false;
+    }
+
     public RoomProps getRoomProps() {
         if (null != managementCallback) {
             return managementCallback.getRoomProps();
@@ -757,5 +768,15 @@ public class RoomManagement implements MediasoupConnectCallback {
             return;
         }
         mRoomClient.enableShare();
+    }
+
+    /**
+     * 设置共享屏幕共享的intent数据
+     */
+    public void setShareScreenIntentData(boolean isReqSuc) {
+        if (null == mRoomClient) {
+            return;
+        }
+        mRoomClient.startEnableShare(isReqSuc);
     }
 }

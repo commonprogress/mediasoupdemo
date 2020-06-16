@@ -122,6 +122,7 @@ public class MeView extends BaseFrameLayout {
         share = rootView.findViewById(R.id.share);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.ECLAIR)
     private void initSurfaceRenderer() {
         if (null == peerView) {
             LogUtils.e(TAG, "initSurfaceRenderer null == peerView , mediasoup ");
@@ -156,12 +157,12 @@ public class MeView extends BaseFrameLayout {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.ECLAIR)
     @Override
     protected void loadViewData(boolean isAgain) {
         LogUtils.i(TAG, "loadViewData,mediasoup isAddVideoTrack:" + isAddVideoTrack + ", isAgain:" + isAgain);
         initSurfaceRenderer();
         if (isAgain) {
-            curMe = null == mMeProps ? null : (null == mMeProps.getMe() ? null : mMeProps.getMe().get());
             setPeerViewProps(mMeProps, null != mRoomClient ? mRoomClient.isConnected() : false);
             setMeCameraFace(mMeProps, null != mRoomClient ? mRoomClient.isConnected() : false);
             // set view model.
@@ -169,13 +170,13 @@ public class MeView extends BaseFrameLayout {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.CUPCAKE)
     public void setProps(MeProps props, final RoomClient roomClient, RoomStore roomStore) {
         LogUtils.i(TAG, "loadViewData,mediasoup  setProps isAddVideoTrack:" + isAddVideoTrack);
         this.mMeProps = props;
         this.mRoomClient = roomClient;
         this.mRoomStore = roomStore;
         isAddVideoTrack = false;
-        curMe = null == mMeProps ? null : (null == mMeProps.getMe() ? null : mMeProps.getMe().get());
         // set view model.
         setPeerViewProps(props, null != roomClient ? roomClient.isConnected() : false);
         setMeCameraFace(props, null != roomClient ? roomClient.isConnected() : false);
@@ -233,6 +234,7 @@ public class MeView extends BaseFrameLayout {
         //屏幕共享 （功能暂未实现）
         share.setOnClickListener(
                 view -> {
+                    LogUtils.i(TAG, "getShareState() ,mediasoup :" + (props.getShareState().get()) + ",isShareInProgress:" + props.getMe().get().isShareInProgress() + ", isCamInProgress:"+props.getMe().get().isCamInProgress());
                     if (MeProps.DeviceState.ON.equals(props.getShareState().get())) {
                         roomClient.disableShare();
                     } else {
@@ -278,7 +280,6 @@ public class MeView extends BaseFrameLayout {
         LogUtils.i(TAG, "setPeerViewProps,mediasoup null == videoTrack:" + (null == videoTrack) + ",step:" + step + ", isConnected:" + isConnected + ", isAddVideoTrack:" + isAddVideoTrack + ",camState:" + camState + ", null == me:" + (null == me) + ", null == curMe:" + (null == curMe) + ",null == props:" + (null == props));
         this.curMe = me;
 
-
         audio_producer.setVisibility(!TextUtils.isEmpty(props.getAudioProducerId().get()) ? View.VISIBLE : View.GONE);
         audio_producer.setText(props.getAudioProducerId().get());
         audio_consumer.setVisibility(!TextUtils.isEmpty(props.getAudioConsumerId().get()) ? View.VISIBLE : View.GONE);
@@ -309,6 +310,7 @@ public class MeView extends BaseFrameLayout {
         BindingAdapters.changeCamState(changeCam, props.getCamState().get());
         BindingAdapters.shareState(share, props.getShareState().get());
         if (null != props.getMe().get()) {
+            LogUtils.i(TAG, "props.getMe().get() ,mediasoup :" + (props.getShareState().get()) + ",isShareInProgress:" + props.getMe().get().isShareInProgress() + ", isCamInProgress:"+props.getMe().get().isCamInProgress());
             cam.setClickable(!(props.getMe().get().isCamInProgress() || props.getMe().get().isShareInProgress()));
             changeCam.setClickable(!(props.getMe().get().isCamInProgress() || props.getMe().get().isShareInProgress()));
             share.setClickable(!(props.getMe().get().isCamInProgress() || props.getMe().get().isShareInProgress()));

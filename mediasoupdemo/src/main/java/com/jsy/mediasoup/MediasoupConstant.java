@@ -1,5 +1,7 @@
 package com.jsy.mediasoup;
 
+import android.content.Intent;
+
 /**
  * 常量配置类
  */
@@ -21,6 +23,11 @@ public class MediasoupConstant {
     public static final String key_msg_convtype = "conv_type";
     public static final String key_msg_shouldring = "should_ring";
 
+    public static final int CAPTURE_PERMISSION_REQUEST_CODE = 0x0021;
+    public static Intent mediaProjectionPermissionResultData;
+    public static int mediaProjectionPermissionResultCode;
+
+    public static String extraVideoFileAsCamera;
 
     /**
      * 接受状态

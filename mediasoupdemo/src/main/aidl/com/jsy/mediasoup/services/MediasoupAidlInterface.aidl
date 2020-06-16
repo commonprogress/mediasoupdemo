@@ -21,4 +21,5 @@ interface MediasoupAidlInterface {
     void callSelfReject();
     void rejectEndCancelCall();
     void setVisibleCall(boolean isVisible);
+    void setShareScreenIntentData(boolean isReqSuc);
 }

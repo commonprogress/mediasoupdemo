@@ -74,6 +74,14 @@ public class Producers {
     wrapper.mProducer.resume();
   }
 
+  public void setProducerType(String producerId, String type) {
+    ProducersWrapper wrapper = mProducers.get(producerId);
+    if (wrapper == null) {
+      return;
+    }
+    wrapper.mType = type;
+  }
+
   public void setProducerScore(String producerId, JSONArray score) {
     ProducersWrapper wrapper = mProducers.get(producerId);
     if (wrapper == null) {

@@ -1,15 +1,20 @@
 package com.jsy.mediasoup;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Color;
+import android.media.projection.MediaProjectionManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -34,6 +39,7 @@ import com.nabinbhandari.android.permissions.Permissions;
 import org.mediasoup.droid.Logger;
 import org.mediasoup.droid.MediasoupClient;
 import org.mediasoup.droid.lib.RoomClient;
+import org.mediasoup.droid.lib.Utils;
 import org.mediasoup.droid.lib.lv.RoomStore;
 import org.mediasoup.droid.lib.model.Me;
 import org.mediasoup.droid.lib.model.Notify;
@@ -121,6 +127,18 @@ public class RoomActivity extends AppCompatActivity {
         public void onOtherLeave() throws RemoteException {
             LogUtils.i(TAG, "==roomBinder mediasoup onOtherLeave==");
 //            rejectViewData();
+        }
+
+        /**
+         * 获取共享屏幕需要参数
+         */
+        @Override
+        public boolean reqShareScreenIntentData() throws RemoteException {
+            LogUtils.i(TAG, "==roomBinder mediasoup onShareScreenIntentData==");
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                return Utils.reqShareScreenIntentData(RoomActivity.this, MediasoupConstant.CAPTURE_PERMISSION_REQUEST_CODE);
+            }
+            return false;
         }
 
         @Override
@@ -413,7 +431,7 @@ public class RoomActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         if (requestCode == REQUEST_CODE_SETTING) {
-            Logger.d(TAG, "request config done");
+            Logger.d(TAG, "request config done resultCode:" + resultCode + ",requestCode:" + REQUEST_CODE_SETTING);
             try {
                 if (null != mediasoupBinder) {
                     mediasoupBinder.onResetMediasoupRoom();
@@ -421,8 +439,24 @@ public class RoomActivity extends AppCompatActivity {
             } catch (RemoteException e) {
                 e.printStackTrace();
             }
-
             initViewData();
+        } else if (requestCode == MediasoupConstant.CAPTURE_PERMISSION_REQUEST_CODE) {
+            Logger.d(TAG, "request Share Screen done resultCode:" + resultCode + ",requestCode:" + MediasoupConstant.CAPTURE_PERMISSION_REQUEST_CODE);
+            boolean isReqSuc = resultCode == Activity.RESULT_OK && null != data;
+            if (isReqSuc) {
+                MediasoupConstant.mediaProjectionPermissionResultCode = resultCode;
+                MediasoupConstant.mediaProjectionPermissionResultData = data;
+            } else {
+                MediasoupConstant.mediaProjectionPermissionResultCode = 0;
+                MediasoupConstant.mediaProjectionPermissionResultData = null;
+            }
+            try {
+                if (null != mediasoupBinder) {
+                    mediasoupBinder.setShareScreenIntentData(isReqSuc);
+                }
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
         } else {
             super.onActivityResult(requestCode, resultCode, data);
         }
@@ -440,6 +474,9 @@ public class RoomActivity extends AppCompatActivity {
             unbindMediasoupService();
         }
         MediasoupLoaderUtils.getInstance().stopMediasoupService(RoomActivity.this);
+        MediasoupConstant.mediaProjectionPermissionResultCode = 0;
+        MediasoupConstant.mediaProjectionPermissionResultData = null;
+        MediasoupConstant.extraVideoFileAsCamera = null;
         if (null != changeAndNotify) {
             changeAndNotify.destroy();
             changeAndNotify = null;

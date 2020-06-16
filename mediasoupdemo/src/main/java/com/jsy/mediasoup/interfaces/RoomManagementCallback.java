@@ -21,6 +21,7 @@ public interface RoomManagementCallback {
 
     void onSelfAcceptOrJoin();
 
-    void onFinishServiceActivity();
+    boolean reqShareScreenIntentData();
 
+    void onFinishServiceActivity();
 }

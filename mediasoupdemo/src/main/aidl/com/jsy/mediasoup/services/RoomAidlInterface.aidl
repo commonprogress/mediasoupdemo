@@ -12,5 +12,7 @@ interface RoomAidlInterface {
 
     void onOtherLeave();
 
+    boolean reqShareScreenIntentData();
+
     void onFinishServiceActivity();
 }

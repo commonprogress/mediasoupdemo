@@ -2,11 +2,13 @@ package org.mediasoup.droid.lib;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
 import android.support.annotation.WorkerThread;
 import android.text.TextUtils;
 
@@ -23,17 +25,13 @@ import org.mediasoup.droid.SendTransport;
 import org.mediasoup.droid.Transport;
 import org.mediasoup.droid.lib.interfaces.MediasoupConnectCallback;
 import org.mediasoup.droid.lib.lv.RoomStore;
+import org.mediasoup.droid.lib.model.Producers;
 import org.mediasoup.droid.lib.socket.WebSocketTransport;
 import org.protoojs.droid.Message;
 import org.protoojs.droid.ProtooException;
 import org.webrtc.AudioTrack;
 import org.webrtc.CameraVideoCapturer;
-import org.webrtc.RTCUtils;
-import org.webrtc.RtpParameters;
 import org.webrtc.VideoTrack;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import io.reactivex.disposables.CompositeDisposable;
 
@@ -260,6 +258,20 @@ public class RoomClient extends RoomMessageHandler {
     }
 
     /**
+     * 改变摄像头采集的分辨率
+     *
+     * @param videoSize
+     */
+    @Async
+    public void changeCaptureFormat(int videoSize) {
+        Logger.d(TAG, "changeCaptureFormat() videoSize：" + videoSize);
+        mWorkHandler.post(
+                () -> {
+                    changeCaptureFormatImpl(videoSize);
+                });
+    }
+
+    /**
      * 禁用摄像头
      */
     @Async
@@ -276,7 +288,8 @@ public class RoomClient extends RoomMessageHandler {
         Logger.d(TAG, "changeCam() switchCam Camera ");
         mStore.setCamInProgress(true);
         mWorkHandler.post(() -> {
-            if (null != mPeerConnectionUtils) {
+            RoomConstant.VideoCapturerType capturerType = null != mPeerConnectionUtils ? mPeerConnectionUtils.getCurrentVideoCapturer() : null;
+            if (capturerType == RoomConstant.VideoCapturerType.CAMERA) {
                 mPeerConnectionUtils.switchCam(
                         new CameraVideoCapturer.CameraSwitchHandler() {
                             @Override
@@ -313,21 +326,44 @@ public class RoomClient extends RoomMessageHandler {
     }
 
     /**
-     * 禁用屏幕共享（功能暂未实现）
+     * 禁用屏幕共享（功能暂未实现）测试版
      */
     @Async
     public void disableShare() {
         Logger.d(TAG, "disableShare()");
         // TODO(feature): share
+        mWorkHandler.post(
+                () ->
+                        disableShareImpl(true)
+        );
     }
 
     /**
-     * 启用屏幕共享（功能暂未实现）
+     * 启用屏幕共享（功能暂未实现）测试版
      */
     @Async
     public void enableShare() {
-        Logger.d(TAG, "enableShare()");
         // TODO(feature): share
+        boolean isEnable = null != connectCallback ? connectCallback.reqShareScreenIntentData() : false;
+        Logger.d(TAG, "enableShare() isEnable:" + isEnable);
+        mStore.setShareInProgress(!isEnable);
+    }
+
+    /**
+     * 开始启用屏幕共享（功能暂未实现）测试版
+     */
+    @Async
+    public void startEnableShare(boolean isReqSuc) {
+        Logger.d(TAG, "startEnableShare() isReqSuc:" + isReqSuc);
+        // TODO(feature): share
+        mStore.setShareInProgress(isReqSuc);
+        if (isReqSuc) {
+            mWorkHandler.post(
+                    () -> {
+                        enableShareImpl();
+                        mStore.setShareInProgress(false);
+                    });
+        }
     }
 
     /**
@@ -524,6 +560,7 @@ public class RoomClient extends RoomMessageHandler {
     /**
      * 改变自己显示的名字
      */
+    @RequiresApi(api = Build.VERSION_CODES.GINGERBREAD)
     @Async
     public void changeDisplayName(String displayName) {
         Logger.d(TAG, "changeDisplayName()");
@@ -680,7 +717,9 @@ public class RoomClient extends RoomMessageHandler {
                     }
 
                     // dispose peerConnection.
-                    mPeerConnectionUtils.dispose();
+                    if (null != mPeerConnectionUtils) {
+                        mPeerConnectionUtils.dispose();
+                    }
 
                     // quit worker handler thread.
                     mWorkHandler.getLooper().quit();
@@ -718,6 +757,21 @@ public class RoomClient extends RoomMessageHandler {
         if (mMediasoupDevice != null) {
             mMediasoupDevice.dispose();
             mMediasoupDevice = null;
+        }
+    }
+
+    /**
+     * 释放mLocalVideoTrack
+     */
+    @WorkerThread
+    private void releaseVideoTrack() {
+        if (mLocalVideoTrack != null) {
+            mLocalVideoTrack.setEnabled(false);
+            mLocalVideoTrack.dispose();
+            mLocalVideoTrack = null;
+        }
+        if (null != mPeerConnectionUtils) {
+            mPeerConnectionUtils.releaseVideoCapturer();
         }
     }
 
@@ -938,12 +992,15 @@ public class RoomClient extends RoomMessageHandler {
                 Logger.w(TAG, "enableMic() | cannot produce audio");
                 return;
             }
+            if (null == mPeerConnectionUtils) {
+                return;
+            }
             if (mSendTransport == null) {
                 Logger.w(TAG, "enableMic() | mSendTransport doesn't ready");
                 return;
             }
             if (mLocalAudioTrack == null) {
-                mLocalAudioTrack = mPeerConnectionUtils.createAudioTrack(mContext, "mic");
+                mLocalAudioTrack = mPeerConnectionUtils.createAudioTrack(mContext);
                 mLocalAudioTrack.setEnabled(true);
                 mPeerConnectionUtils.addAudioTrackMediaStream(mLocalAudioTrack);
             }
@@ -1060,8 +1117,21 @@ public class RoomClient extends RoomMessageHandler {
             if (!isConnecting()) {
                 return;
             }
-            if (mCamProducer != null) {
+            if (null == mPeerConnectionUtils) {
                 return;
+            }
+            if (mCamProducer != null) {
+                RoomConstant.VideoCapturerType capturerType = mPeerConnectionUtils.getCurrentVideoCapturer();
+                if (capturerType == RoomConstant.VideoCapturerType.SCREEN) {
+                    mWorkHandler.post(
+                            () ->
+                                    disableShareImpl(false)
+                    );
+                } else if (capturerType == RoomConstant.VideoCapturerType.FILE) {
+
+                } else {
+                    return;
+                }
             }
             if (!mMediasoupDevice.isLoaded()) {
                 Logger.w(TAG, "enableCam() | not loaded");
@@ -1075,9 +1145,9 @@ public class RoomClient extends RoomMessageHandler {
                 Logger.w(TAG, "enableCam() | mSendTransport doesn't ready");
                 return;
             }
-
-            if (mLocalVideoTrack == null) {
-                mLocalVideoTrack = mPeerConnectionUtils.createVideoTrack(mContext, "cam");
+            if (mLocalVideoTrack == null || mPeerConnectionUtils.getCurrentVideoCapturer() != RoomConstant.VideoCapturerType.CAMERA) {
+                releaseVideoTrack();
+                mLocalVideoTrack = mPeerConnectionUtils.createVideoTrack(mContext, RoomConstant.VideoCapturerType.CAMERA);
                 mLocalVideoTrack.setEnabled(true);
                 mPeerConnectionUtils.addVideoTrackMediaStream(mLocalVideoTrack);
             }
@@ -1101,6 +1171,7 @@ public class RoomClient extends RoomMessageHandler {
                             /*encodings*/null,
                             /*codecOptions*/ null);
             mStore.addProducer(mCamProducer);
+            mStore.setProducerType(mCamProducer.getId(), Producers.ProducersWrapper.TYPE_CAM);
             Logger.d(TAG, "mCamProducer," + mCamProducer.getId() + "," + mCamProducer.getKind());
         } catch (MediasoupException e) {
             e.printStackTrace();
@@ -1110,6 +1181,28 @@ public class RoomClient extends RoomMessageHandler {
                 mLocalVideoTrack.setEnabled(false);
             }
         }
+    }
+
+    /**
+     * 改变摄像头采集的分辨率
+     *
+     * @param videoSize
+     */
+    @WorkerThread
+    private void changeCaptureFormatImpl(int videoSize) {
+        if (!isConnected()) {
+            return;
+        }
+        if (mCamProducer == null) {
+            return;
+        }
+
+        RoomConstant.VideoCapturerType capturerType = null != mPeerConnectionUtils ? mPeerConnectionUtils.getCurrentVideoCapturer() : null;
+        if (capturerType != RoomConstant.VideoCapturerType.CAMERA) {
+            return;
+        }
+        boolean isChange = mPeerConnectionUtils.changeCaptureFormat(videoSize);
+        Logger.d(TAG, "changeCaptureFormatImpl() videoSize:" + videoSize + ",isChange:" + isChange);
     }
 
     /**
@@ -1124,9 +1217,13 @@ public class RoomClient extends RoomMessageHandler {
         if (mCamProducer == null) {
             return;
         }
+        RoomConstant.VideoCapturerType capturerType = null != mPeerConnectionUtils ? mPeerConnectionUtils.getCurrentVideoCapturer() : null;
+        if (capturerType != RoomConstant.VideoCapturerType.CAMERA) {
+            return;
+        }
+
         mCamProducer.close();
         mStore.removeProducer(mCamProducer.getId());
-
         try {
             mProtoo.syncRequest("closeProducer", req -> jsonPut(req, "producerId", mCamProducer.getId()));
         } catch (ProtooException e) {
@@ -1134,6 +1231,120 @@ public class RoomClient extends RoomMessageHandler {
             mStore.addNotify("error", "Error closing server-side webcam Producer: " + e.getMessage());
         }
         mCamProducer = null;
+    }
+
+    /**
+     * 启用屏幕共享（功能暂未实现）测试版
+     */
+    @WorkerThread
+    private void enableShareImpl() {
+        Logger.d(TAG, "enableShareImpl()");
+        try {
+            if (!isConnecting()) {
+                return;
+            }
+            if (mPeerConnectionUtils == null) {
+                return;
+            }
+
+            if (mCamProducer != null) {
+                RoomConstant.VideoCapturerType capturerType = mPeerConnectionUtils.getCurrentVideoCapturer();
+                if (capturerType == RoomConstant.VideoCapturerType.CAMERA) {
+                    mMainHandler.post(this::disableCamImpl);
+                } else if (capturerType == RoomConstant.VideoCapturerType.FILE) {
+
+                } else {
+                    return;
+                }
+            }
+            if (null == mMediasoupDevice) {
+                return;
+            }
+            if (!mMediasoupDevice.isLoaded()) {
+                Logger.w(TAG, "enableShare | not loaded");
+                return;
+            }
+            if (!mMediasoupDevice.canProduce("video")) {
+                Logger.w(TAG, "enableShare | cannot produce video");
+                return;
+            }
+            if (mSendTransport == null) {
+                Logger.w(TAG, "enableShare | mSendTransport doesn't ready");
+                return;
+            }
+
+            if (mLocalVideoTrack == null || mPeerConnectionUtils.getCurrentVideoCapturer() != RoomConstant.VideoCapturerType.SCREEN) {
+                releaseVideoTrack();
+                mLocalVideoTrack = mPeerConnectionUtils.createVideoTrack(mContext, RoomConstant.VideoCapturerType.SCREEN);
+                mLocalVideoTrack.setEnabled(true);
+                mPeerConnectionUtils.addVideoTrackMediaStream(mLocalVideoTrack);
+            }
+
+//            String codecOptions = "[{\"videoGoogleStartBitrate\":1000}]";
+//            List<RtpParameters.Encoding> encodings = new ArrayList<>();
+//            encodings.add(RTCUtils.genRtpEncodingParameters(null, false, 500000, 0, 60, 0, 0.0d, 0L));
+//            encodings.add(RTCUtils.genRtpEncodingParameters(null, false, 1000000, 0, 60, 0, 0.0d, 0L));
+//            encodings.add(RTCUtils.genRtpEncodingParameters(null, false, 1500000, 0, 60, 0, 0.0d, 0L));
+            mCamProducer =
+                    mSendTransport.produce(
+                            producer -> {
+                                Logger.e(TAG, "onTransportClose(), shareProducer");
+                                if (mCamProducer != null) {
+                                    mStore.removeProducer(mCamProducer.getId());
+                                    mCamProducer = null;
+                                }
+                            },
+                            mLocalVideoTrack,
+                            /*encodings*/null,
+                            /*codecOptions*/null);
+            mStore.addProducer(mCamProducer);
+            mStore.setProducerType(mCamProducer.getId(), Producers.ProducersWrapper.TYPE_SHARE);
+            Logger.d(TAG, "mShareProducer," + mCamProducer.getId() + "," + mCamProducer.getKind());
+        } catch (MediasoupException e) {
+            e.printStackTrace();
+            logError("enableWebShare() | failed:", e);
+            mStore.addNotify("error", "Error enabling webShare: " + e.getMessage());
+            if (mLocalVideoTrack != null) {
+                mLocalVideoTrack.setEnabled(false);
+            }
+        }
+    }
+
+    /**
+     * 禁用屏幕共享（功能暂未实现）测试版
+     */
+    @WorkerThread
+    private void disableShareImpl(boolean isContinue) {
+        Logger.d(TAG, "disableShareImpl()");
+        if (!isConnected()) {
+            return;
+        }
+        if (mCamProducer == null) {
+            return;
+        }
+
+        RoomConstant.VideoCapturerType capturerType = null != mPeerConnectionUtils ? mPeerConnectionUtils.getCurrentVideoCapturer() : null;
+        if (capturerType != RoomConstant.VideoCapturerType.SCREEN) {
+            return;
+        }
+
+        releaseVideoTrack();
+
+        mCamProducer.close();
+        mStore.removeProducer(mCamProducer.getId());
+
+        try {
+            mProtoo.syncRequest(ActionEvent.CLOSE_PRODUCER, req -> jsonPut(req, "producerId", mCamProducer.getId()));
+        } catch (ProtooException e) {
+            e.printStackTrace();
+            mStore.addNotify("error", "Error closing server-side webShare Producer: " + e.getMessage());
+        }
+        mCamProducer = null;
+
+        //关闭屏幕共享后如果之前是摄像头模式 ，继续启用摄像头
+        if (isContinue && mOptions.isEnableVideo()) {
+            mMainHandler.post(this::enableCam);//启用摄像头
+        }
     }
 
     /**

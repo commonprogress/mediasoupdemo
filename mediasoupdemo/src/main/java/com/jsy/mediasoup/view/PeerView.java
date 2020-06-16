@@ -158,8 +158,6 @@ public class PeerView extends BaseFrameLayout {
         LogUtils.i(TAG, "loadViewData,mediasoup isAddVideoTrack:" + isAddVideoTrack + ", isAgain:" + isAgain);
         initSurfaceRenderer();
         if (isAgain) {
-            Info curInfo = null == mPeerProps ? null : (null == mPeerProps.getPeer() ? null : mPeerProps.getPeer().get());
-            curPeer = null == curInfo ? null : (Peer) curInfo;
             // set view model into included layout
             setPeerViewProps(mPeerProps, null != mRoomClient ? mRoomClient.isConnected() : false);
             // set view model
@@ -173,8 +171,6 @@ public class PeerView extends BaseFrameLayout {
         this.mRoomClient = roomClient;
         this.mRoomStore = roomStore;
         isAddVideoTrack = false;
-        Info curInfo = null == props ? null : (null == props.getPeer() ? null : props.getPeer().get());
-        curPeer = null == curInfo ? null : (Peer) curInfo;
         // set view model into included layout
         setPeerViewProps(props, null != roomClient ? roomClient.isConnected() : false);
 
@@ -209,7 +205,17 @@ public class PeerView extends BaseFrameLayout {
         if (null == props) {
             return;
         }
-        Peer user = null == props ? null : (null == props.getPeer() ? null : (Peer) props.getPeer().get());
+        
+        Peer user;
+        Info curInfo = null == props ? null : (null == props.getPeer() ? null : props.getPeer().get());
+        if (null != curInfo && !(curInfo instanceof Peer)) {
+            LogUtils.e(TAG, "setPeerViewProps,mediasoup  setProps curInfo is not Peer:" + curInfo);
+//            user = null;
+            return;
+        } else {
+            user = null == curInfo ? null : (Peer) curInfo;
+        }
+
         VideoTrack videoTrack = null == props ? null : (null == props.getVideoTrack() ? null : props.getVideoTrack().get());
         boolean isPropVideoVisible = null == props ? false : (null == props.getVideoVisible() ? false : props.getVideoVisible().get());
         boolean isPeerVideoVisible = null == user ? false : user.isVideoVisible();

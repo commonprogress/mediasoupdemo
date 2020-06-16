@@ -120,12 +120,19 @@ public class Consumers {
     wrapper.mTemporalLayer = temporalLayer;
   }
 
+  public void setConsumerType(String consumerId, String type) {
+    ConsumerWrapper wrapper = consumers.get(consumerId);
+    if (wrapper == null) {
+      return;
+    }
+    wrapper.mType = type;
+  }
+
   public void setConsumerScore(String consumerId, JSONArray score) {
     ConsumerWrapper wrapper = consumers.get(consumerId);
     if (wrapper == null) {
       return;
     }
-
     wrapper.mScore = score;
   }
 

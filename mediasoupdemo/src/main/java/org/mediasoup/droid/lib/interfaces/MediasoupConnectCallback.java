@@ -16,4 +16,6 @@ public interface MediasoupConnectCallback {
     boolean isConnecting();
 
     boolean isConnected();
+
+    boolean reqShareScreenIntentData();
 }

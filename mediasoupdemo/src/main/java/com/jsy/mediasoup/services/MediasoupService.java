@@ -166,6 +166,14 @@ public class MediasoupService extends LifecycleService implements RoomManagement
                 roomManagement.setVisibleCall(isVisible);
             }
         }
+
+        @Override
+        public void setShareScreenIntentData(boolean isReqSuc) throws RemoteException {
+            LogUtils.i(TAG, "==mediasoupBinder setShareScreenIntentData==");
+            if (null != roomManagement) {
+                roomManagement.setShareScreenIntentData(isReqSuc);
+            }
+        }
     };
 
 
@@ -366,6 +374,21 @@ public class MediasoupService extends LifecycleService implements RoomManagement
         }
     }
 
+    /**
+     * 获取共享屏幕需要参数
+     */
+    @Override
+    public boolean reqShareScreenIntentData() {
+        try {
+            if (null != roomBinder) {
+                return roomBinder.reqShareScreenIntentData();
+            }
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     @Override
     public void onFinishServiceActivity() {
         try {
@@ -555,6 +578,9 @@ public class MediasoupService extends LifecycleService implements RoomManagement
     }
 
     private void destroy() {
+        MediasoupConstant.mediaProjectionPermissionResultCode = 0;
+        MediasoupConstant.mediaProjectionPermissionResultData = null;
+        MediasoupConstant.extraVideoFileAsCamera = null;
         if (null != changeAndNotify) {
             changeAndNotify.destroy();
             changeAndNotify = null;
