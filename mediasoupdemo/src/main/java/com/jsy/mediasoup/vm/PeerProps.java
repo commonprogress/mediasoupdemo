@@ -72,6 +72,19 @@ public class PeerProps extends PeerViewProps {
                         mVideoVisible.set(
                                 videoCW != null && !videoCW.isLocallyPaused() && !videoCW.isRemotelyPaused());
 
+                        LogUtils.i(TAG, "PeerProps, onPropertyChanged mAudioProducerId:" + mAudioProducerId.get()
+                                + ", mVideoProducerId:" + mVideoProducerId.get()
+                                + ", audioPW.getType():" + (audioCW != null ? audioCW.getType() : "null")
+                                + ", videoPW.getType():" + (videoCW != null ? videoCW.getType() : "null")
+                                + ", mAudioEnabled:" + mAudioEnabled.get()
+                                + ", mVideoVisible:" + mVideoVisible.get()
+                                + ", \nmAudioScore:" + mAudioScore.get()
+                                + ", \nmVideoScore:" + mVideoScore.get()
+                                + ", \nmAudioTrack:" + mAudioTrack.get()
+                                + ", \nmVideoTrack:" + mVideoTrack.get()
+                                + ", \nmAudioRtpParameters:" + mAudioRtpParameters.get() + "\n"
+                                + ", \nmVideoRtpParameters:" + mVideoRtpParameters.get() + "\n");
+
                         if (null != mPropsLiveDataChange) {
                             mPropsLiveDataChange.onDataChanged(PeerProps.this);
                         }

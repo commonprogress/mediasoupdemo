@@ -204,6 +204,13 @@ public class RoomStore {
     producers.postValue(producers -> producers.addProducer(producer));
   }
 
+  public void addProducer(Producer producer, String type) {
+    producers.postValue(producers -> {
+      producers.addProducer(producer);
+      producers.setProducerType(producer.getId(), type);
+    });
+  }
+
   public void setProducerPaused(String producerId) {
     producers.postValue(producers -> producers.setProducerPaused(producerId));
   }

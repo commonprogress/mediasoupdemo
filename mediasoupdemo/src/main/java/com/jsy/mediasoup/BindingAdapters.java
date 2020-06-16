@@ -168,13 +168,19 @@ public class BindingAdapters {
     }
   }
 
-  public static void shareState(View view, MeProps.DeviceState state) {
+  public static void shareState(ImageView imageView, MeProps.DeviceState state) {
     if (state == null) {
       return;
     }
     LogUtils.d(TAG, "edias_share_state: " + state.name());
     if (MeProps.DeviceState.ON.equals(state)) {
-      view.setEnabled(true);
+      imageView.setBackgroundResource(R.drawable.bg_media_box_on);
+    } else {
+      imageView.setBackgroundResource(R.drawable.bg_media_box_off);
+    }
+
+    if (MeProps.DeviceState.ON.equals(state)) {
+      imageView.setEnabled(true);
     } else {
       view.setEnabled(false);
     }

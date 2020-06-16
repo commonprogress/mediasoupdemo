@@ -78,6 +78,17 @@ public class MeProps extends PeerViewProps {
                     mAudioScore.set(audioPW != null ? audioPW.getScore() : null);
                     mVideoScore.set(videoPW != null ? videoPW.getScore() : null);
 
+                    LogUtils.i(TAG, "MeProps, onPropertyChanged mAudioProducerId:" + mAudioProducerId.get()
+                            + ", mVideoProducerId:" + mVideoProducerId.get()
+                            + ", audioPW.getType():" + (audioPW != null ? audioPW.getType() : "null")
+                            + ", videoPW.getType():" + (videoPW != null ? videoPW.getType() : "null")
+                            + ", \nmAudioScore:" + mAudioScore.get()
+                            + ", \nmVideoScore:" + mVideoScore.get()
+                            + ", \nmAudioTrack:" + mAudioTrack.get()
+                            + ", \nmVideoTrack:" + mVideoTrack.get()
+                            + ", \nmAudioRtpParameters:" + mAudioRtpParameters.get() + "\n"
+                            + ", \nmVideoRtpParameters:" + mVideoRtpParameters.get() + "\n");
+
                     DeviceState micState;
                     if (me == null || !me.isCanSendMic()) {
                         micState = DeviceState.UNSUPPORTED;

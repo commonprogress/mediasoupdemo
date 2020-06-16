@@ -1123,10 +1123,10 @@ public class RoomClient extends RoomMessageHandler {
             if (mCamProducer != null) {
                 RoomConstant.VideoCapturerType capturerType = mPeerConnectionUtils.getCurrentVideoCapturer();
                 if (capturerType == RoomConstant.VideoCapturerType.SCREEN) {
-                    mWorkHandler.post(
-                            () ->
-                                    disableShareImpl(false)
-                    );
+//                    mWorkHandler.post(
+//                            () ->
+                                    disableShareImpl(false);
+//                    );
                 } else if (capturerType == RoomConstant.VideoCapturerType.FILE) {
 
                 } else {
@@ -1170,8 +1170,9 @@ public class RoomClient extends RoomMessageHandler {
                             mLocalVideoTrack,
                             /*encodings*/null,
                             /*codecOptions*/ null);
-            mStore.addProducer(mCamProducer);
-            mStore.setProducerType(mCamProducer.getId(), Producers.ProducersWrapper.TYPE_CAM);
+//            mStore.addProducer(mCamProducer);
+            mStore.addProducer(mCamProducer, Producers.ProducersWrapper.TYPE_CAM);
+//            mStore.setProducerType(mCamProducer.getId(), Producers.ProducersWrapper.TYPE_CAM);
             Logger.d(TAG, "mCamProducer," + mCamProducer.getId() + "," + mCamProducer.getKind());
         } catch (MediasoupException e) {
             e.printStackTrace();
@@ -1250,7 +1251,8 @@ public class RoomClient extends RoomMessageHandler {
             if (mCamProducer != null) {
                 RoomConstant.VideoCapturerType capturerType = mPeerConnectionUtils.getCurrentVideoCapturer();
                 if (capturerType == RoomConstant.VideoCapturerType.CAMERA) {
-                    mMainHandler.post(this::disableCamImpl);
+//                    mMainHandler.post(this::disableCamImpl);
+                    disableCamImpl();
                 } else if (capturerType == RoomConstant.VideoCapturerType.FILE) {
 
                 } else {
@@ -1297,8 +1299,9 @@ public class RoomClient extends RoomMessageHandler {
                             mLocalVideoTrack,
                             /*encodings*/null,
                             /*codecOptions*/null);
-            mStore.addProducer(mCamProducer);
-            mStore.setProducerType(mCamProducer.getId(), Producers.ProducersWrapper.TYPE_SHARE);
+//            mStore.addProducer(mCamProducer);
+            mStore.addProducer(mCamProducer, Producers.ProducersWrapper.TYPE_SHARE);
+//            mStore.setProducerType(mCamProducer.getId(), Producers.ProducersWrapper.TYPE_SHARE);
             Logger.d(TAG, "mShareProducer," + mCamProducer.getId() + "," + mCamProducer.getKind());
         } catch (MediasoupException e) {
             e.printStackTrace();
