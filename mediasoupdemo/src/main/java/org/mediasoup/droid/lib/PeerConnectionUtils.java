@@ -631,25 +631,23 @@ public class PeerConnectionUtils {
      */
     public boolean changeCaptureFormat(int videoSize) {
         Logger.d(TAG, "changeCaptureFormat() videoSize:" + videoSize + ",curVideoSize:" + curVideoSize);
-        if (null != mVideoCapturer && mVideoCapturer instanceof CameraVideoCapturer) {
-            mThreadChecker.checkIsOnValidThread();
-            if (curVideoSize != videoSize) {
-                if (videoSize <= VIDEO_SIZE_HIGH && curVideoSize > VIDEO_SIZE_HIGH) {
-                    mVideoCapturer.changeCaptureFormat(640, 480, 15);
-                    this.curVideoSize = videoSize;
-                    return true;
-                } else if (videoSize > VIDEO_SIZE_HIGH && videoSize <= VIDEO_SIZE_MID && (curVideoSize <= VIDEO_SIZE_HIGH || curVideoSize > VIDEO_SIZE_MID)) {
-                    mVideoCapturer.changeCaptureFormat(480, 360, 15);
-                    this.curVideoSize = videoSize;
-                    return true;
-                } else if (videoSize > VIDEO_SIZE_MID && curVideoSize <= VIDEO_SIZE_MID) {
-                    mVideoCapturer.changeCaptureFormat(320, 240, 15);
-                    this.curVideoSize = videoSize;
-                    return true;
-                }
+        mThreadChecker.checkIsOnValidThread();
+        if (null != mVideoCapturer && curVideoSize != videoSize) {
+            if (videoSize <= VIDEO_SIZE_HIGH && curVideoSize > VIDEO_SIZE_HIGH) {
+                mVideoCapturer.changeCaptureFormat(640, 480, 15);
+                this.curVideoSize = videoSize;
+                return true;
+            } else if (videoSize > VIDEO_SIZE_HIGH && videoSize <= VIDEO_SIZE_MID && (curVideoSize <= VIDEO_SIZE_HIGH || curVideoSize > VIDEO_SIZE_MID)) {
+                mVideoCapturer.changeCaptureFormat(480, 360, 15);
+                this.curVideoSize = videoSize;
+                return true;
+            } else if (videoSize > VIDEO_SIZE_MID && curVideoSize <= VIDEO_SIZE_MID) {
+                mVideoCapturer.changeCaptureFormat(320, 240, 15);
+                this.curVideoSize = videoSize;
+                return true;
             }
-            this.curVideoSize = videoSize;
         }
+        this.curVideoSize = videoSize;
         return false;
     }
 
@@ -760,21 +758,22 @@ public class PeerConnectionUtils {
   public void dispose() {
     Logger.w(TAG, "dispose()");
     mThreadChecker.checkIsOnValidThread();
-    if (mVideoCapturer != null) {
-      mVideoCapturer.dispose();
-      mVideoCapturer = null;
-    }
 
     releaseVideoCapturer();
+//    if (mVideoCapturer != null) {
+//      mVideoCapturer.dispose();
+//      mVideoCapturer = null;
+//    }
+//
 //    if (mVideoSource != null) {
 //      mVideoSource.dispose();
 //      mVideoSource = null;
 //    }
 //
-//    if (mAudioSource != null) {
-//      mAudioSource.dispose();
-//      mAudioSource = null;
-//    }
+    if (mAudioSource != null) {
+      mAudioSource.dispose();
+      mAudioSource = null;
+    }
 
 //    if(null != mMediaStream){
 //        mMediaStream.dispose();

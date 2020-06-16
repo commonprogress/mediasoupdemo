@@ -182,7 +182,8 @@ public class BindingAdapters {
     if (MeProps.DeviceState.ON.equals(state)) {
       imageView.setEnabled(true);
     } else {
-      view.setEnabled(false);
+//      imageView.setEnabled(false);
+      imageView.setEnabled(true);
     }
   }
 

@@ -578,9 +578,6 @@ public class MediasoupService extends LifecycleService implements RoomManagement
     }
 
     private void destroy() {
-        MediasoupConstant.mediaProjectionPermissionResultCode = 0;
-        MediasoupConstant.mediaProjectionPermissionResultData = null;
-        MediasoupConstant.extraVideoFileAsCamera = null;
         if (null != changeAndNotify) {
             changeAndNotify.destroy();
             changeAndNotify = null;

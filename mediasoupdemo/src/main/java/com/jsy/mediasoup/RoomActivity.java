@@ -474,9 +474,6 @@ public class RoomActivity extends AppCompatActivity {
             unbindMediasoupService();
         }
         MediasoupLoaderUtils.getInstance().stopMediasoupService(RoomActivity.this);
-        MediasoupConstant.mediaProjectionPermissionResultCode = 0;
-        MediasoupConstant.mediaProjectionPermissionResultData = null;
-        MediasoupConstant.extraVideoFileAsCamera = null;
         if (null != changeAndNotify) {
             changeAndNotify.destroy();
             changeAndNotify = null;

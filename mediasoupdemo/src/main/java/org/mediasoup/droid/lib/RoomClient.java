@@ -981,6 +981,9 @@ public class RoomClient extends RoomMessageHandler {
             if (!isConnecting()) {
                 return;
             }
+            if (null == mPeerConnectionUtils) {
+                return;
+            }
             if (mMicProducer != null) {
                 return;
             }
@@ -990,9 +993,6 @@ public class RoomClient extends RoomMessageHandler {
             }
             if (!mMediasoupDevice.canProduce("audio")) {
                 Logger.w(TAG, "enableMic() | cannot produce audio");
-                return;
-            }
-            if (null == mPeerConnectionUtils) {
                 return;
             }
             if (mSendTransport == null) {
@@ -1198,10 +1198,10 @@ public class RoomClient extends RoomMessageHandler {
             return;
         }
 
-        RoomConstant.VideoCapturerType capturerType = null != mPeerConnectionUtils ? mPeerConnectionUtils.getCurrentVideoCapturer() : null;
-        if (capturerType != RoomConstant.VideoCapturerType.CAMERA) {
-            return;
-        }
+//        RoomConstant.VideoCapturerType capturerType = null != mPeerConnectionUtils ? mPeerConnectionUtils.getCurrentVideoCapturer() : null;
+//        if (capturerType != RoomConstant.VideoCapturerType.CAMERA) {
+//            return;
+//        }
         boolean isChange = mPeerConnectionUtils.changeCaptureFormat(videoSize);
         Logger.d(TAG, "changeCaptureFormatImpl() videoSize:" + videoSize + ",isChange:" + isChange);
     }
@@ -1244,10 +1244,12 @@ public class RoomClient extends RoomMessageHandler {
             if (!isConnecting()) {
                 return;
             }
+            if (null == mMediasoupDevice) {
+                return;
+            }
             if (mPeerConnectionUtils == null) {
                 return;
             }
-
             if (mCamProducer != null) {
                 RoomConstant.VideoCapturerType capturerType = mPeerConnectionUtils.getCurrentVideoCapturer();
                 if (capturerType == RoomConstant.VideoCapturerType.CAMERA) {
@@ -1258,9 +1260,6 @@ public class RoomClient extends RoomMessageHandler {
                 } else {
                     return;
                 }
-            }
-            if (null == mMediasoupDevice) {
-                return;
             }
             if (!mMediasoupDevice.isLoaded()) {
                 Logger.w(TAG, "enableShare | not loaded");

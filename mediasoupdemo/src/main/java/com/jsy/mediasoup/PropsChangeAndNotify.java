@@ -250,6 +250,8 @@ public class PropsChangeAndNotify {
     }
 
     public void destroy() {
-
+        MediasoupConstant.mediaProjectionPermissionResultCode = 0;
+        MediasoupConstant.mediaProjectionPermissionResultData = null;
+        MediasoupConstant.extraVideoFileAsCamera = null;
     }
 }
