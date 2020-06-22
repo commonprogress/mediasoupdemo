@@ -1,7 +1,13 @@
 apply plugin: 'com.android.library'
 
+// Source of webrtc.
+def WEBRTC_INC_PATH = "${projectDir}/deps/webrtc/src"
+// Precompiled static libs and jar for webrtc android.
+def WEBRTC_LIB_PATH = "${projectDir}/deps/webrtc/lib"
+
 android {
     compileSdkVersion 28
+    ndkVersion "20.0.5594570"
     buildToolsVersion "28.0.3"
 
     defaultConfig {
@@ -16,14 +22,23 @@ android {
             cmake {
                 cppFlags "-frtti -fexceptions"
                 arguments "-DANDROID_ARM_NEON=TRUE"
+                // "-DANDROID_ALLOW_UNDEFINED_SYMBOLS=true",
+                // Passes optional arguments to CMake.
+                arguments "-DLIBWEBRTC_INCLUDE_PATH=" + WEBRTC_INC_PATH,
+                        "-DLIBWEBRTC_BINARY_PATH=" + WEBRTC_LIB_PATH,
+                        "-DANDROID_ARM_NEON=TRUE"
+//                        "-DMEDIASOUPCLIENT_BUILD_TESTS=false",
+//                        "-DSDPTRANSFORM_BUILD_TESTS=OFF",
+//                        "-DSDPTRANSFORM_BUILD_READMEHELPER=OFF",
+//                        "-DMEDIASOUPCLIENT_LOG_TRACE=ON",
+//                        "-DMEDIASOUPCLIENT_LOG_DEV=ON"
             }
         }
-
 
         ndk {
             // Specifies the ABI configurations of your native
             // libraries Gradle should build and package with your APK.
-            abiFilters 'x86', 'x86_64', 'armeabi-v7a', 'arm64-v8a'
+            abiFilters 'x86' ,'x86_64', 'armeabi-v7a', 'arm64-v8a'
         }
     }
 

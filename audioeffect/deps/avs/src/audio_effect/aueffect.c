@@ -17,12 +17,12 @@
 */
 
 #include <re.h>
-#include "../../include/avs_audio_effect.h"
+#include "avs_audio_effect.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-#include "../../include/avs_log.h"
+#include "avs_log.h"
 #ifdef __cplusplus
 }
 #endif

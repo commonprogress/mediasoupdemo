@@ -23,7 +23,7 @@
 #include <android/log.h>
 #endif
 
-#include <re/re.h>
+#include <re.h>
 
 #include <avs.h>
 
@@ -40,7 +40,7 @@ JNIEXPORT jint JNICALL Java_com_waz_audioeffect_AudioEffect_applyEffectWav(JNIEn
 {
     const char *file_name_in = env->GetStringUTFChars(jfile_name_in, 0);
     const char *file_name_out = env->GetStringUTFChars(jfile_name_out, 0);
-    
+
     enum audio_effect effect_type = AUDIO_EFFECT_CHORUS_MIN;
     if (effect == com_waz_audioeffect_AudioEffect_AVS_AUDIO_EFFECT_CHORUS_MIN) {
         effect_type = AUDIO_EFFECT_CHORUS_MIN;
@@ -99,14 +99,14 @@ JNIEXPORT jint JNICALL Java_com_waz_audioeffect_AudioEffect_applyEffectWav(JNIEn
     }else if(effect == com_waz_audioeffect_AudioEffect_AVS_AUDIO_EFFECT_NONE){
         effect_type = AUDIO_EFFECT_NONE;
     }
-    
+
     int ret = apply_effect_to_wav(file_name_in, file_name_out, effect_type, reduce_noise, NULL, NULL);
-    
+
     if (file_name_in)
         env->ReleaseStringUTFChars(jfile_name_in, file_name_in);
     if (file_name_out)
         env->ReleaseStringUTFChars(jfile_name_out, file_name_out);
-    
+
     return ret;
 }
 
@@ -114,7 +114,7 @@ JNIEXPORT jint JNICALL Java_com_waz_audioeffect_AudioEffect_applyEffectPCM(JNIEn
 {
     const char *file_name_in = env->GetStringUTFChars(jfile_name_in, 0);
     const char *file_name_out = env->GetStringUTFChars(jfile_name_out, 0);
-    
+
     enum audio_effect effect_type = AUDIO_EFFECT_CHORUS_MIN;
     if (effect == com_waz_audioeffect_AudioEffect_AVS_AUDIO_EFFECT_CHORUS_MIN) {
         effect_type = AUDIO_EFFECT_CHORUS_MIN;
@@ -177,13 +177,13 @@ JNIEXPORT jint JNICALL Java_com_waz_audioeffect_AudioEffect_applyEffectPCM(JNIEn
     }else if(effect == com_waz_audioeffect_AudioEffect_AVS_AUDIO_EFFECT_NONE){
         effect_type = AUDIO_EFFECT_NONE;
     }
-    
+
     int ret = apply_effect_to_pcm(file_name_in, file_name_out, jfs_hz, effect_type, reduce_noise, NULL, NULL);
-    
+
     if (file_name_in)
         env->ReleaseStringUTFChars(jfile_name_in, file_name_in);
     if (file_name_out)
         env->ReleaseStringUTFChars(jfile_name_out, file_name_out);
-    
+
     return ret;
 }

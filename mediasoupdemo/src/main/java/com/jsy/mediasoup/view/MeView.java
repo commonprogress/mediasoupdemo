@@ -120,6 +120,7 @@ public class MeView extends BaseFrameLayout {
         cam = rootView.findViewById(R.id.cam);
         changeCam = rootView.findViewById(R.id.change_cam);
         share = rootView.findViewById(R.id.share);
+        share.setVisibility(VISIBLE);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.ECLAIR)

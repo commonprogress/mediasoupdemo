@@ -73,7 +73,7 @@ extern "C" {
  * Signature: (Ljava/lang/String;Ljava/lang/String;IZ)I
  */
 JNIEXPORT jint JNICALL Java_com_waz_audioeffect_AudioEffect_applyEffectWav
-  (JNIEnv *, jobject, jstring, jstring, jint, jboolean);
+        (JNIEnv *, jobject, jstring, jstring, jint, jboolean);
 
 /*
  * Class:     com_waz_audioeffect_AudioEffect
@@ -81,7 +81,7 @@ JNIEXPORT jint JNICALL Java_com_waz_audioeffect_AudioEffect_applyEffectWav
  * Signature: (Ljava/lang/String;Ljava/lang/String;IIZ)I
  */
 JNIEXPORT jint JNICALL Java_com_waz_audioeffect_AudioEffect_applyEffectPCM
-  (JNIEnv *, jobject, jstring, jstring, jint, jint, jboolean);
+        (JNIEnv *, jobject, jstring, jstring, jint, jint, jboolean);
 
 #ifdef __cplusplus
 }

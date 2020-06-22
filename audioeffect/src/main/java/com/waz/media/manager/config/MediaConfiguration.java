@@ -1,31 +1,24 @@
 /*
-* Wire
-* Copyright (C) 2016 Wire Swiss GmbH
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License
-* along with this program. If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Wire
+ * Copyright (C) 2016 Wire Swiss GmbH
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 package com.waz.media.manager.config;
 
 
-import java.util.HashSet;
-import java.util.HashMap;
-
-import java.util.Iterator;
-
-import org.json.JSONArray;
 import org.json.JSONObject;
-import org.json.JSONException;
 
 
 public class MediaConfiguration {
@@ -94,7 +87,7 @@ public class MediaConfiguration {
   public int getIntensity ( ) {
     return this._intensity;
   }
-  
+
 
   public boolean getLooping ( ) {
     return this._looping;
@@ -133,12 +126,12 @@ public class MediaConfiguration {
     if ( this._json != null ) {
       this._path = this._json.optString(PATH_KEY, null);
       this._format = this._json.optString(FORMAT_KEY, null);
-  
+
       this._mixing = this._json.optInt(MIXING_KEY, 0);
       this._incall = this._json.optInt(INCALL_KEY, 0);
 
       this._intensity = this._json.optInt(INTENSITY_KEY, 0);
-  
+
       this._looping = this._json.optInt(LOOPING_KEY, 0) == 1;
 
       int requirePlaybackMode = this._json.optInt(REQUIRE_P_KEY, -1);
@@ -150,7 +143,7 @@ public class MediaConfiguration {
       else {
         this._requirePlaybackMode = requirePlaybackMode > 0;
       }
-  
+
       if ( requireRecordingMode == -1 ) {
         this._requireRecordingMode = false;
       }

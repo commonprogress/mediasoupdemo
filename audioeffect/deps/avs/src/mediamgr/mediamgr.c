@@ -17,14 +17,14 @@
 */
 
 #include <re.h>
-#include "../../include/avs.h"
-#include "../../include/avs_mediamgr.h"
-#include "../../include/avs_lockedqueue.h"
-#include "../../include/avs_audio_io.h"
+#include "avs.h"
+#include "avs_mediamgr.h"
+#include "avs_lockedqueue.h"
+#include "avs_audio_io.h"
 #include <pthread.h>
 #include "mediamgr.h"
 #include "mm_platform.h"
-#include "../../include/avs_flowmgr.h"
+#include "avs_flowmgr.h"
 #include <unistd.h>
 
 #define MM_USE_THREAD   1

@@ -15,19 +15,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com.waz.media.manager.player;
+package com.waz.log;
 
-
-public interface MediaSource {
-  public void play ( );
-  public void stop ( );
-
-  public MediaSourceListener getListener ( );
-  public void setListener ( MediaSourceListener listener );
-
-  public float getVolume ( );
-  public void setVolume ( float volume );
-
-  public boolean getShouldLoop ( );
-  public void setShouldLoop ( boolean shouldLoop );
+public interface LogHandler {
+    void append(String msg);
+    void upload();
 }
+

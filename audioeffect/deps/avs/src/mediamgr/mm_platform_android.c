@@ -17,10 +17,10 @@
 */
 
 #include "re.h"
-#include "../../include/avs.h"
+#include "avs.h"
 #include "mm_platform.h"
 #include "mm_platform_android.h"
-#include "../../include/avs_mediamgr.h"
+#include "avs_mediamgr.h"
 
 #include <pthread.h>
 #include <sys/time.h>

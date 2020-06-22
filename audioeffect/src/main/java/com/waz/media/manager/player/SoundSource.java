@@ -1,46 +1,38 @@
 /*
-* Wire
-* Copyright (C) 2016 Wire Swiss GmbH
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License
-* along with this program. If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Wire
+ * Copyright (C) 2016 Wire Swiss GmbH
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 package com.waz.media.manager.player;
 
 
 import android.content.Context;
-import android.net.Uri;
-import android.util.Log;
-
+import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.media.MediaPlayer.OnPreparedListener;
-import android.media.MediaPlayer.OnSeekCompleteListener;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.media.MediaPlayer.OnErrorListener;
-
-import com.waz.media.manager.player.MPState;
-import com.waz.media.manager.player.MediaSource;
-import com.waz.media.manager.player.MediaSourceListener;
-
-import com.waz.media.manager.MediaManager;
-
-import android.media.AudioManager;
+import android.media.MediaPlayer.OnPreparedListener;
+import android.media.MediaPlayer.OnSeekCompleteListener;
+import android.net.Uri;
+import android.util.Log;
 
 public class SoundSource implements MediaSource, OnPreparedListener, OnSeekCompleteListener, OnCompletionListener, OnErrorListener {
 
   // Set to true to enable debug logs.
   private static final boolean DEBUG = false;
-    
+
   private String _name = null;
   private Context _context = null;
   private Uri _uri = null;
@@ -58,12 +50,12 @@ public class SoundSource implements MediaSource, OnPreparedListener, OnSeekCompl
   private boolean _shouldLoop = false;
 
   private boolean isUpdating = false;
-    
+
   //private boolean _shouldMuteIncomingSound = false;
   private boolean _shouldMuteOutgoingSound = false;
 
   private AudioManager _audioManager = null;
-    
+
   public MediaSourceListener getListener ( ) {
     return this._listener;
   }
@@ -117,11 +109,11 @@ public class SoundSource implements MediaSource, OnPreparedListener, OnSeekCompl
 
   private void update ( ) {
     if(isUpdating){
-        DoLogErr("Sound Source update() allready running ! \n");
-        //return;
+      DoLogErr("Sound Source update() allready running ! \n");
+      //return;
     }
     isUpdating = true;
-      
+
     boolean playChanged = true;
     boolean stopChanged = true;
     boolean stateChanged = true;
@@ -161,7 +153,7 @@ public class SoundSource implements MediaSource, OnPreparedListener, OnSeekCompl
       this._player.reset();
       setVolume(vol);
       setShouldLoop(looping);
-        
+
       this._currentState = MPState.NULL;
     }
   }
@@ -172,11 +164,11 @@ public class SoundSource implements MediaSource, OnPreparedListener, OnSeekCompl
     if ( this._requestPlay ) {
       try {
         DoLog("Sound Source -> setting up: " + this._name);
-          
+
         this._player.setDataSource(this._context, this._uri);
 
         this._player.setAudioStreamType(this._stream);
-          
+
         this._currentState = MPState.INIT;
       }
       catch ( Exception e ) {
@@ -199,7 +191,7 @@ public class SoundSource implements MediaSource, OnPreparedListener, OnSeekCompl
       if(this._stream == android.media.AudioManager.STREAM_RING){
         float vol = getVolume ( );
         boolean looping = getShouldLoop ( );
-        
+
         this._player.reset();
 
 
@@ -213,9 +205,9 @@ public class SoundSource implements MediaSource, OnPreparedListener, OnSeekCompl
         }
 	*/
 
-	/* -- Use the stream as indicated by the stream property */	
-	this._player.setAudioStreamType(this._stream);
-	
+        /* -- Use the stream as indicated by the stream property */
+        this._player.setAudioStreamType(this._stream);
+
         try {
           this._player.setDataSource(this._context, this._uri);
         }
@@ -225,7 +217,7 @@ public class SoundSource implements MediaSource, OnPreparedListener, OnSeekCompl
         setVolume(vol);
         setShouldLoop(looping);
       }
-        
+
       this._player.prepareAsync();
 
       this._currentState = MPState.PREP;
@@ -342,14 +334,14 @@ public class SoundSource implements MediaSource, OnPreparedListener, OnSeekCompl
 
   private void onStopState ( ) {
     DoLog("Sound Source on Stop State: " + this._name);
-      
+
     if ( this._requestPlay ) {
       DoLog("Sound Source -> prepareAsync(): " + this._name);
 
       if(this._stream == android.media.AudioManager.STREAM_RING){
         float vol = getVolume ( );
         boolean looping = getShouldLoop ( );
-        
+
         this._player.reset();
 
 	/*
@@ -361,9 +353,9 @@ public class SoundSource implements MediaSource, OnPreparedListener, OnSeekCompl
           DoLog("Reconfigure to STREAM_RING");
         }
 	*/
-	
-	this._player.setAudioStreamType(this._stream);
-	
+
+        this._player.setAudioStreamType(this._stream);
+
         try {
           this._player.setDataSource(this._context, this._uri);
         }
@@ -375,13 +367,13 @@ public class SoundSource implements MediaSource, OnPreparedListener, OnSeekCompl
       }
       this._currentState = MPState.PREP;
       try {
-          this._player.prepareAsync();
+        this._player.prepareAsync();
       }
       catch( Exception e){
         DoLogErr("prepareAsync failed");
         this._requestPlay = false;
         this._requestStop = false;
-          
+
         this._currentState = MPState.FAIL;
       }
     }
@@ -400,7 +392,7 @@ public class SoundSource implements MediaSource, OnPreparedListener, OnSeekCompl
     this._player.setOnSeekCompleteListener(this);
     this._player.setOnCompletionListener(this);
     this._player.setOnErrorListener(this);
-      
+
     DoLog("Sound Source New: " + name + " " + this._uri + " " + stream);
   }
 
@@ -429,9 +421,9 @@ public class SoundSource implements MediaSource, OnPreparedListener, OnSeekCompl
     DoLog("Sound Source Prepared: " + this._uri);
 
     if(this._currentState != MPState.PREP){
-        DoLogErr("Sound Source illegal state change " + this._currentState + " to prepared");
+      DoLogErr("Sound Source illegal state change " + this._currentState + " to prepared");
     }
-      
+
     this._currentState = MPState.IDLE;
 
     this.update();
@@ -474,14 +466,14 @@ public class SoundSource implements MediaSource, OnPreparedListener, OnSeekCompl
   }
 
   final String logTag = "avs SoundSource";
-    
+
   private void DoLog(String msg) {
     if (DEBUG) {
       Log.d(logTag, msg);
     }
   }
-    
+
   private void DoLogErr(String msg) {
-      Log.e(logTag, msg);
+    Log.e(logTag, msg);
   }
 }

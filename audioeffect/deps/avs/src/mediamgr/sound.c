@@ -23,7 +23,7 @@
 
 #include <re/re.h>
 
-#include "../../include/avs.h"
+#include "avs.h"
 
 #include "mediamgr.h"
 
