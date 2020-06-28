@@ -20,8 +20,7 @@ android {
 
         externalNativeBuild {
             cmake {
-                cppFlags "-frtti -fexceptions"
-                arguments "-DANDROID_ARM_NEON=TRUE"
+//                cppFlags "-frtti -fexceptions"
                 // "-DANDROID_ALLOW_UNDEFINED_SYMBOLS=true",
                 // Passes optional arguments to CMake.
                 arguments "-DLIBWEBRTC_INCLUDE_PATH=" + WEBRTC_INC_PATH,

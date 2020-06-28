@@ -21,51 +21,51 @@
 #include "mm_platform.h"
 
 static struct {
-	struct mm *mm;
-	enum mediamgr_auplay current_route;
+    struct mm *mm;
+    enum mediamgr_auplay current_route;
 } dummy = {
-	.mm = NULL,
-	.current_route = MEDIAMGR_AUPLAY_EARPIECE,
+        .mm = NULL,
+        .current_route = MEDIAMGR_AUPLAY_EARPIECE,
 };
 
 
 int mm_platform_init(struct mm *mm, struct dict *sounds)
 {
-	dummy.mm = mm;
-	
-	(void)sounds;
-	return 0;
+    dummy.mm = mm;
+
+    (void)sounds;
+    return 0;
 }
 
 int mm_platform_free(struct mm *mm)
 {
-	return 0;
+    return 0;
 }
 
 void mm_platform_play_sound(struct sound *snd, bool sync, bool delayed)
 {
-	(void)snd;
+    (void)snd;
 }
 
 void mm_platform_pause_sound(struct sound *snd)
 {
-	(void)snd;
+    (void)snd;
 }
 
 void mm_platform_resume_sound(struct sound *snd)
 {
-	(void)snd;
+    (void)snd;
 }
 
 void mm_platform_stop_sound(struct sound *snd)
 {
-	(void)snd;
+    (void)snd;
 }
 
 bool mm_platform_is_sound_playing(struct sound *snd)
 {
-	(void)snd;
-	return false;
+    (void)snd;
+    return false;
 }
 
 int mm_platform_enable_speaker(void)
@@ -130,18 +130,18 @@ void mm_platform_registerMedia(struct dict *sounds,
                                bool is_call_media)
 {
     debug("mm_platform_registerMedia name = %s obj = %p \n", name, mediaObj);
-    
+
     struct sound *snd;
-    
+
     snd = mem_zalloc(sizeof(struct sound), NULL);
-    
+
     snd->arg = mediaObj;
     snd->mixing = mixing;
     snd->incall = incall;
     snd->intensity = intensity;
     snd->priority = priority;
     snd->is_call_media = is_call_media;
-    
+
     dict_add( sounds, name, (void*)snd);
     mem_deref(snd); // to get the ref count to 1
 }
@@ -153,7 +153,7 @@ void mm_platform_unregisterMedia(struct dict *sounds, const char *name){
 
 void mm_platform_reset_sound(struct sound *snd)
 {
-	(void)snd;
+    (void)snd;
 }
 
 

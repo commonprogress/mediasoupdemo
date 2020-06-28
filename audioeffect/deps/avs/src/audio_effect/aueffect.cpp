@@ -30,11 +30,11 @@ extern "C" {
 static void aueffect_destructor(void *arg)
 {
     struct aueffect *aue = (struct aueffect *)arg;
-    
+
     debug("aueffect_destructor: %p free_h: %p\n",aue, aue->e_free_h);
 
     if (aue->e_free_h)
-	    aue->e_free_h(aue->effect);
+        aue->e_free_h(aue->effect);
 }
 
 int aueffect_alloc(struct aueffect **auep,
@@ -43,17 +43,17 @@ int aueffect_alloc(struct aueffect **auep,
 {
     struct aueffect *aue;
     int err = 0, strength = 0;
-    
+
     if (!auep) {
         return EINVAL;
     }
-    
+
     debug("voe: aueffect_alloc: \n");
-    
+
     aue = (struct aueffect *)mem_zalloc(sizeof(*aue), aueffect_destructor);
     if (!aue)
         return ENOMEM;
-    
+
     switch ((enum audio_effect)effect_type) {
 
         case AUDIO_EFFECT_CHORUS_MAX:
@@ -128,7 +128,7 @@ int aueffect_alloc(struct aueffect **auep,
             aue->e_length_h = pace_shift_length_factor;
             break;
         case AUDIO_EFFECT_VOCODER_MED:
-            strength++;            
+            strength++;
         case AUDIO_EFFECT_VOCODER_MIN:
             aue->e_create_h = create_vocoder;
             aue->e_reset_h = NULL;
@@ -138,7 +138,7 @@ int aueffect_alloc(struct aueffect **auep,
         case AUDIO_EFFECT_AUTO_TUNE_MAX:
             strength++;
         case AUDIO_EFFECT_AUTO_TUNE_MED:
-            strength++;            
+            strength++;
         case AUDIO_EFFECT_AUTO_TUNE_MIN:
             aue->e_create_h = create_auto_tune;
             aue->e_reset_h = NULL;
@@ -186,15 +186,15 @@ int aueffect_alloc(struct aueffect **auep,
     if(!aue->effect){
         err = -1;
     }
-    
-out:
+
+    out:
     if (err) {
         mem_deref(aue);
     }
     else {
         *auep = aue;
     }
-    
+
     return err;
 }
 
@@ -204,9 +204,9 @@ int aueffect_reset(struct aueffect *aue, int fs_hz)
         error("Effect not allocated ! \n");
         return -1;
     }
-    
+
     aue->e_reset_h(aue->effect, fs_hz);
-    
+
     return 0;
 }
 
@@ -216,9 +216,9 @@ int aueffect_process(struct aueffect *aue, const int16_t *sampin, int16_t *sampo
         error("Effect not allocated ! \n");
         return -1;
     }
-    
+
     aue->e_proc_h(aue->effect, (int16_t*)sampin, sampout, n_sampin, n_sampout);
-    
+
     return 0;
 }
 
@@ -229,6 +229,6 @@ int aueffect_length_modification(struct aueffect *aue, int *length_modification_
     } else {
         *length_modification_q10 = 1024;
     }
- 
+
     return 0;
 }
