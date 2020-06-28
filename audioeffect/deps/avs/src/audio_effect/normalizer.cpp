@@ -21,6 +21,7 @@
 #include "avs_audio_effect.h"
 #include <math.h>
 #include <cstdlib>
+#include <silk/main.h>
 
 #ifdef __APPLE__
 #       include "TargetConditionals.h"

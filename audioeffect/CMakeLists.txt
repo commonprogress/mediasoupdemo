@@ -53,16 +53,14 @@ include_directories(
 
 include_directories(deps/webrtc/include
         deps/webrtc/include/rtc_base
+        deps/webrtc/include/third_party/abseil-cpp
         deps/webrtc/include/third_party/opus
         deps/webrtc/include/third_party/opus/src
+        deps/webrtc/include/third_party/opus/src/src
+        deps/webrtc/include/third_party/opus/src/celt
         deps/webrtc/include/third_party/opus/src/include
         deps/webrtc/include/third_party/opus/src/silk
         )
-
-
-# Add some compile flags to our source files.
-set_source_files_properties(${SOURCE_FILES}
-        PROPERTIES COMPILE_FLAGS -Wall -Wextra -Wpedantic)
 
 # Compile definitions for libwebrtc.
 target_compile_definitions(${PROJECT_NAME} PUBLIC
@@ -76,5 +74,6 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
         android
         log
         OpenSLES
+        re
         avs
         )

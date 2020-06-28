@@ -46,8 +46,11 @@ include_directories(include
 include_directories(../webrtc/include
         ../webrtc/include/rtc_base
         ../webrtc/include/third_party
+        ../webrtc/include/third_party/abseil-cpp
         ../webrtc/include/third_party/opus
         ../webrtc/include/third_party/opus/src
+        ../webrtc/include/third_party/opus/src/src
+        ../webrtc/include/third_party/opus/src/celt
         ../webrtc/include/third_party/opus/src/include
         ../webrtc/include/third_party/opus/src/silk
         )
@@ -82,12 +85,17 @@ set(
 # Create target.
 add_library(${PROJECT_NAME} STATIC ${SOURCE_FILES})
 
+add_library(re SHARED IMPORTED)
+set_target_properties(re
+        PROPERTIES IMPORTED_LOCATION
+        contrib/re/libre.a)
 
 # Add '-whole-archive' to keep symbols from peerconnection_jni.
 # https://stackoverflow.com/a/5687860/2085408
 SET(webrtc -Wl,--whole-archive ../webrtc/lib/${ANDROID_ABI}/libwebrtc.so -Wl,--no-whole-archive)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC
+        re
         ${webrtc}
         )
 
