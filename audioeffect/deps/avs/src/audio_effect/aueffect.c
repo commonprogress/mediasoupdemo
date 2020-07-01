@@ -34,7 +34,7 @@ static void aueffect_destructor(void *arg)
     debug("aueffect_destructor: %p free_h: %p\n",aue, aue->e_free_h);
 
     if (aue->e_free_h)
-        aue->e_free_h(aue->effect);
+	    aue->e_free_h(aue->effect);
 }
 
 int aueffect_alloc(struct aueffect **auep,
@@ -187,7 +187,7 @@ int aueffect_alloc(struct aueffect **auep,
         err = -1;
     }
 
-    out:
+out:
     if (err) {
         mem_deref(aue);
     }

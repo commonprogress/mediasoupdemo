@@ -94,7 +94,7 @@ static float compress(float x)
 
 static void find_res(struct vocoder_effect *ve, int16_t x[], int L, int16_t res[], silk_float a[], float *g,  float *tilt)
 {
-#if !defined(WEBRTC_ARCH_ARM)
+#if !defined(__ARM_ARCH)
     silk_float thrhld, res_nrg;
     silk_float auto_corr[ Z_REST_LPC_ORDER + 1 ];
     silk_float A[         Z_REST_LPC_ORDER ];
@@ -106,11 +106,11 @@ static void find_res(struct vocoder_effect *ve, int16_t x[], int L, int16_t res[
     for( int i = 0; i < L; i++ ) {
         ve->rest.buf[(PROC_FS_KHZ*Z_REST_BUF_SZ_MS) - L + i] = x[i];
     }
-    
+
     for( int i = 0; i < PROC_FS_KHZ*Z_REST_BUF_SZ_MS; i++ ) {
         sig[i] = (silk_float)ve->rest.buf[i];
     }
-    
+
     /* Apply Window */
     for(int i = 0; i < Z_REST_WIN_L1*PROC_FS_KHZ; i++){
         Wsig[i] = sig[i] * ve->rest.win1[i];
@@ -121,41 +121,41 @@ static void find_res(struct vocoder_effect *ve, int16_t x[], int L, int16_t res[
     for(int i = 0; i < Z_REST_WIN_L3*PROC_FS_KHZ; i++){
         Wsig[(Z_REST_WIN_L1+Z_REST_WIN_L2)*PROC_FS_KHZ + i] = sig[(Z_REST_WIN_L1+Z_REST_WIN_L2)*PROC_FS_KHZ +i] * ve->rest.win3[i];
     }
-    
+
     /* Calculate autocorrelation sequence */
     silk_autocorrelation_FLP( auto_corr, Wsig, PROC_FS_KHZ*Z_REST_BUF_SZ_MS, Z_REST_LPC_ORDER + 1 );
-    
+
     /* Add white noise, as fraction of energy */
     auto_corr[ 0 ] += auto_corr[ 0 ] * 1e-3 + 1;
-    
+
     *tilt = auto_corr[ 1 ] / auto_corr[ 0 ];
-    
+
     /* Calculate the reflection coefficients using Schur */
     res_nrg = silk_schur_FLP( refl_coef, auto_corr, Z_REST_LPC_ORDER );
-    
+
     /* Convert reflection coefficients to prediction coefficients */
     silk_k2a_FLP( A, refl_coef, Z_REST_LPC_ORDER );
-    
+
     /* Bandwidth expansion */
     silk_bwexpander_FLP( A, Z_REST_LPC_ORDER, 0.99f );
-    
+
     /*****************************************/
     /* LPC analysis filtering                */
     /*****************************************/
     silk_LPC_analysis_filter_FLP( res_buf, A, sig, PROC_FS_KHZ*Z_REST_BUF_SZ_MS, Z_REST_LPC_ORDER );
-    
+
     for(int i = 0; i < 10*PROC_FS_KHZ; i++){
         res[i] = (int16_t)res_buf[Z_REST_WIN_L1*PROC_FS_KHZ + i];
     }
-    
+
     float e1 = 1;
     for(int i = Z_REST_LPC_ORDER; i < Z_REST_BUF_SZ_MS*PROC_FS_KHZ; i++){
         e1 = e1 + (float)res_buf[i] * (float)res_buf[i];
     }
     *g = sqrtf(e1/(Z_REST_BUF_SZ_MS*PROC_FS_KHZ - Z_REST_LPC_ORDER));
-    
+
     memcpy(a, A, Z_REST_LPC_ORDER*sizeof(silk_float));
-    
+
     memmove(&ve->rest.buf[0], &ve->rest.buf[L], ((PROC_FS_KHZ*Z_REST_BUF_SZ_MS) - L)*sizeof(int16_t));
 #else
     opus_int16 Wsig[16*Z_REST_BUF_SZ_MS];

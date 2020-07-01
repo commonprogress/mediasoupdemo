@@ -53,7 +53,7 @@ void free_find_pitch_lags(struct pitch_estimator *pest)
 
 void find_pitch_lags(struct pitch_estimator *pest, int16_t x[], int L)
 {
-#if !defined(WEBRTC_ARCH_ARM)
+#if !defined(__ARM_ARCH)
     silk_float thrhld, res_nrg;
     silk_float auto_corr[ Z_LPC_ORDER + 1 ];
     silk_float A[         Z_LPC_ORDER ];
@@ -62,7 +62,7 @@ void find_pitch_lags(struct pitch_estimator *pest, int16_t x[], int L)
     silk_float sig[Z_FS_KHZ*Z_PEST_BUF_SZ_MS];
     silk_float res[Z_FS_KHZ*Z_PEST_BUF_SZ_MS];
     int L_re = (L*Z_FS_KHZ)/pest->fs_khz;
-    
+
     /* resample to 16 khz if > 16 khz */
     pest->resampler->Resample( x, L, &pest->buf[(Z_FS_KHZ*Z_PEST_BUF_SZ_MS) - L_re], L_re);
 
@@ -73,22 +73,22 @@ void find_pitch_lags(struct pitch_estimator *pest, int16_t x[], int L)
     }
     silk_apply_sine_window_FLP( Wsig, Wsig, 1, Z_WIN_LEN_MS*Z_FS_KHZ );
     silk_apply_sine_window_FLP( &Wsig[Z_FS_KHZ*(Z_PEST_BUF_SZ_MS - Z_WIN_LEN_MS)], &Wsig[Z_FS_KHZ*(Z_PEST_BUF_SZ_MS - Z_WIN_LEN_MS)], 2, Z_WIN_LEN_MS*Z_FS_KHZ );
-    
+
     /* Calculate autocorrelation sequence */
     silk_autocorrelation_FLP( auto_corr, Wsig, Z_FS_KHZ*Z_PEST_BUF_SZ_MS, Z_LPC_ORDER + 1 );
-        
+
     /* Add white noise, as fraction of energy */
     auto_corr[ 0 ] += auto_corr[ 0 ] * 1e-3f + 1;
-    
+
     /* Calculate the reflection coefficients using Schur */
     res_nrg = silk_schur_FLP( refl_coef, auto_corr, Z_LPC_ORDER );
-    
+
     /* Convert reflection coefficients to prediction coefficients */
     silk_k2a_FLP( A, refl_coef, Z_LPC_ORDER );
-    
+
     /* Bandwidth expansion */
     silk_bwexpander_FLP( A, Z_LPC_ORDER, 0.99f );
-    
+
     /*****************************************/
     /* LPC analysis filtering                */
     /*****************************************/

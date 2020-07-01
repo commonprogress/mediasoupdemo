@@ -16,12 +16,22 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef AVS_IO_CLASS_H_
+#define AVS_IO_CLASS_H_
 
-/*
- * UUID
- */
+#include "avs_audio_io.h"
+#include "modules/audio_device/include/audio_device.h"
 
-enum {UUID_SZ = 37};
+namespace webrtc {
+    class audio_io_class : public AudioDeviceModule {
+    public:
+        virtual int32_t InitInternal() = 0;
 
-int  uuid_v4(char **uuidp);
-bool uuid_isvalid(const char *uuid);
+        virtual int32_t TerminateInternal() = 0;
+        virtual int32_t ResetAudioDevice() = 0;
+                
+        virtual int32_t EnableSine() = 0;
+    };
+}
+
+#endif

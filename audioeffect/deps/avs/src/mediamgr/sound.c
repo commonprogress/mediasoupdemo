@@ -30,34 +30,34 @@
 
 static void destructor(void *arg)
 {
-    struct sound *snd = arg;
+	struct sound *snd = arg;
 
-    mem_deref((void *)snd->path);
-    mem_deref((void *)snd->format);
+	mem_deref((void *)snd->path);
+	mem_deref((void *)snd->format);
 }
 
 int sound_alloc(struct sound **sndp,
-                const char *path, const char *fmt,
-                bool loop, bool mixing, bool incall, int intensity, bool is_call_media)
+		const char *path, const char *fmt,
+		bool loop, bool mixing, bool incall, int intensity, bool is_call_media)
 {
-    struct sound *snd;
-    int err = 0;
+	struct sound *snd;
+	int err = 0;
 
-    snd = mem_zalloc(sizeof(*snd), destructor);
-    if (!snd)
-        return ENOMEM;
+	snd = mem_zalloc(sizeof(*snd), destructor);
+	if (!snd)
+		return ENOMEM;
 
-    str_dup((char **)&snd->path, path);
-    str_dup((char **)&snd->format, fmt);
-    snd->loop = loop;
-    snd->mixing = mixing;
-    snd->intensity = intensity;
-    snd->is_call_media = is_call_media;
+	str_dup((char **)&snd->path, path);
+	str_dup((char **)&snd->format, fmt);
+	snd->loop = loop;
+	snd->mixing = mixing;
+	snd->intensity = intensity;
+	snd->is_call_media = is_call_media;
 
-    if (err)
-        mem_deref(snd);
-    else
-        *sndp = snd;
+	if (err)
+		mem_deref(snd);
+	else
+		*sndp = snd;
 
-    return err;
+	return err;
 }

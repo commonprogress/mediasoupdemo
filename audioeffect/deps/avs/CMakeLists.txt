@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(avs LANGUAGES CXX)
+#project(avs LANGUAGES CXX)
+project(avs)
 
 # Set version number.
 set(avs_VERSION_MAJOR 3)
@@ -16,6 +17,16 @@ set(avs_VERSION_PATCH 8)
 # C++ standard requirements.
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# 设置C语言标准
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+
+#判断编译器类型,如果是gcc编译器,则在编译选项中加入c++11支持
+#if(CMAKE_COMPILER_IS_GNUCXX)
+#    set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
+#    message(STATUS "optMalformedional:-std=c++11")
+#endif(CMAKE_COMPILER_IS_GNUCXX)
 
 # Project configuration.
 set(LIBWEBRTC_INCLUDE_PATH "" CACHE STRING "libwebrtc include path")
@@ -46,6 +57,19 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     endif ()
 endif ()
 
+set(
+        SOURCE_FILES_C
+        src/audio_effect/aueffect.c
+        src/mediamgr/mediamgr.c
+        src/mediamgr/sound.c
+        src/mediamgr/mm_platform_android.c
+        src/dict/dict.c
+        src/log/log.c
+        src/string/wordexp.c
+        src/msystem/msystem.c
+        src/msystem/msys_default.c
+        )
+
 #if (${MEDIASOUPCLIENT_BUILD_TESTS})
 #    add_subdirectory(test)
 #endif()
@@ -55,11 +79,6 @@ endif ()
 #        )
 set(
         SOURCE_FILES
-        src/mediamgr/mediamgr.cpp
-        src/mediamgr/mm_platform_dummy.cpp
-        src/mediamgr/sound.cpp
-        src/mediamgr/mm_platform_android.cpp
-        src/audio_effect/aueffect.cpp
         src/audio_effect/chorus.cpp
         src/audio_effect/reverb.cpp
         src/audio_effect/pitch_shift.cpp
@@ -75,11 +94,19 @@ set(
         src/audio_effect/biquad.cpp
         src/audio_effect/wav_interface.cpp
         src/audio_effect/pcm_interface.cpp
-        src/log/log.cpp
+        src/audio_io/audio_io.cpp
+        src/audio_io/mock/fake_audiodevice.cpp
 )
 
+#file(GLOB_RECURSE SOURCE_FILES_RE contrib/re/src/*.c)
+
+# include header files for the IDEs
+#file(GLOB_RECURSE HEADER_FILES_RE contrib/re/src/*.h contrib/re/include/*.h)
+
 # Create target.
-add_library(${PROJECT_NAME} STATIC ${SOURCE_FILES})
+add_library(${PROJECT_NAME} STATIC ${SOURCE_FILES_C} ${SOURCE_FILES})
+
+message("\n=========== 33333333 ===========\n")
 
 #if (${MEDIASOUPCLIENT_LOG_TRACE})
 #    target_compile_definitions(${PROJECT_NAME}
@@ -95,13 +122,16 @@ add_library(${PROJECT_NAME} STATIC ${SOURCE_FILES})
 
 # Source Dependencies.
 #add_subdirectory(deps/libsdptransform "${CMAKE_CURRENT_BINARY_DIR}/libsdptransform")
+#add_subdirectory(contrib/re "${PROJECT_SOURCE_DIR}/contrib/re")
 
 # Add some compile flags to our source files.
 if (MSVC)
-    set_source_files_properties(${SOURCE_FILES}
+    message("\n=========== 66666666 ===========\n")
+    set_source_files_properties(${SOURCE_FILES_C} ${SOURCE_FILES}
             PROPERTIES COMPILE_FLAGS "/W3 /WX")
 else ()
-    set_source_files_properties(${SOURCE_FILES}
+    message("\n=========== 77777777 ===========\n")
+    set_source_files_properties(${SOURCE_FILES_C} ${SOURCE_FILES}
             PROPERTIES COMPILE_FLAGS -Wall -Wextra -Wpedantic)
 endif ()
 
@@ -113,8 +143,9 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         include
         src/audio_effect
         src/mediamgr
-        src/main
-        contrib
+        src/msystem
+        src/audio_io
+        src/audio_io/mock
         contrib/re
         contrib/re/include
         ../webrtc/src
@@ -127,6 +158,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         ../webrtc/src/third_party/opus/src/celt
         ../webrtc/src/third_party/opus/src/include
         ../webrtc/src/third_party/opus/src/silk
+        ../webrtc/src/third_party/boringssl/src/include
         )
 
 #target_include_directories(${PROJECT_NAME} PUBLIC
@@ -148,32 +180,43 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 #        "${LIBWEBRTC_INCLUDE_PATH}/third_party/opus/src/silk"
 #        )
 
-add_library(ffmpeg SHARED IMPORTED)
-set_target_properties(ffmpeg
-        PROPERTIES IMPORTED_LOCATION
-        ${LIBWEBRTC_BINARY_PATH}/${ANDROID_ABI}/libffmpeg.so)
+ add_library(ffmpeg SHARED IMPORTED)
+ set_target_properties(ffmpeg
+         PROPERTIES IMPORTED_LOCATION
+         ${LIBWEBRTC_BINARY_PATH}/${ANDROID_ABI}/libffmpeg.so)
 
 add_library(re STATIC IMPORTED)
 set_target_properties(re
         PROPERTIES IMPORTED_LOCATION
-        ${PROJECT_SOURCE_DIR}/contrib/re/libre.a)
+        ${LIBWEBRTC_BINARY_PATH}/${ANDROID_ABI}/libre${CMAKE_STATIC_LIBRARY_SUFFIX})
+
+add_library(opus STATIC IMPORTED)
+set_target_properties(opus
+        PROPERTIES IMPORTED_LOCATION
+        ${LIBWEBRTC_BINARY_PATH}/${ANDROID_ABI}/libopus${CMAKE_STATIC_LIBRARY_SUFFIX})
+
+message("\n=========== 4444444 ===========\n")
 
 # Public (interface) dependencies.
 if ("${ANDROID_ABI}" STREQUAL "")
+    message("\n=========== 222222 ===========\n")
     target_link_libraries(${PROJECT_NAME} PUBLIC
-#            sdptransform
-            ffmpeg
             re
+            ffmpeg
+#            opus
             ${LIBWEBRTC_BINARY_PATH}/libwebrtc${CMAKE_STATIC_LIBRARY_SUFFIX}
             )
 else ()
+    message("\n=========== 11111111 ===========\n")
     # Add '-whole-archive' to keep symbols from peerconnection_jni.
     # https://stackoverflow.com/a/5687860/2085408
+#    SET(re -Wl,--whole-archive ${PROJECT_SOURCE_DIR}/contrib/re/lib/${ANDROID_ABI}/libre${CMAKE_STATIC_LIBRARY_SUFFIX} -Wl,--no-whole-archive)
     SET(webrtc -Wl,--whole-archive ${LIBWEBRTC_BINARY_PATH}/${ANDROID_ABI}/libwebrtc${CMAKE_STATIC_LIBRARY_SUFFIX} -Wl,--no-whole-archive)
+#    SET(opus -Wl,--whole-archive ${LIBWEBRTC_BINARY_PATH}/${ANDROID_ABI}/libopus${CMAKE_STATIC_LIBRARY_SUFFIX} -Wl,--no-whole-archive)
     target_link_libraries(${PROJECT_NAME} PUBLIC
-#            sdptransform
-            ffmpeg
             re
+            ffmpeg
+#            opus
             ${webrtc}
             )
 endif ()
@@ -184,6 +227,6 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC
         $<$<PLATFORM_ID:Windows>:WEBRTC_WIN>
         $<$<PLATFORM_ID:Darwin>:WEBRTC_MAC>
         )
-
+message("\n=========== 55555555 ===========\n")
 install(TARGETS avs DESTINATION lib)
 #install(FILES ${HEADER_FILES} DESTINATION include/avs)

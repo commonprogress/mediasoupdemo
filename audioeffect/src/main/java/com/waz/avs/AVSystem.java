@@ -23,7 +23,7 @@ public class AVSystem {
         if (isLoaded)
             return;
 
-        System.loadLibrary("avs");
+        System.loadLibrary("avs_so");
         isLoaded = true;
     }
 }
