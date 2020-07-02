@@ -46,8 +46,8 @@ message("\n=========== libavs Build Configuration ===========\n")
 #message(STATUS "MEDIASOUPCLIENT_LOG_DEV     : " ${MEDIASOUPCLIENT_LOG_DEV})
 message(STATUS "LIBWEBRTC_INCLUDE_PATH      : " ${LIBWEBRTC_INCLUDE_PATH})
 message(STATUS "LIBWEBRTC_BINARY_PATH       : " ${LIBWEBRTC_BINARY_PATH})
-message(STATUS "PROJECT_NAME       : " ${PROJECT_NAME})
-message(STATUS "PROJECT_SOURCE_DIR       : " ${PROJECT_SOURCE_DIR})
+message(STATUS "PROJECT_NAME                : " ${PROJECT_NAME})
+message(STATUS "PROJECT_SOURCE_DIR          : " ${PROJECT_SOURCE_DIR})
 message("")
 
 # GCC >= 4.9 is required due to std::regex use.
@@ -70,13 +70,6 @@ set(
         src/msystem/msys_default.c
         )
 
-#if (${MEDIASOUPCLIENT_BUILD_TESTS})
-#    add_subdirectory(test)
-#endif()
-
-#set(HEADER_FILES
-#        include/mediasoupclient.hpp
-#        )
 set(
         SOURCE_FILES
         src/audio_effect/chorus.cpp
@@ -94,17 +87,15 @@ set(
         src/audio_effect/biquad.cpp
         src/audio_effect/wav_interface.cpp
         src/audio_effect/pcm_interface.cpp
-#         src/audio_io/audio_io.cpp
-#         src/audio_io/mock/fake_audiodevice.cpp
 )
 
-#file(GLOB_RECURSE SOURCE_FILES_RE contrib/re/src/*.c)
+file(GLOB_RECURSE SOURCE_FILES_RE contrib/re/src/*.c)
 
 # include header files for the IDEs
-#file(GLOB_RECURSE HEADER_FILES_RE contrib/re/src/*.h contrib/re/include/*.h)
+file(GLOB_RECURSE HEADER_FILES_RE contrib/re/src/*.h contrib/re/include/*.h)
 
 # Create target.
-add_library(${PROJECT_NAME} STATIC ${SOURCE_FILES_C} ${SOURCE_FILES})
+add_library(${PROJECT_NAME} STATIC ${SOURCE_FILES_C} ${SOURCE_FILES} ${SOURCE_FILES_RE} ${HEADER_FILES_RE})
 
 message("\n=========== 33333333 ===========\n")
 
@@ -121,7 +112,6 @@ message("\n=========== 33333333 ===========\n")
 #endif ()
 
 # Source Dependencies.
-#add_subdirectory(deps/libsdptransform "${CMAKE_CURRENT_BINARY_DIR}/libsdptransform")
 #add_subdirectory(contrib/re "${PROJECT_SOURCE_DIR}/contrib/re")
 
 # Add some compile flags to our source files.
@@ -136,18 +126,16 @@ else ()
 endif ()
 
 # Private (implementation) header files.
-target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/include)
-
-# Public (interface) headers from dependencies.
-target_include_directories(${PROJECT_NAME} PUBLIC
+target_include_directories(${PROJECT_NAME} PRIVATE
         include
         src/audio_effect
         src/mediamgr
         src/msystem
-#         src/audio_io
-#         src/audio_io/mock
         contrib/re
-        contrib/re/include
+        contrib/re/include)
+
+# Public (interface) headers from dependencies.
+target_include_directories(${PROJECT_NAME} PUBLIC
         ../webrtc/src
         ../webrtc/src/rtc_base
         ../webrtc/src/third_party
@@ -161,39 +149,15 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         ../webrtc/src/third_party/boringssl/src/include
         )
 
-#target_include_directories(${PROJECT_NAME} PUBLIC
-#        "${PROJECT_SOURCE_DIR}/include"
-#        "${PROJECT_SOURCE_DIR}/src/audio_effect"
-#        "${PROJECT_SOURCE_DIR}/src/mediamgr"
-#        "${PROJECT_SOURCE_DIR}/src/main"
-#        "${PROJECT_SOURCE_DIR}/contrib/re/src/main"
-#        "${PROJECT_SOURCE_DIR}/contrib/re/include"
-#        "${LIBWEBRTC_INCLUDE_PATH}"
-#        "${LIBWEBRTC_INCLUDE_PATH}/rtc_base"
-#        "${LIBWEBRTC_INCLUDE_PATH}/third_party"
-#        "${LIBWEBRTC_INCLUDE_PATH}/third_party/abseil-cpp"
-#        "${LIBWEBRTC_INCLUDE_PATH}/third_party/opus"
-#        "${LIBWEBRTC_INCLUDE_PATH}/third_party/opus/src"
-#        "${LIBWEBRTC_INCLUDE_PATH}/third_party/opus/src/src"
-#        "${LIBWEBRTC_INCLUDE_PATH}/third_party/opus/src/celt"
-#        "${LIBWEBRTC_INCLUDE_PATH}/third_party/opus/src/include"
-#        "${LIBWEBRTC_INCLUDE_PATH}/third_party/opus/src/silk"
-#        )
-
- add_library(ffmpeg SHARED IMPORTED)
- set_target_properties(ffmpeg
-         PROPERTIES IMPORTED_LOCATION
-         ${LIBWEBRTC_BINARY_PATH}/${ANDROID_ABI}/libffmpeg.so)
-
-add_library(re STATIC IMPORTED)
-set_target_properties(re
+add_library(ffmpeg SHARED IMPORTED)
+set_target_properties(ffmpeg
         PROPERTIES IMPORTED_LOCATION
-        ${LIBWEBRTC_BINARY_PATH}/${ANDROID_ABI}/libre${CMAKE_STATIC_LIBRARY_SUFFIX})
+        ${LIBWEBRTC_BINARY_PATH}/${ANDROID_ABI}/libffmpeg.so)
 
-add_library(opus STATIC IMPORTED)
-set_target_properties(opus
-        PROPERTIES IMPORTED_LOCATION
-        ${LIBWEBRTC_BINARY_PATH}/${ANDROID_ABI}/libopus${CMAKE_STATIC_LIBRARY_SUFFIX})
+#add_library(re STATIC IMPORTED)
+#set_target_properties(re
+#        PROPERTIES IMPORTED_LOCATION
+#        ${LIBWEBRTC_BINARY_PATH}/${ANDROID_ABI}/libre${CMAKE_STATIC_LIBRARY_SUFFIX})
 
 message("\n=========== 4444444 ===========\n")
 
@@ -201,9 +165,8 @@ message("\n=========== 4444444 ===========\n")
 if ("${ANDROID_ABI}" STREQUAL "")
     message("\n=========== 222222 ===========\n")
     target_link_libraries(${PROJECT_NAME} PUBLIC
-            re
+#            re
             ffmpeg
-#            opus
             ${LIBWEBRTC_BINARY_PATH}/libwebrtc${CMAKE_STATIC_LIBRARY_SUFFIX}
             )
 else ()
@@ -214,9 +177,8 @@ else ()
     SET(webrtc -Wl,--whole-archive ${LIBWEBRTC_BINARY_PATH}/${ANDROID_ABI}/libwebrtc${CMAKE_STATIC_LIBRARY_SUFFIX} -Wl,--no-whole-archive)
 #    SET(opus -Wl,--whole-archive ${LIBWEBRTC_BINARY_PATH}/${ANDROID_ABI}/libopus${CMAKE_STATIC_LIBRARY_SUFFIX} -Wl,--no-whole-archive)
     target_link_libraries(${PROJECT_NAME} PUBLIC
-            re
+#            re
             ffmpeg
-#            opus
             ${webrtc}
             )
 endif ()
