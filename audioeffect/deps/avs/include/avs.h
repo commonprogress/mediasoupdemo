@@ -38,13 +38,10 @@ extern "C" {
 
 #include "avs_dict.h"
 #include "avs_log.h"
-#include "avs_lockedqueue.h"
 #include "avs_mediamgr.h"
 #include "avs_audio_effect.h"
-#include "avs_audio_io.h"
 #include "avs_msystem.h"
 #include "avs_string.h"
-#include "avs_flowmgr.h"
 
 #ifdef __cplusplus
 }

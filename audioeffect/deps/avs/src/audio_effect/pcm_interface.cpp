@@ -133,10 +133,10 @@ int apply_effect_to_pcm(const char* pcmIn,
     }
     FILE *in_file, *out_file;
     
-    webrtc::PushResampler<int16_t> input_resampler;
-    webrtc::PushResampler<int16_t> output_resampler;
-    std::unique_ptr<webrtc::AudioProcessing> apm(webrtc::AudioProcessingBuilder().Create());    
-    
+//    webrtc::PushResampler<int16_t> input_resampler;
+//    webrtc::PushResampler<int16_t> output_resampler;
+//    std::unique_ptr<webrtc::AudioProcessing> apm(webrtc::AudioProcessingBuilder().Create());
+//
     struct aueffect *aue;
     int ret = aueffect_alloc(&aue, effect_type, FS_PROC);
     if(ret != 0){
@@ -167,38 +167,38 @@ int apply_effect_to_pcm(const char* pcmIn,
         return -1;
     }
     
-    input_resampler.InitializeIfNeeded(fs_hz, FS_PROC, 1);
-    output_resampler.InitializeIfNeeded(FS_PROC, fs_hz, 1);
-    
-    // Setup Audio Buffer used by apm
-    webrtc::AudioFrame near_frame;
-    near_frame.samples_per_channel_ = L_proc;
-    near_frame.num_channels_ = 1;
-    near_frame.sample_rate_hz_ = FS_PROC;
-    
-    // Setup APM
-    webrtc::AudioProcessing::ChannelLayout inLayout = webrtc::AudioProcessing::kMono;
-    webrtc::AudioProcessing::ChannelLayout outLayout = webrtc::AudioProcessing::kMono;;
-    webrtc::AudioProcessing::ChannelLayout reverseLayout = webrtc::AudioProcessing::kMono;;
-    apm->Initialize( FS_PROC, FS_PROC, FS_PROC, inLayout, outLayout, reverseLayout );
-    
-    // Enable High Pass Filter
-    //apm->high_pass_filter()->Enable(true);
-    webrtc::AudioProcessing::Config apmConfig;
-
-    apmConfig.high_pass_filter.enabled = true;
-    
-    // Enable Noise Supression
-    if(reduce_noise){
-	apmConfig.noise_suppression.enabled = true;
-        if(effect_type == AUDIO_EFFECT_VOCODER_MED){
-	    apmConfig.noise_suppression.level = webrtc::AudioProcessing::Config::NoiseSuppression::kModerate;
-        } else {
-	    apmConfig.noise_suppression.level = webrtc::AudioProcessing::Config::NoiseSuppression::kLow;
-        }
-    }
-    
-    apm->ApplyConfig(apmConfig);    
+//    input_resampler.InitializeIfNeeded(fs_hz, FS_PROC, 1);
+//    output_resampler.InitializeIfNeeded(FS_PROC, fs_hz, 1);
+//
+//    // Setup Audio Buffer used by apm
+//    webrtc::AudioFrame near_frame;
+//    near_frame.samples_per_channel_ = L_proc;
+//    near_frame.num_channels_ = 1;
+//    near_frame.sample_rate_hz_ = FS_PROC;
+//
+//    // Setup APM
+//    webrtc::AudioProcessing::ChannelLayout inLayout = webrtc::AudioProcessing::kMono;
+//    webrtc::AudioProcessing::ChannelLayout outLayout = webrtc::AudioProcessing::kMono;;
+//    webrtc::AudioProcessing::ChannelLayout reverseLayout = webrtc::AudioProcessing::kMono;;
+//    apm->Initialize( FS_PROC, FS_PROC, FS_PROC, inLayout, outLayout, reverseLayout );
+//
+//    // Enable High Pass Filter
+//    //apm->high_pass_filter()->Enable(true);
+//    webrtc::AudioProcessing::Config apmConfig;
+//
+//    apmConfig.high_pass_filter.enabled = true;
+//
+//    // Enable Noise Supression
+//    if(reduce_noise){
+//	apmConfig.noise_suppression.enabled = true;
+//        if(effect_type == AUDIO_EFFECT_VOCODER_MED){
+//	    apmConfig.noise_suppression.level = webrtc::AudioProcessing::Config::NoiseSuppression::kModerate;
+//        } else {
+//	    apmConfig.noise_suppression.level = webrtc::AudioProcessing::Config::NoiseSuppression::kLow;
+//        }
+//    }
+//
+//    apm->ApplyConfig(apmConfig);
 
     int16_t circ_buf[(1 << LOG2_CIRC_BUF_SZ)];
     int write_idx = 0;
@@ -207,59 +207,59 @@ int apply_effect_to_pcm(const char* pcmIn,
     int16_t bufIn[L], procOut[L_proc];
     //int16_t procIn[L_proc], procOut[L_proc];
     size_t count;
-    for(int i = 0; i < n_frames; i++){
-        count = fread(bufIn,
-                      sizeof(int16_t),
-                      L,
-                      in_file);
-        
-        if(count < L){
-            break;
-        }
-        if((i % 100) == 0){
-            int progress = (i*100)/n_frames;
-            if(progress_h){
-                progress_h(progress, arg);
-            }
-        }
-        
-        input_resampler.Resample( bufIn, L, near_frame.mutable_data(), L_proc);
-        
-        ret = apm->ProcessStream(&near_frame);
-        if( ret < 0 ){
-            error("apm->ProcessStream returned %d \n", ret);
-        }
-        
-        size_t L_proc_out;
-        aueffect_process(aue, near_frame.data(), procOut, L_proc, &L_proc_out);
-        
-        //input_resampler.Resample( bufIn, L, procIn, L_proc);
-        
-        //size_t L_proc_out;
-        //aueffect_process(aue, procIn, procOut, L_proc, &L_proc_out);
-        
-        for(int j = 0; j < L_proc_out; j++){
-            circ_buf[write_idx] = procOut[j];
-            write_idx = (write_idx + 1) & CIRC_BUF_MASK;
-        }
-        // resampler needs 10 ms chunks
-        int buf_smpls = (write_idx - read_idx) & CIRC_BUF_MASK;
-        while(buf_smpls >= L_proc){
-            for(int j = 0; j < L_proc; j++){
-                procOut[j] = circ_buf[read_idx];
-                read_idx = (read_idx + 1) & CIRC_BUF_MASK;
-            }
-            output_resampler.Resample( procOut, L_proc, bufIn, L);
-            
-            count = fwrite(bufIn,
-                           sizeof(int16_t),
-                           L,
-                           out_file);
-            n_samp_out+=L;
-            
-            buf_smpls = (write_idx - read_idx) & CIRC_BUF_MASK;
-        }
-    }
+//    for(int i = 0; i < n_frames; i++){
+//        count = fread(bufIn,
+//                      sizeof(int16_t),
+//                      L,
+//                      in_file);
+//
+//        if(count < L){
+//            break;
+//        }
+//        if((i % 100) == 0){
+//            int progress = (i*100)/n_frames;
+//            if(progress_h){
+//                progress_h(progress, arg);
+//            }
+//        }
+//
+//        input_resampler.Resample( bufIn, L, near_frame.mutable_data(), L_proc);
+//
+//        ret = apm->ProcessStream(&near_frame);
+//        if( ret < 0 ){
+//            error("apm->ProcessStream returned %d \n", ret);
+//        }
+//
+//        size_t L_proc_out;
+//        aueffect_process(aue, near_frame.data(), procOut, L_proc, &L_proc_out);
+//
+//        //input_resampler.Resample( bufIn, L, procIn, L_proc);
+//
+//        //size_t L_proc_out;
+//        //aueffect_process(aue, procIn, procOut, L_proc, &L_proc_out);
+//
+//        for(int j = 0; j < L_proc_out; j++){
+//            circ_buf[write_idx] = procOut[j];
+//            write_idx = (write_idx + 1) & CIRC_BUF_MASK;
+//        }
+//        // resampler needs 10 ms chunks
+//        int buf_smpls = (write_idx - read_idx) & CIRC_BUF_MASK;
+//        while(buf_smpls >= L_proc){
+//            for(int j = 0; j < L_proc; j++){
+//                procOut[j] = circ_buf[read_idx];
+//                read_idx = (read_idx + 1) & CIRC_BUF_MASK;
+//            }
+//            output_resampler.Resample( procOut, L_proc, bufIn, L);
+//
+//            count = fwrite(bufIn,
+//                           sizeof(int16_t),
+//                           L,
+//                           out_file);
+//            n_samp_out+=L;
+//
+//            buf_smpls = (write_idx - read_idx) & CIRC_BUF_MASK;
+//        }
+//    }
     
     if(progress_h){
         progress_h(100, arg);

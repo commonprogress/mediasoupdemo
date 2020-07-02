@@ -43,25 +43,25 @@ void* create_pitch_up_shift(int fs_hz, int strength)
     };
     struct pitch_shift_effect* pse = (struct pitch_shift_effect*)calloc(sizeof(struct pitch_shift_effect),1);
  
-    pse->resampler = new webrtc::PushResampler<int16_t>;
-
-    pse->fs_khz = fs_hz/1000;
-    
-    init_find_pitch_lags(&pse->pest, fs_hz, 2);
-    
-    if(strength < 0){
-        strength = 0;
-    }
-    if(strength > 3){
-        strength = 3;
-    }
-    
-    pse->up = up_down_table[strength].up;
-    pse->down = up_down_table[strength].down;
-
-    time_scale_init(&pse->tscale, (fs_hz*pse->up)/pse->down, fs_hz);
-    
-    pse->resampler->InitializeIfNeeded(fs_hz, (fs_hz*pse->up)/pse->down, 1);
+//    pse->resampler = new webrtc::PushResampler<int16_t>;
+//
+//    pse->fs_khz = fs_hz/1000;
+//
+//    init_find_pitch_lags(&pse->pest, fs_hz, 2);
+//
+//    if(strength < 0){
+//        strength = 0;
+//    }
+//    if(strength > 3){
+//        strength = 3;
+//    }
+//
+//    pse->up = up_down_table[strength].up;
+//    pse->down = up_down_table[strength].down;
+//
+//    time_scale_init(&pse->tscale, (fs_hz*pse->up)/pse->down, fs_hz);
+//
+//    pse->resampler->InitializeIfNeeded(fs_hz, (fs_hz*pse->up)/pse->down, 1);
     
     return (void*)pse;
 }
@@ -77,25 +77,25 @@ void* create_pitch_down_shift(int fs_hz, int strength)
     
     struct pitch_shift_effect* pse = (struct pitch_shift_effect*)calloc(sizeof(struct pitch_shift_effect),1);
     
-    pse->resampler = new webrtc::PushResampler<int16_t>;
-    
-    pse->fs_khz = fs_hz/1000;
-    
-    init_find_pitch_lags(&pse->pest, fs_hz, 2);
-    
-    if(strength < 0){
-        strength = 0;
-    }
-    if(strength > 3){
-        strength = 3;
-    }
-    
-    pse->up = up_down_table[strength].up;
-    pse->down = up_down_table[strength].down;
-    
-    time_scale_init(&pse->tscale, (fs_hz*pse->up)/pse->down, fs_hz);
-    
-    pse->resampler->InitializeIfNeeded(fs_hz, (fs_hz*pse->up)/pse->down, 1);
+//    pse->resampler = new webrtc::PushResampler<int16_t>;
+//
+//    pse->fs_khz = fs_hz/1000;
+//
+//    init_find_pitch_lags(&pse->pest, fs_hz, 2);
+//
+//    if(strength < 0){
+//        strength = 0;
+//    }
+//    if(strength > 3){
+//        strength = 3;
+//    }
+//
+//    pse->up = up_down_table[strength].up;
+//    pse->down = up_down_table[strength].down;
+//
+//    time_scale_init(&pse->tscale, (fs_hz*pse->up)/pse->down, fs_hz);
+//
+//    pse->resampler->InitializeIfNeeded(fs_hz, (fs_hz*pse->up)/pse->down, 1);
     
     return (void*)pse;
 }
@@ -104,10 +104,10 @@ void free_pitch_shift(void *st)
 {
     struct pitch_shift_effect *pse = (struct pitch_shift_effect*)st;
     
-    delete pse->resampler;
-    free_find_pitch_lags(&pse->pest);
-    
-    free(pse);
+//    delete pse->resampler;
+//    free_find_pitch_lags(&pse->pest);
+//
+//    free(pse);
 }
 
 static void find_min_max_pitch(struct pitch_shift_effect *pse, int *min_pL, int *max_pL)
@@ -115,17 +115,17 @@ static void find_min_max_pitch(struct pitch_shift_effect *pse, int *min_pL, int 
     int pitchL;
     int maxL = 0;
     int minL = 1000;
-    if(pse->pest.voiced){
-        for(int i = 0; i < Z_NB_SUBFR; i++){
-            pitchL = (pse->fs_khz*pse->pest.pitchL[i]*pse->up)/(16*pse->down);
-            if(pitchL > maxL){
-                maxL = pitchL;
-            }
-            if(pitchL < minL){
-                minL = pitchL;
-            }
-        }
-    }
+//    if(pse->pest.voiced){
+//        for(int i = 0; i < Z_NB_SUBFR; i++){
+//            pitchL = (pse->fs_khz*pse->pest.pitchL[i]*pse->up)/(16*pse->down);
+//            if(pitchL > maxL){
+//                maxL = pitchL;
+//            }
+//            if(pitchL < minL){
+//                minL = pitchL;
+//            }
+//        }
+//    }
     *min_pL = minL;
     *max_pL = maxL;
 }
@@ -143,17 +143,17 @@ void pitch_shift_process(void *st, int16_t in[], int16_t out[], size_t L_in, siz
     int L10_out = (L10*pse->up)/pse->down;
     
     int16_t tmp_buf[L10_out];
-    for( int i = 0; i < N; i++){
-        find_pitch_lags(&pse->pest, &in[i*L10], L10);
-
-        pse->resampler->Resample( &in[i*L10], L10, tmp_buf, L10_out);
-        
-        int min_pL, max_pL;
-        find_min_max_pitch(pse, &min_pL, &max_pL);
-    
-        time_scale_insert(&pse->tscale, tmp_buf, L10_out, max_pL, min_pL, pse->pest.voiced);
-        
-        time_scale_extract(&pse->tscale, &out[i*L10], L10);
-    }
+//    for( int i = 0; i < N; i++){
+//        find_pitch_lags(&pse->pest, &in[i*L10], L10);
+//
+//        pse->resampler->Resample( &in[i*L10], L10, tmp_buf, L10_out);
+//
+//        int min_pL, max_pL;
+//        find_min_max_pitch(pse, &min_pL, &max_pL);
+//
+//        time_scale_insert(&pse->tscale, tmp_buf, L10_out, max_pL, min_pL, pse->pest.voiced);
+//
+//        time_scale_extract(&pse->tscale, &out[i*L10], L10);
+//    }
     *L_out = L_in;
 }

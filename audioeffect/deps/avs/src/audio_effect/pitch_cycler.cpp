@@ -43,12 +43,12 @@ void* create_pitch_cycler(int fs_hz, int strength)
     
     time_scale_init(&pce->tscale, fs_hz * PCE_EXTRA_UP, fs_hz * PCE_EXTRA_UP);
  
-    pce->resampler = new webrtc::PushResampler<int16_t>;
-    pce->resampler->InitializeIfNeeded(fs_hz, fs_hz * PCE_UP_FAC * PCE_EXTRA_UP, 1);
-
-    pce->resampler_out = new webrtc::PushResampler<int16_t>;
-    pce->resampler_out->InitializeIfNeeded(fs_hz * PCE_EXTRA_UP, fs_hz, 1);
-    
+//    pce->resampler = new webrtc::PushResampler<int16_t>;
+//    pce->resampler->InitializeIfNeeded(fs_hz, fs_hz * PCE_UP_FAC * PCE_EXTRA_UP, 1);
+//
+//    pce->resampler_out = new webrtc::PushResampler<int16_t>;
+//    pce->resampler_out->InitializeIfNeeded(fs_hz * PCE_EXTRA_UP, fs_hz, 1);
+//
     pce->read_idx = pce->fs_khz * PCE_EXTRA_BUF_MS * PCE_UP_FAC * PCE_EXTRA_UP;
     
     pce->comp = 1.5;
@@ -70,7 +70,7 @@ void free_pitch_cycler(void *st)
 {
     struct pitch_cycler_effect *pce = (struct pitch_cycler_effect*)st;
     
-    delete pce->resampler;
+//    delete pce->resampler;
     free_find_pitch_lags(&pce->pest);
     
     free(pce);
@@ -82,21 +82,21 @@ static void find_min_max_pitch(struct pitch_cycler_effect *pce, int *min_pL, int
     int maxL = 0;
     int minL = 1000;
     float inv_comp = 1.0/pce->comp;
-    if(pce->pest.voiced){
-        for(int i = 0; i < Z_NB_SUBFR; i++){
-            pitchL = (PCE_EXTRA_UP*pce->fs_khz*pce->pest.pitchL[i])/16;
-            pitchL = (int)((float)pitchL * inv_comp);
-            if(pitchL > maxL){
-                maxL = pitchL;
-            }
-            if(pitchL < minL){
-                minL = pitchL;
-            }
-        }
-    } else {
-        maxL = 0;
-        minL = 0;
-    }
+//    if(pce->pest.voiced){
+//        for(int i = 0; i < Z_NB_SUBFR; i++){
+//            pitchL = (PCE_EXTRA_UP*pce->fs_khz*pce->pest.pitchL[i])/16;
+//            pitchL = (int)((float)pitchL * inv_comp);
+//            if(pitchL > maxL){
+//                maxL = pitchL;
+//            }
+//            if(pitchL < minL){
+//                minL = pitchL;
+//            }
+//        }
+//    } else {
+//        maxL = 0;
+//        minL = 0;
+//    }
     *min_pL = minL;
     *max_pL = maxL;
 }
@@ -119,39 +119,39 @@ void pitch_cycler_process(void *st, int16_t in[], int16_t out[], size_t L_in, si
     int16_t in_lp[L10];
     int pL, median_pL;
     float comp;
-    for( int i = 0; i < N; i++){
-        find_pitch_lags(&pce->pest, &in[i*L10], L10);
-
-        pce->resampler->Resample( &in[i*L10], L10, &pce->buf[(PCE_BUF_FRAMES-1)*L10_out + L_extra], L10_out);
-        
-        int n = 0;
-        while(pce->read_idx < (L10_out + L_extra)){
-            int idx = (int)pce->read_idx;
-            tmp_buf[n] = pce->buf[idx];
-            n++;
-            pce->read_idx += pce->comp * PCE_UP_FAC;
-        }
-        
-        pce->comp += pce->used_comp_delta;
-        if(pce->comp > PCE_COMP_MAX){
-            pce->used_comp_delta = -pce->comp_delta;
-        }
-        if(pce->comp < PCE_COMP_MIN){
-            pce->used_comp_delta = pce->comp_delta;
-        }
-        
-        int min_pL, max_pL;
-        find_min_max_pitch(pce, &min_pL, &max_pL);
-        
-        time_scale_insert(&pce->tscale, tmp_buf, n, max_pL, min_pL, pce->pest.voiced);
-        
-        time_scale_extract(&pce->tscale, tmp_out, L10 * PCE_EXTRA_UP);
-        
-        pce->resampler_out->Resample( tmp_out, L10 * PCE_EXTRA_UP, &out[i*L10], L10);
-        
-        memmove(pce->buf, &pce->buf[L10_out], ((PCE_BUF_FRAMES-1)*L10_out + L_extra) * sizeof(int16_t));
-        pce->read_idx -= L10_out;
-    }
+//    for( int i = 0; i < N; i++){
+//        find_pitch_lags(&pce->pest, &in[i*L10], L10);
+//
+//        pce->resampler->Resample( &in[i*L10], L10, &pce->buf[(PCE_BUF_FRAMES-1)*L10_out + L_extra], L10_out);
+//
+//        int n = 0;
+//        while(pce->read_idx < (L10_out + L_extra)){
+//            int idx = (int)pce->read_idx;
+//            tmp_buf[n] = pce->buf[idx];
+//            n++;
+//            pce->read_idx += pce->comp * PCE_UP_FAC;
+//        }
+//
+//        pce->comp += pce->used_comp_delta;
+//        if(pce->comp > PCE_COMP_MAX){
+//            pce->used_comp_delta = -pce->comp_delta;
+//        }
+//        if(pce->comp < PCE_COMP_MIN){
+//            pce->used_comp_delta = pce->comp_delta;
+//        }
+//
+//        int min_pL, max_pL;
+//        find_min_max_pitch(pce, &min_pL, &max_pL);
+//
+//        time_scale_insert(&pce->tscale, tmp_buf, n, max_pL, min_pL, pce->pest.voiced);
+//
+//        time_scale_extract(&pce->tscale, tmp_out, L10 * PCE_EXTRA_UP);
+//
+//        pce->resampler_out->Resample( tmp_out, L10 * PCE_EXTRA_UP, &out[i*L10], L10);
+//
+//        memmove(pce->buf, &pce->buf[L10_out], ((PCE_BUF_FRAMES-1)*L10_out + L_extra) * sizeof(int16_t));
+//        pce->read_idx -= L10_out;
+//    }
     
     *L_out = L_in;
 }

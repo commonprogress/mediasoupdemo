@@ -81,7 +81,7 @@ void free_pace_shift(void *st)
 {
     struct pace_shift_effect *pse = (struct pace_shift_effect*)st;
     
-    delete pse->pest.resampler;
+//    delete pse->pest.resampler;
     
     free(pse);
 }
@@ -97,17 +97,17 @@ static void find_min_max_pitch(struct pace_shift_effect *pse, int *min_pL, int *
     int pitchL;
     int maxL = 0;
     int minL = 1000;
-    if(pse->pest.voiced){
-        for(int i = 0; i < Z_NB_SUBFR; i++){
-            pitchL = (pse->fs_khz*pse->pest.pitchL[i])/16;
-            if(pitchL > maxL){
-                maxL = pitchL;
-            }
-            if(pitchL < minL){
-                minL = pitchL;
-            }
-        }
-    }
+//    if(pse->pest.voiced){
+//        for(int i = 0; i < Z_NB_SUBFR; i++){
+//            pitchL = (pse->fs_khz*pse->pest.pitchL[i])/16;
+//            if(pitchL > maxL){
+//                maxL = pitchL;
+//            }
+//            if(pitchL < minL){
+//                minL = pitchL;
+//            }
+//        }
+//    }
     *min_pL = minL;
     *max_pL = maxL;
 }

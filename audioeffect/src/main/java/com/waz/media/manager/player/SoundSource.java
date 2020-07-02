@@ -19,14 +19,24 @@ package com.waz.media.manager.player;
 
 
 import android.content.Context;
-import android.media.AudioManager;
+import android.net.Uri;
+import android.os.Build;
+import android.support.annotation.RequiresApi;
+import android.util.Log;
+
 import android.media.MediaPlayer;
-import android.media.MediaPlayer.OnCompletionListener;
-import android.media.MediaPlayer.OnErrorListener;
 import android.media.MediaPlayer.OnPreparedListener;
 import android.media.MediaPlayer.OnSeekCompleteListener;
-import android.net.Uri;
-import android.util.Log;
+import android.media.MediaPlayer.OnCompletionListener;
+import android.media.MediaPlayer.OnErrorListener;
+
+import com.waz.media.manager.player.MPState;
+import com.waz.media.manager.player.MediaSource;
+import com.waz.media.manager.player.MediaSourceListener;
+
+import com.waz.media.manager.MediaManager;
+
+import android.media.AudioManager;
 
 public class SoundSource implements MediaSource, OnPreparedListener, OnSeekCompleteListener, OnCompletionListener, OnErrorListener {
 
@@ -436,6 +446,7 @@ public class SoundSource implements MediaSource, OnPreparedListener, OnSeekCompl
     this.update();
   }
 
+  @RequiresApi(api = Build.VERSION_CODES.CUPCAKE)
   @Override
   public void onCompletion ( MediaPlayer player ) {
     DoLog("Sound Source Completion: " + this._uri);

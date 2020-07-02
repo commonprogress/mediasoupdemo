@@ -31,6 +31,7 @@ import android.content.pm.PackageManager;
 import android.media.AudioManager;
 import android.media.AudioManager.OnAudioFocusChangeListener;
 import android.os.Build;
+import android.support.annotation.RequiresApi;
 import android.util.Log;
 
 import java.util.List;
@@ -89,7 +90,8 @@ public class AudioRouter {
 
     private boolean _inCall = false;
 
-    public AudioRouter ( Context context, long nativeMM ) {
+    @RequiresApi(api = Build.VERSION_CODES.FROYO)
+    public AudioRouter (Context context, long nativeMM ) {
         this._context = context;
         this._nativeMM = nativeMM;
 
@@ -115,6 +117,7 @@ public class AudioRouter {
         };
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.HONEYCOMB)
     private void btHeadsetService(BluetoothHeadset btHeadset) {
         List<BluetoothDevice> devices;
 
@@ -493,7 +496,7 @@ public class AudioRouter {
         return(context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_TELEPHONY));
     }
 
-    private native void setPlaybackRoute(int route);
+//    private native void setPlaybackRoute(int route);
 
     final String logTag = "avs AudioRouter";
 

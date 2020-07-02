@@ -40,9 +40,9 @@
 
 struct pitch_estimator {
     int16_t buf[Z_MAX_FS_KHZ*40];
-    webrtc::PushResampler<int16_t> *resampler;
-    opus_int pitchL[Z_NB_SUBFR];
-    opus_int LTPCorr_Q15;
+//    webrtc::PushResampler<int16_t> *resampler;
+//    opus_int pitchL[Z_NB_SUBFR];
+//    opus_int LTPCorr_Q15;
     int fs_khz;
     int complexity;
     bool voiced;

@@ -94,8 +94,8 @@ set(
         src/audio_effect/biquad.cpp
         src/audio_effect/wav_interface.cpp
         src/audio_effect/pcm_interface.cpp
-        src/audio_io/audio_io.cpp
-        src/audio_io/mock/fake_audiodevice.cpp
+#         src/audio_io/audio_io.cpp
+#         src/audio_io/mock/fake_audiodevice.cpp
 )
 
 #file(GLOB_RECURSE SOURCE_FILES_RE contrib/re/src/*.c)
@@ -144,8 +144,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         src/audio_effect
         src/mediamgr
         src/msystem
-        src/audio_io
-        src/audio_io/mock
+#         src/audio_io
+#         src/audio_io/mock
         contrib/re
         contrib/re/include
         ../webrtc/src

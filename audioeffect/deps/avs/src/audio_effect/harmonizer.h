@@ -51,7 +51,7 @@ struct harm_channel {
 
 struct harmonizer_effect {
     int fs_khz;
-    webrtc::PushResampler<int16_t> *resampler;
+//    webrtc::PushResampler<int16_t> *resampler;
     struct pitch_estimator pest;
     struct biquad lp_filt[HMZ_NUM_BIQUADS];
     struct harm_channel hm_ch[HMZ_NUM_CHANNELS];

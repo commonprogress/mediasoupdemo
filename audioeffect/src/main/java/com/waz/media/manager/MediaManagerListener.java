@@ -17,6 +17,8 @@
  */
 package com.waz.media.manager;
 
+import com.waz.media.manager.MediaManager;
+
 public interface MediaManagerListener {
   public void onPlaybackRouteChanged ( int route );
 
