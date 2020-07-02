@@ -41,8 +41,8 @@
 
 struct pitch_cycler_effect {
     int fs_khz;
-//    webrtc::PushResampler<int16_t> *resampler;
-//    webrtc::PushResampler<int16_t> *resampler_out;
+    webrtc::PushResampler<int16_t> *resampler;
+    webrtc::PushResampler<int16_t> *resampler_out;
     struct pitch_estimator pest;
     struct time_scale tscale;
     float read_idx;

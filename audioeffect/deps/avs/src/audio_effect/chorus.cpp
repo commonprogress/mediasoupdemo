@@ -36,61 +36,61 @@ static void* create_chorus_org(int fs_hz, int strength)
     int period_len;
     struct chorus_org_effect* cho = (struct chorus_org_effect*)calloc(sizeof(struct chorus_org_effect),1);
     
-//    cho->resampler = new webrtc::PushResampler<int16_t>;
-//    cho->resampler->InitializeIfNeeded(fs_hz, fs_hz*UP_FAC, 1);
-//    cho->fs_khz = (fs_hz/1000);
-//
-//    float max_a = MAX_A;
-//    float max_d_ms = MAX_D_MS;
-//    if(strength < 1){
-//        max_a = max_a * 0.5f;
-//        max_d_ms = max_d_ms * 0.75f;
-//    }
-//    float min_a = MIN_A;
-//    float min_d_ms = MIN_D_MS;
-//    if(strength < 1){
-//        max_a = max_a * 0.5f;
-//        min_d_ms = min_d_ms * 0.75f;
-//    }
-//
-//#if NUM_RAND_ELEM
-//    period_len = (cho->fs_khz * RAND_PERIOD_MS);
-//    int offset = period_len / NUM_RAND_ELEM;
-//
-//    for(int j = 0; j < NUM_RAND_ELEM; j++){
-//        cho->r_elem[j].max_d = max_d_ms * cho->fs_khz;
-//        cho->r_elem[j].min_d = min_d_ms * cho->fs_khz;
-//        cho->r_elem[j].max_a = max_a;
-//        cho->r_elem[j].min_a = min_a;
-//        cho->r_elem[j].cnt = j*offset;
-//        cho->r_elem[j].period_smpls = period_len;
-//        //cho->elem[j].alpha = 0.001; // to do depend on fs
-//        cho->r_elem[j].alpha = 0.0001;
-//    }
-//#endif
-//
-//#if NUM_SINE_ELEM
-//    period_len = (cho->fs_khz * SINE_PERIOD_MS);
-//    float d_omega = (2*PI)/period_len;
-//
-//    for(int j = 0; j < NUM_SINE_ELEM; j++){
-//        cho->s_elem[j].max_d = max_d_ms * cho->fs_khz;
-//        cho->s_elem[j].min_d = min_d_ms * cho->fs_khz;
-//        cho->s_elem[j].max_a = max_a;
-//        cho->s_elem[j].min_a = min_a;
-//        cho->s_elem[j].d_omega = d_omega;
-//        cho->s_elem[j].omega = (PI/2)*j;
-//    }
-//#endif
-    
+    cho->resampler = new webrtc::PushResampler<int16_t>;
+    cho->resampler->InitializeIfNeeded(fs_hz, fs_hz*UP_FAC, 1);
+    cho->fs_khz = (fs_hz/1000);
+
+    float max_a = MAX_A;
+    float max_d_ms = MAX_D_MS;
+    if(strength < 1){
+        max_a = max_a * 0.5f;
+        max_d_ms = max_d_ms * 0.75f;
+    }
+    float min_a = MIN_A;
+    float min_d_ms = MIN_D_MS;
+    if(strength < 1){
+        max_a = max_a * 0.5f;
+        min_d_ms = min_d_ms * 0.75f;
+    }
+
+#if NUM_RAND_ELEM
+    period_len = (cho->fs_khz * RAND_PERIOD_MS);
+    int offset = period_len / NUM_RAND_ELEM;
+
+    for(int j = 0; j < NUM_RAND_ELEM; j++){
+        cho->r_elem[j].max_d = max_d_ms * cho->fs_khz;
+        cho->r_elem[j].min_d = min_d_ms * cho->fs_khz;
+        cho->r_elem[j].max_a = max_a;
+        cho->r_elem[j].min_a = min_a;
+        cho->r_elem[j].cnt = j*offset;
+        cho->r_elem[j].period_smpls = period_len;
+        //cho->elem[j].alpha = 0.001; // to do depend on fs
+        cho->r_elem[j].alpha = 0.0001;
+    }
+#endif
+
+#if NUM_SINE_ELEM
+    period_len = (cho->fs_khz * SINE_PERIOD_MS);
+    float d_omega = (2*PI)/period_len;
+
+    for(int j = 0; j < NUM_SINE_ELEM; j++){
+        cho->s_elem[j].max_d = max_d_ms * cho->fs_khz;
+        cho->s_elem[j].min_d = min_d_ms * cho->fs_khz;
+        cho->s_elem[j].max_a = max_a;
+        cho->s_elem[j].min_a = min_a;
+        cho->s_elem[j].d_omega = d_omega;
+        cho->s_elem[j].omega = (PI/2)*j;
+    }
+#endif
+
     return (void*)cho;
 }
 
 static void free_chorus_org(void *st)
 {
     struct chorus_org_effect *cho = (struct chorus_org_effect*)st;
-    
-//    delete cho->resampler;
+
+    delete cho->resampler;
     free(cho);
 }
 
@@ -107,7 +107,7 @@ static int16_t update_rand_chorus_elem(struct rand_chorus_elem *r_elem, int16_t 
 
     int d = (int)(r_elem->d * (float)up_fac);
     int16_t ret = (int16_t)((float)buf[-d] * r_elem->a);
-    
+
     return ret;
 }
 
@@ -121,7 +121,7 @@ static int16_t update_sine_chorus_elem(struct sine_chorus_elem *s_elem, int16_t 
 
     int d = (int)(s_elem->d * (float)up_fac);
     int16_t ret = (int16_t)((float)buf[-d] * s_elem->a);
-    
+
     return ret;
 }
 
@@ -129,53 +129,53 @@ static float compress(float x)
 {
     float y = 1/(exp(-3*x)+1.0f);
     y = y - 0.5f;
-    
+
     return y;
 }
 
 static void chorus_process_org(void *st, int16_t in[], int16_t out[], size_t L)
 {
     struct chorus_org_effect *cho = (struct chorus_org_effect*)st;
-    
+
     int32_t tmp = 0;
     int16_t *ptr;
     int hist_size = (MAX_D_MS * cho->fs_khz) * UP_FAC;
     float y, sc1 = 1.0f/(32768.0f*2.0f), sc2 = (32768.0f*2.0f);
-    
+
     int L10 = (cho->fs_khz * 10);
     int N = (int)L / L10;
     if( N * L10 != L || L > (cho->fs_khz * MAX_L_MS)){
         error("chorus_process needs 10 ms chunks max %d ms \n", MAX_L_MS);
     }
-    
-//    for( int i = 0; i < N; i++){
-//        cho->resampler->Resample( &in[i*L10], L10, &cho->buf[hist_size + i*L10*UP_FAC], L10*UP_FAC);
-//    }
-//
-//    ptr = &cho->buf[hist_size];
-//    for(size_t i = 0; i < L; i++){
-//        tmp = ptr[i * UP_FAC];
-//
-//#if NUM_RAND_ELEM
-//        for(int j = 0; j < NUM_RAND_ELEM; j++){
-//            tmp += update_rand_chorus_elem(&cho->r_elem[j], &ptr[i * UP_FAC], UP_FAC);
-//        }
-//#endif
-//
-//#if NUM_SINE_ELEM
-//        for(int j = 0; j < NUM_SINE_ELEM; j++){
-//            tmp += update_sine_chorus_elem(&cho->s_elem[j], &ptr[i * UP_FAC], UP_FAC);
-//        }
-//#endif
-//
-//        y = (float)tmp * sc1;
-//        y = compress(y);
-//        y = y * sc2;
-//
-//        out[i] = (int16_t)y;
-//    }
-//
-//    memmove(cho->buf, &cho->buf[L * UP_FAC], hist_size*sizeof(int16_t)); // todo make circular
+
+    for( int i = 0; i < N; i++){
+        cho->resampler->Resample( &in[i*L10], L10, &cho->buf[hist_size + i*L10*UP_FAC], L10*UP_FAC);
+    }
+
+    ptr = &cho->buf[hist_size];
+    for(size_t i = 0; i < L; i++){
+        tmp = ptr[i * UP_FAC];
+
+#if NUM_RAND_ELEM
+        for(int j = 0; j < NUM_RAND_ELEM; j++){
+            tmp += update_rand_chorus_elem(&cho->r_elem[j], &ptr[i * UP_FAC], UP_FAC);
+        }
+#endif
+
+#if NUM_SINE_ELEM
+        for(int j = 0; j < NUM_SINE_ELEM; j++){
+            tmp += update_sine_chorus_elem(&cho->s_elem[j], &ptr[i * UP_FAC], UP_FAC);
+        }
+#endif
+
+        y = (float)tmp * sc1;
+        y = compress(y);
+        y = y * sc2;
+
+        out[i] = (int16_t)y;
+    }
+
+    memmove(cho->buf, &cho->buf[L * UP_FAC], hist_size*sizeof(int16_t)); // todo make circular
 }
 
 static void* create_chorus_alt(int fs_hz, int strength)

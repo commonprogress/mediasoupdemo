@@ -101,21 +101,21 @@ void* create_auto_tune(int fs_hz, int strength)
 {
     struct auto_tune_effect* ate = (struct auto_tune_effect*)calloc(sizeof(struct auto_tune_effect),1);
  
-//    ate->resampler = new webrtc::PushResampler<int16_t>;
-//
-//    ate->fs_khz = fs_hz/1000;
-//
-//    init_find_pitch_lags(&ate->pest, fs_hz, 2);
-//
-//    time_scale_init(&ate->tscale, fs_hz, fs_hz);
-//
-//    ate->resampler->InitializeIfNeeded(fs_hz, fs_hz * ATE_UP_FAC, 1);
-    
+    ate->resampler = new webrtc::PushResampler<int16_t>;
+
+    ate->fs_khz = fs_hz/1000;
+
+    init_find_pitch_lags(&ate->pest, fs_hz, 2);
+
+    time_scale_init(&ate->tscale, fs_hz, fs_hz);
+
+    ate->resampler->InitializeIfNeeded(fs_hz, fs_hz * ATE_UP_FAC, 1);
+
     ate->read_idx = ate->fs_khz * ATE_EXTRA_BUF_MS * ATE_UP_FAC;
     ate->comp_smth = 1.0f;
-    
+
     ate->prev_idx = -1;
-    
+
     if(strength < 0){
         strength = 0;
     }
@@ -131,17 +131,17 @@ void* create_auto_tune(int fs_hz, int strength)
         ate->pitch_up_bias = 2;
         ate->lag_hysterisis = 3;
     }
-    
+
     return (void*)ate;
 }
 
 void free_auto_tune(void *st)
 {
     struct auto_tune_effect *ate = (struct auto_tune_effect*)st;
-    
-//    delete ate->resampler;
-//    free_find_pitch_lags(&ate->pest);
-    
+
+    delete ate->resampler;
+    free_find_pitch_lags(&ate->pest);
+
     free(ate);
 }
 
@@ -151,21 +151,21 @@ static void find_min_max_pitch(struct auto_tune_effect *ate, int *min_pL, int *m
     int maxL = 0;
     int minL = 1000;
     float inv_comp = 1.0/ate->comp_smth;
-//    if(ate->pest.voiced){
-//        for(int i = 0; i < Z_NB_SUBFR; i++){
-//            pitchL = (ate->fs_khz*ate->pest.pitchL[i])/16;
-//            pitchL = (int)((float)pitchL * inv_comp);
-//            if(pitchL > maxL){
-//                maxL = pitchL;
-//            }
-//            if(pitchL < minL){
-//                minL = pitchL;
-//            }
-//        }
-//    } else {
-//        maxL = 0;
-//        minL = 0;
-//    }
+    if(ate->pest.voiced){
+        for(int i = 0; i < Z_NB_SUBFR; i++){
+            pitchL = (ate->fs_khz*ate->pest.pitchL[i])/16;
+            pitchL = (int)((float)pitchL * inv_comp);
+            if(pitchL > maxL){
+                maxL = pitchL;
+            }
+            if(pitchL < minL){
+                minL = pitchL;
+            }
+        }
+    } else {
+        maxL = 0;
+        minL = 0;
+    }
     *min_pL = minL;
     *max_pL = maxL;
 }
@@ -177,7 +177,7 @@ static int median_pitch(struct auto_tune_effect *ate)
         mean += (float)ate->pL_buf[i];
     }
     mean = mean / (float)ATE_PL_BUF_SZ;
-    
+
     int median = 0;
     float min_diff = 1e7;
     float diff;
@@ -195,66 +195,66 @@ static int median_pitch(struct auto_tune_effect *ate)
 void auto_tune_process(void *st, int16_t in[], int16_t out[], size_t L_in, size_t *L_out)
 {
     struct auto_tune_effect *ate = (struct auto_tune_effect*)st;
-    
+
     int L10 = (ate->fs_khz * 10);
     int N = (int)L_in / L10;
     if( N * L10 != L_in || L_in > (ate->fs_khz * MAX_L_MS)){
         error("auto_tune_process needs 10 ms chunks max %d ms \n", MAX_L_MS);
     }
-    
+
     int L10_out = L10*ATE_UP_FAC;
     int L_extra = ate->fs_khz * ATE_EXTRA_BUF_MS * ATE_UP_FAC;
-    
+
     int16_t tmp_buf[L10 * 2];
     int16_t in_lp[L10];
     int pL, median_pL;
     float comp;
-//    for( int i = 0; i < N; i++){
-//        biquad(&ate->lp_filt[0], a_lp[0], b_lp[0], &in[i*L10], in_lp, L10);
-//        for(int j = 1 ; j < ATE_NUM_BIQUADS; j++){
-//            biquad(&ate->lp_filt[j], a_lp[j], b_lp[j], in_lp, in_lp, L10);
-//        }
-//
-//        find_pitch_lags(&ate->pest, &in[i*L10], L10);
-//
-//        ate->resampler->Resample( &in[i*L10], L10, &ate->buf[(ATE_BUF_FRAMES-1)*L10_out + L_extra], L10_out);
-//
-//        pL = ((ate->pest.pitchL[2] + ate->pest.pitchL[3]) >> 1);
-//        ate->pL_buf[ATE_PL_BUF_SZ-1] = pL;
-//
-//        median_pL = median_pitch(ate);
-//
-//        ate->pL_smth += 0.5 * ((float)median_pL - ate->pL_smth);
-//
-//        if(median_pL > 0){
-//            pL = find_nearest_lag(ate, median_pL);
-//            comp = (float)median_pL / (float)pL;
-//        } else {
-//            comp = 1.0f;
-//            ate->prev_idx = -1;
-//        }
-//
-//        ate->comp_smth += (comp - ate->comp_smth) * ate->comp_smth_alpha;
-//
-//        int n = 0;
-//        while(ate->read_idx < (L10_out + L_extra)){
-//            int idx = (int)ate->read_idx;
-//            tmp_buf[n] = ate->buf[idx];
-//            n++;
-//            ate->read_idx += ate->comp_smth * ATE_UP_FAC;
-//        }
-//
-//        int min_pL, max_pL;
-//        find_min_max_pitch(ate, &min_pL, &max_pL);
-//
-//        time_scale_insert(&ate->tscale, tmp_buf, n, max_pL, min_pL, ate->pest.voiced);
-//
-//        time_scale_extract(&ate->tscale, &out[i*L10], L10);
-//
-//        memmove(ate->buf, &ate->buf[L10_out], ((ATE_BUF_FRAMES-1)*L10_out + L_extra) * sizeof(int16_t));
-//        ate->read_idx -= L10_out;
-//        memmove(ate->pL_buf, &ate->pL_buf[1], (ATE_PL_BUF_SZ-1) * sizeof(int));
-//    }
+    for( int i = 0; i < N; i++){
+        biquad(&ate->lp_filt[0], a_lp[0], b_lp[0], &in[i*L10], in_lp, L10);
+        for(int j = 1 ; j < ATE_NUM_BIQUADS; j++){
+            biquad(&ate->lp_filt[j], a_lp[j], b_lp[j], in_lp, in_lp, L10);
+        }
+
+        find_pitch_lags(&ate->pest, &in[i*L10], L10);
+
+        ate->resampler->Resample( &in[i*L10], L10, &ate->buf[(ATE_BUF_FRAMES-1)*L10_out + L_extra], L10_out);
+
+        pL = ((ate->pest.pitchL[2] + ate->pest.pitchL[3]) >> 1);
+        ate->pL_buf[ATE_PL_BUF_SZ-1] = pL;
+
+        median_pL = median_pitch(ate);
+
+        ate->pL_smth += 0.5 * ((float)median_pL - ate->pL_smth);
+
+        if(median_pL > 0){
+            pL = find_nearest_lag(ate, median_pL);
+            comp = (float)median_pL / (float)pL;
+        } else {
+            comp = 1.0f;
+            ate->prev_idx = -1;
+        }
+
+        ate->comp_smth += (comp - ate->comp_smth) * ate->comp_smth_alpha;
+
+        int n = 0;
+        while(ate->read_idx < (L10_out + L_extra)){
+            int idx = (int)ate->read_idx;
+            tmp_buf[n] = ate->buf[idx];
+            n++;
+            ate->read_idx += ate->comp_smth * ATE_UP_FAC;
+        }
+
+        int min_pL, max_pL;
+        find_min_max_pitch(ate, &min_pL, &max_pL);
+
+        time_scale_insert(&ate->tscale, tmp_buf, n, max_pL, min_pL, ate->pest.voiced);
+
+        time_scale_extract(&ate->tscale, &out[i*L10], L10);
+
+        memmove(ate->buf, &ate->buf[L10_out], ((ATE_BUF_FRAMES-1)*L10_out + L_extra) * sizeof(int16_t));
+        ate->read_idx -= L10_out;
+        memmove(ate->pL_buf, &ate->pL_buf[1], (ATE_PL_BUF_SZ-1) * sizeof(int));
+    }
     
     *L_out = L_in;
 }

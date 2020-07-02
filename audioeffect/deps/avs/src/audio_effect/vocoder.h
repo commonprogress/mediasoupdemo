@@ -67,10 +67,10 @@ struct residual_estimator {
 };
 
 struct vocoder_effect {
-//    silk_float lpc_synth_state[Z_REST_LPC_ORDER];
+    silk_float lpc_synth_state[Z_REST_LPC_ORDER];
     int fs_khz;
-//    webrtc::PushResampler<int16_t> *resampler_in;
-//    webrtc::PushResampler<int16_t> *resampler_out;
+    webrtc::PushResampler<int16_t> *resampler_in;
+    webrtc::PushResampler<int16_t> *resampler_out;
     struct residual_estimator rest;
     struct pitch_estimator pest;
     int16_t buf[E_BUF_FRAMES * 10 * 48];

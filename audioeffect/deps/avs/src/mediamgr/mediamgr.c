@@ -144,7 +144,6 @@ struct mm {
 	int intensity_thres;
 	bool user_starts_audio;
 
-//	struct audio_io *aio;
 
 	struct list mml;
 };
@@ -1318,39 +1317,39 @@ static void sys_entered_call_handler(struct mm *mm)
 //			return;
 //		}
 //	}
-
-	if (mm->sys_state == MM_SYS_STATE_INCALL
-	    && mm->call_state != MEDIAMGR_STATE_RESUME) {
-		info("mediamgr: already INCALL and not resuming\n");
-		return;
-	}
-
-	if (mm->sys_state != MM_SYS_STATE_ENTERING_CALL) {
-		info("mediamgr: not requested to enter call, ignoring\n");
-		return;
-	}
-
-	set_sys_state(mm, MM_SYS_STATE_INCALL);
-
-	switch (mm->call_state) {
-	case MEDIAMGR_STATE_OUTGOING_AUDIO_CALL:
-		play_sound(mm, "ringing_from_me", false, true);
-		break;
-
-	case MEDIAMGR_STATE_OUTGOING_VIDEO_CALL:
-		if (!mm->router.bt_device_is_connected
-		    && !mm->router.wired_hs_is_connected) {
-			enable_speaker(mm, true);
-		}
-		play_sound(mm, "ringing_from_me_video", false, true);
-		break;
-
-	case MEDIAMGR_STATE_INCALL:
-	case MEDIAMGR_STATE_INVIDEOCALL:
-		incall_action(mm);
-		break;
-
-	case MEDIAMGR_STATE_RESUME:
+//
+//	if (mm->sys_state == MM_SYS_STATE_INCALL
+//	    && mm->call_state != MEDIAMGR_STATE_RESUME) {
+//		info("mediamgr: already INCALL and not resuming\n");
+//		return;
+//	}
+//
+//	if (mm->sys_state != MM_SYS_STATE_ENTERING_CALL) {
+//		info("mediamgr: not requested to enter call, ignoring\n");
+//		return;
+//	}
+//
+//	set_sys_state(mm, MM_SYS_STATE_INCALL);
+//
+//	switch (mm->call_state) {
+//	case MEDIAMGR_STATE_OUTGOING_AUDIO_CALL:
+//		play_sound(mm, "ringing_from_me", false, true);
+//		break;
+//
+//	case MEDIAMGR_STATE_OUTGOING_VIDEO_CALL:
+//		if (!mm->router.bt_device_is_connected
+//		    && !mm->router.wired_hs_is_connected) {
+//			enable_speaker(mm, true);
+//		}
+//		play_sound(mm, "ringing_from_me_video", false, true);
+//		break;
+//
+//	case MEDIAMGR_STATE_INCALL:
+//	case MEDIAMGR_STATE_INVIDEOCALL:
+//		incall_action(mm);
+//		break;
+//
+//	case MEDIAMGR_STATE_RESUME:
 //		if (mm->aio)
 //			fire_callback(mm);
 //		else {
@@ -1359,15 +1358,15 @@ static void sys_entered_call_handler(struct mm *mm)
 //						NULL);
 //		}
 //		set_state(mm, mm->hold_state);
-		break;
-
-	case MEDIAMGR_STATE_NORMAL:
-		exit_call(mm);
-		break;
-
-	default:
-		break;
-	}
+//		break;
+//
+//	case MEDIAMGR_STATE_NORMAL:
+//		exit_call(mm);
+//		break;
+//
+//	default:
+//		break;
+//	}
 }
 
 static void sys_left_call_handler(struct mm *mm)
@@ -1389,8 +1388,8 @@ static void sys_left_call_handler(struct mm *mm)
 }
 
 
-//static void audio_alloc(struct mm *mm)
-//{
+static void audio_alloc(struct mm *mm)
+{
 //	int err = 0;
 //#if 0
 //	if (mm->aio) {
@@ -1424,11 +1423,11 @@ static void sys_left_call_handler(struct mm *mm)
 //
 // out:
 //	mm->alloc_pending = false;
-//}
+}
 
 
-//static void audio_release(struct mm *mm)
-//{
+static void audio_release(struct mm *mm)
+{
 //	info("mediamgr: audio_release: aio=%p\n", mm->aio);
 //
 //	if (mm->aio) {
@@ -1438,7 +1437,7 @@ static void sys_left_call_handler(struct mm *mm)
 //		mm->aio = mem_deref(mm->aio);
 //	}
 //	mm->alloc_pending = false;
-//}
+}
 
 
 void mediamgr_audio_release_mm(struct mm *mm)
@@ -1456,8 +1455,8 @@ void mediamgr_audio_release(struct mediamgr *mediamgr)
 }
 
 
-//static void audio_reset(struct mm *mm)
-//{
+static void audio_reset(struct mm *mm)
+{
 //	info("mediamgr: audio_reset: aio=%p\n", mm->aio);
 //
 //	if (mm->aio) {
@@ -1473,7 +1472,7 @@ void mediamgr_audio_release(struct mediamgr *mediamgr)
 //	else {
 //		enter_call(mm);
 //	}
-//}
+}
 
 void mediamgr_audio_reset_mm(struct mm *mm)
 {
@@ -1500,11 +1499,11 @@ void mediamgr_audio_start(struct mediamgr *mediamgr)
 
 static void call_state_handler(struct mm *mm, enum mediamgr_state new_state)
 {
-	enum mediamgr_state old_state = mm->call_state;
-
-	info("mediamgr: call_state_handler: %s->%s\n",
-	     mmstate_name(old_state), mmstate_name(new_state));
-
+//	enum mediamgr_state old_state = mm->call_state;
+//
+//	info("mediamgr: call_state_handler: %s->%s\n",
+//	     mmstate_name(old_state), mmstate_name(new_state));
+//
 //	if (new_state == old_state) {
 //		if (new_state == MEDIAMGR_STATE_INVIDEOCALL ||
 //		    new_state == MEDIAMGR_STATE_INCALL) {
@@ -1514,12 +1513,12 @@ static void call_state_handler(struct mm *mm, enum mediamgr_state new_state)
 //
 //		return;
 //	}
-
-	switch (new_state) {
-	case MEDIAMGR_STATE_NORMAL:
+//
+//	switch (new_state) {
+//	case MEDIAMGR_STATE_NORMAL:
 //		set_state(mm, new_state);
 //		stop_all_media(mm);
-////		audio_release(mm);
+//		audio_release(mm);
 //		msystem_set_muted(false);
 //		mm->audio_started = false;
 //		switch (mm->sys_state) {
@@ -1539,9 +1538,9 @@ static void call_state_handler(struct mm *mm, enum mediamgr_state new_state)
 //			break;
 //		}
 //		mm->router.prefer_loudspeaker = false;
-		break;
-
-	case MEDIAMGR_STATE_OUTGOING_AUDIO_CALL:
+//		break;
+//
+//	case MEDIAMGR_STATE_OUTGOING_AUDIO_CALL:
 //		switch(old_state) {
 //		case MEDIAMGR_STATE_NORMAL:
 //			set_state(mm, new_state);
@@ -1561,9 +1560,9 @@ static void call_state_handler(struct mm *mm, enum mediamgr_state new_state)
 //		default:
 //			break;
 //		}
-		break;
-
-	case MEDIAMGR_STATE_OUTGOING_VIDEO_CALL:
+//		break;
+//
+//	case MEDIAMGR_STATE_OUTGOING_VIDEO_CALL:
 //		mm->router.prefer_loudspeaker = true;
 //		switch(old_state) {
 //		case MEDIAMGR_STATE_NORMAL:
@@ -1590,9 +1589,9 @@ static void call_state_handler(struct mm *mm, enum mediamgr_state new_state)
 //		default:
 //			break;
 //		}
-		break;
-
-	case MEDIAMGR_STATE_INCOMING_AUDIO_CALL:
+//		break;
+//
+//	case MEDIAMGR_STATE_INCOMING_AUDIO_CALL:
 //		if (old_state == MEDIAMGR_STATE_NORMAL) {
 //			set_state(mm, new_state);
 //			enter_incoming(mm);
@@ -1601,18 +1600,18 @@ static void call_state_handler(struct mm *mm, enum mediamgr_state new_state)
 //			mm->hold_state = MEDIAMGR_STATE_INCOMING_AUDIO_CALL;
 //			enter_incoming(mm);
 //		}
-		break;
-
-	case MEDIAMGR_STATE_INCOMING_VIDEO_CALL:
+//		break;
+//
+//	case MEDIAMGR_STATE_INCOMING_VIDEO_CALL:
 //		if (old_state == MEDIAMGR_STATE_NORMAL)
 //			set_state(mm, new_state);
 //		else if (old_state == MEDIAMGR_STATE_RESUME)
 //			mm->hold_state = MEDIAMGR_STATE_INCOMING_VIDEO_CALL;
 //		enter_incoming(mm);
-		break;
-
-	case MEDIAMGR_STATE_INCALL:
-	case MEDIAMGR_STATE_INVIDEOCALL:
+//		break;
+//
+//	case MEDIAMGR_STATE_INCALL:
+//	case MEDIAMGR_STATE_INVIDEOCALL:
 //		set_state(mm, new_state);
 //		if (old_state == MEDIAMGR_STATE_INCALL) {
 //			if (new_state == MEDIAMGR_STATE_INVIDEOCALL)
@@ -1627,19 +1626,19 @@ static void call_state_handler(struct mm *mm, enum mediamgr_state new_state)
 //		else {
 //			handle_incall(mm, old_state == MEDIAMGR_STATE_HOLD);
 //		}
-		break;
-
-	case MEDIAMGR_STATE_ROAMING:
-		break;
-
-	case MEDIAMGR_STATE_HOLD:
+//		break;
+//
+//	case MEDIAMGR_STATE_ROAMING:
+//		break;
+//
+//	case MEDIAMGR_STATE_HOLD:
 //		mm->hold_state = old_state;
 //		mm->should_reset = true;
 //		set_state(mm, new_state);
 //		fire_callback(mm);
-		break;
-
-	case MEDIAMGR_STATE_RESUME:
+//		break;
+//
+//	case MEDIAMGR_STATE_RESUME:
 //		if (old_state == MEDIAMGR_STATE_HOLD) {
 //			set_state(mm, new_state);
 //			if (mm->hold_state == MEDIAMGR_STATE_INCALL
@@ -1654,14 +1653,14 @@ static void call_state_handler(struct mm *mm, enum mediamgr_state new_state)
 //				}
 //			}
 //		}
-		break;
-
-	case MEDIAMGR_STATE_UNKNOWN:
-		break;
-
-	default:
-		break;
-	}
+//		break;
+//
+//	case MEDIAMGR_STATE_UNKNOWN:
+//		break;
+//
+//	default:
+//		break;
+//	}
 }
 
 
@@ -1782,7 +1781,7 @@ static void mqueue_handler(int id, void *data, void *arg)
 	break;
 
 	case MM_MARSHAL_ENTER_CALL:
-		enter_call(mm);
+//		enter_call(mm);
 		break;
 
 	case MM_MARSHAL_AUDIO_ALLOC:
@@ -1798,31 +1797,31 @@ static void mqueue_handler(int id, void *data, void *arg)
 		break;
 
 	case MM_MARSHAL_EXIT_CALL:
-		exit_call(mm);
+//		exit_call(mm);
 		break;
 
 	case MM_MARSHAL_SYS_INCOMING:
-		sys_incoming_handler(mm);
+//		sys_incoming_handler(mm);
 		break;
 
 	case MM_MARSHAL_SYS_ENTERED_CALL:
-		sys_entered_call_handler(mm);
+//		sys_entered_call_handler(mm);
 		break;
 
 	case MM_MARSHAL_SYS_LEFT_CALL:
-		sys_left_call_handler(mm);
+//		sys_left_call_handler(mm);
 		break;
 
 	case MM_MARSHAL_INVOKE_INCOMINGH:
-		if (msg->incomingh.incomingh) {
-			msg->incomingh.incomingh(msg->incomingh.convid,
-						 msg->incomingh.msg_time,
-						 msg->incomingh.userid,
-						 msg->incomingh.video_call,
-						 msg->incomingh.should_ring,
-						 msg->incomingh.conv_type,
-						 msg->incomingh.arg);
-		}
+//		if (msg->incomingh.incomingh) {
+//			msg->incomingh.incomingh(msg->incomingh.convid,
+//						 msg->incomingh.msg_time,
+//						 msg->incomingh.userid,
+//						 msg->incomingh.video_call,
+//						 msg->incomingh.should_ring,
+//						 msg->incomingh.conv_type,
+//						 msg->incomingh.arg);
+//		}
 		break;
 
 	case MM_MARSHAL_START_RECORDING:

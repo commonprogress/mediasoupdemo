@@ -67,8 +67,8 @@ extern "C"
 
 struct normalizer_effect {
     int fs_khz;
-//    webrtc::PushResampler<int16_t> *resampler;
-//    silk_encoder_state silk_enc;
+    webrtc::PushResampler<int16_t> *resampler;
+    silk_encoder_state silk_enc;
     int vad_buf[NE_BUF_SIZE];
     int nrg_buf[NE_BUF_SIZE];
     int16_t sig_buf[NE_MAX_FS_KHZ];

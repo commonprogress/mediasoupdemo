@@ -69,13 +69,13 @@ struct sine_chorus_elem {
 struct chorus_org_effect {
     int fs_khz;
     int16_t buf[(MAX_D_MS+MAX_L_MS)*Z_MAX_FS_KHZ*UP_FAC];
-//#if NUM_RAND_ELEM
-//    struct rand_chorus_elem r_elem[NUM_RAND_ELEM];
-//#endif
-//#if NUM_SINE_ELEM
-//    struct sine_chorus_elem s_elem[NUM_SINE_ELEM];
-//#endif
-//    webrtc::PushResampler<int16_t> *resampler;
+#if NUM_RAND_ELEM
+    struct rand_chorus_elem r_elem[NUM_RAND_ELEM];
+#endif
+#if NUM_SINE_ELEM
+    struct sine_chorus_elem s_elem[NUM_SINE_ELEM];
+#endif
+    webrtc::PushResampler<int16_t> *resampler;
 };
 
 struct chorus_alt_effect {

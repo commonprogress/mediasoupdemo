@@ -43,7 +43,7 @@
 
 struct auto_tune_effect {
     int fs_khz;
-//    webrtc::PushResampler<int16_t> *resampler;
+    webrtc::PushResampler<int16_t> *resampler;
     struct pitch_estimator pest;
     struct time_scale tscale;
     struct biquad lp_filt[ATE_NUM_BIQUADS];

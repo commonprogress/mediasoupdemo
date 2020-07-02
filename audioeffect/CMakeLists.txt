@@ -131,8 +131,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         /deps/avs/src/audio_effect
         /deps/avs/src/mediamgr
         /deps/avs/src/msystem
-        /deps/avs/src/audio_io
-        /deps/avs/src/audio_io/mock
+#         /deps/avs/src/audio_io
+#         /deps/avs/src/audio_io/mock
         /deps/avs/contrib/re
         /deps/avs/contrib/re/include
         /deps/webrtc/src
