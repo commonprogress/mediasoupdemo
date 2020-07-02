@@ -29,6 +29,8 @@ set(
 	${SOURCE_DIR}/peerconnection_jni.cpp
 	${SOURCE_DIR}/producer_jni.cpp
 	${SOURCE_DIR}/transport_jni.cpp
+	${SOURCE_DIR}/audio_effect.cc
+	${SOURCE_DIR}/media_manager.cc
 )
 
 # TODO(haiyang wu): add condition
@@ -53,6 +55,7 @@ endif()
 # Source Dependencies. override LIBWEBRTC_BINARY_PATH
 # TODO(HaiyangWu) add libwebrtc.a without change CMakeLists in libmediasoupclient
 # set(LIBWEBRTC_BINARY_PATH ${LIBWEBRTC_BINARY_ANDROID_PATH}/${ANDROID_ABI} CACHE STRING "libwebrtc binary path" FORCE)
+add_subdirectory("deps/avs")
 add_subdirectory("deps/libmediasoupclient")
 
 add_library(ffmpeg SHARED IMPORTED)
@@ -65,9 +68,16 @@ set_source_files_properties(${SOURCE_FILES}
 	PROPERTIES COMPILE_FLAGS -Wall -Wextra -Wpedantic)
 
 include_directories(SYSTEM "${LIBWEBRTC_INCLUDE_PATH}")
+include_directories(SYSTEM "${LIBWEBRTC_INCLUDE_PATH}/rtc_base")
 include_directories(SYSTEM "${LIBWEBRTC_INCLUDE_PATH}/third_party")
 include_directories(SYSTEM "${LIBWEBRTC_INCLUDE_PATH}/third_party/ffmpeg")
 include_directories(SYSTEM "${LIBWEBRTC_INCLUDE_PATH}/third_party/abseil-cpp")
+include_directories(SYSTEM "${LIBWEBRTC_INCLUDE_PATH}/third_party/opus/src")
+include_directories(SYSTEM "${LIBWEBRTC_INCLUDE_PATH}/third_party/opus/src/src")
+include_directories(SYSTEM "${LIBWEBRTC_INCLUDE_PATH}/third_party/opus/src/celt")
+include_directories(SYSTEM "${LIBWEBRTC_INCLUDE_PATH}/third_party/opus/src/include")
+include_directories(SYSTEM "${LIBWEBRTC_INCLUDE_PATH}/third_party/opus/src/silk")
+include_directories(SYSTEM "${LIBWEBRTC_INCLUDE_PATH}/third_party/boringssl/src/include")
 
 # Private (implementation) header files.
 target_include_directories(${PROJECT_NAME} PUBLIC
@@ -76,10 +86,23 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 	"${PROJECT_SOURCE_DIR}/deps/libmediasoupclient/include"
 	"${PROJECT_SOURCE_DIR}/deps/libmediasoupclient/test/include"
 	"${PROJECT_SOURCE_DIR}/deps/libmediasoupclient/deps/libsdptransform/include"
+    "${PROJECT_SOURCE_DIR}/deps/avs/include"
+    "${PROJECT_SOURCE_DIR}/deps/avs/src/audio_effect"
+    "${PROJECT_SOURCE_DIR}/deps/avs/src/mediamgr"
+    "${PROJECT_SOURCE_DIR}/deps/avs/src/msystem"
+    "${PROJECT_SOURCE_DIR}/deps/avs/contrib/re"
+    "${PROJECT_SOURCE_DIR}/deps/avs/contrib/re/include"
 	"${LIBWEBRTC_INCLUDE_PATH}"
+	"${LIBWEBRTC_INCLUDE_PATH}/rtc_base"
     "${LIBWEBRTC_INCLUDE_PATH}/third_party"
     "${LIBWEBRTC_INCLUDE_PATH}/third_party/ffmpeg"
 	"${LIBWEBRTC_INCLUDE_PATH}/third_party/abseil-cpp"
+	"${LIBWEBRTC_INCLUDE_PATH}/third_party/opus/src"
+	"${LIBWEBRTC_INCLUDE_PATH}/third_party/opus/src/src"
+	"${LIBWEBRTC_INCLUDE_PATH}/third_party/opus/src/celt"
+	"${LIBWEBRTC_INCLUDE_PATH}/third_party/opus/src/include"
+	"${LIBWEBRTC_INCLUDE_PATH}/third_party/opus/src/silk"
+	"${LIBWEBRTC_INCLUDE_PATH}/third_party/boringssl/src/include"
 )
 
 # Compile definitions for libwebrtc.
@@ -95,5 +118,6 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 	log
 	OpenSLES
 	ffmpeg
+	avs
 	mediasoupclient
 )
