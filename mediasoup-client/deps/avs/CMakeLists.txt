@@ -126,7 +126,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
         "${PROJECT_SOURCE_DIR}/src/mediamgr"
         "${PROJECT_SOURCE_DIR}/contrib/re"
         "${PROJECT_SOURCE_DIR}/contrib/re/include"
-)
+        )
 
 # Public (interface) headers from dependencies.
 target_include_directories(${PROJECT_NAME} PUBLIC

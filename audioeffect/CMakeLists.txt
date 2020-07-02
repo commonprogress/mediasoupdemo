@@ -18,10 +18,10 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
 #判断编译器类型,如果是gcc编译器,则在编译选项中加入c++11支持
-if(CMAKE_COMPILER_IS_GNUCXX)
-    set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
-    message(STATUS "optional:-std=c++11")
-endif(CMAKE_COMPILER_IS_GNUCXX)
+#if(CMAKE_COMPILER_IS_GNUCXX)
+#    set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
+#    message(STATUS "optional:-std=c++11")
+#endif(CMAKE_COMPILER_IS_GNUCXX)
 
 set(
         SOURCE_DIR
@@ -38,7 +38,6 @@ set(
 # Create target.
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})
 
-
 # Source Dependencies. override LIBWEBRTC_BINARY_PATH
 # TODO(HaiyangWu) add libwebrtc.a without change CMakeLists in libmediasoupclient
 # set(LIBWEBRTC_BINARY_PATH ${LIBWEBRTC_BINARY_ANDROID_PATH}/${ANDROID_ABI} CACHE STRING "libwebrtc binary path" FORCE)
@@ -53,38 +52,38 @@ set_target_properties(ffmpeg
 set_source_files_properties(${SOURCE_FILES}
         PROPERTIES COMPILE_FLAGS -Wall -Wextra -Wpedantic)
 
-
-include_directories(SYSTEM /deps/webrtc/src/rtc_base)
-include_directories(SYSTEM /deps/webrtc/src/third_party)
-include_directories(SYSTEM /deps/webrtc/src/third_party/abseil-cpp)
-include_directories(SYSTEM /deps/webrtc/src/third_party/ffmpeg)
-include_directories(SYSTEM /deps/webrtc/src/third_party/opus/src)
-include_directories(SYSTEM /deps/webrtc/src/third_party/opus/src/src)
-include_directories(SYSTEM /deps/webrtc/src/third_party/opus/src/celt)
-include_directories(SYSTEM /deps/webrtc/src/third_party/opus/src/include)
-include_directories(SYSTEM /deps/webrtc/src/third_party/opus/src/silk)
-include_directories(SYSTEM /deps/webrtc/src/third_party/boringssl/src/include/openssl)
+include_directories(SYSTEM "${LIBWEBRTC_INCLUDE_PATH}")
+include_directories(SYSTEM "${LIBWEBRTC_INCLUDE_PATH}/rtc_base")
+include_directories(SYSTEM "${LIBWEBRTC_INCLUDE_PATH}/third_party")
+include_directories(SYSTEM "${LIBWEBRTC_INCLUDE_PATH}/third_party/ffmpeg")
+include_directories(SYSTEM "${LIBWEBRTC_INCLUDE_PATH}/third_party/abseil-cpp")
+include_directories(SYSTEM "${LIBWEBRTC_INCLUDE_PATH}/third_party/opus/src")
+include_directories(SYSTEM "${LIBWEBRTC_INCLUDE_PATH}/third_party/opus/src/src")
+include_directories(SYSTEM "${LIBWEBRTC_INCLUDE_PATH}/third_party/opus/src/celt")
+include_directories(SYSTEM "${LIBWEBRTC_INCLUDE_PATH}/third_party/opus/src/include")
+include_directories(SYSTEM "${LIBWEBRTC_INCLUDE_PATH}/third_party/opus/src/silk")
+include_directories(SYSTEM "${LIBWEBRTC_INCLUDE_PATH}/third_party/boringssl/src/include")
 
 
 target_include_directories(${PROJECT_NAME} PUBLIC
         "${SOURCE_DIR}/"
-        /deps/avs/include
-        /deps/avs/src/audio_effect
-        /deps/avs/src/mediamgr
-        /deps/avs/src/msystem
-        /deps/avs/contrib/re
-        /deps/avs/contrib/re/include
-        /deps/webrtc/src
-        /deps/webrtc/src/rtc_base
-        /deps/webrtc/src/third_party
-        /deps/webrtc/src/third_party/abseil-cpp
-        /deps/webrtc/src/third_party/ffmpeg
-        /deps/webrtc/src/third_party/opus/src
-        /deps/webrtc/src/third_party/opus/src/src
-        /deps/webrtc/src/third_party/opus/src/celt
-        /deps/webrtc/src/third_party/opus/src/include
-        /deps/webrtc/src/third_party/opus/src/silk
-        /deps/webrtc/src/third_party/boringssl/src/include
+        "${PROJECT_SOURCE_DIR}/deps/avs/include"
+        "${PROJECT_SOURCE_DIR}/deps/avs/src/audio_effect"
+        "${PROJECT_SOURCE_DIR}/deps/avs/src/mediamgr"
+        "${PROJECT_SOURCE_DIR}/deps/avs/src/msystem"
+        "${PROJECT_SOURCE_DIR}/deps/avs/contrib/re"
+        "${PROJECT_SOURCE_DIR}/deps/avs/contrib/re/include"
+        "${LIBWEBRTC_INCLUDE_PATH}"
+   	    "${LIBWEBRTC_INCLUDE_PATH}/rtc_base"
+        "${LIBWEBRTC_INCLUDE_PATH}/third_party"
+        "${LIBWEBRTC_INCLUDE_PATH}/third_party/ffmpeg"
+   	    "${LIBWEBRTC_INCLUDE_PATH}/third_party/abseil-cpp"
+   	    "${LIBWEBRTC_INCLUDE_PATH}/third_party/opus/src"
+   	    "${LIBWEBRTC_INCLUDE_PATH}/third_party/opus/src/src"
+   	    "${LIBWEBRTC_INCLUDE_PATH}/third_party/opus/src/celt"
+   	    "${LIBWEBRTC_INCLUDE_PATH}/third_party/opus/src/include"
+   	    "${LIBWEBRTC_INCLUDE_PATH}/third_party/opus/src/silk"
+   	    "${LIBWEBRTC_INCLUDE_PATH}/third_party/boringssl/src/include"
         )
 
 # Compile definitions for libwebrtc.

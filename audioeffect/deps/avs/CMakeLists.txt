@@ -8,12 +8,6 @@ set(avs_VERSION_MAJOR 3)
 set(avs_VERSION_MINOR 0)
 set(avs_VERSION_PATCH 8)
 
-# Configure a header file to pass the version.
-#configure_file (
-#        "${PROJECT_SOURCE_DIR}/version.hpp.in"
-#        "${PROJECT_SOURCE_DIR}/include/version.hpp"
-#)
-
 # C++ standard requirements.
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -60,14 +54,14 @@ endif ()
 set(
         SOURCE_FILES_C
         src/audio_effect/aueffect.c
+        src/dict/dict.c
+        src/log/log.c
         src/mediamgr/mediamgr.c
         src/mediamgr/sound.c
         src/mediamgr/mm_platform_android.c
-        src/dict/dict.c
-        src/log/log.c
-        src/string/wordexp.c
         src/msystem/msystem.c
         src/msystem/msys_default.c
+        src/string/wordexp.c
         )
 
 set(
@@ -89,10 +83,10 @@ set(
         src/audio_effect/pcm_interface.cpp
 )
 
-file(GLOB_RECURSE SOURCE_FILES_RE contrib/re/src/*.c)
+file(GLOB_RECURSE SOURCE_FILES_RE ${PROJECT_SOURCE_DIR}/contrib/re/src/*.c)
 
 # include header files for the IDEs
-file(GLOB_RECURSE HEADER_FILES_RE contrib/re/src/*.h contrib/re/include/*.h)
+file(GLOB_RECURSE HEADER_FILES_RE ${PROJECT_SOURCE_DIR}/contrib/re/src/*.h ${PROJECT_SOURCE_DIR}/contrib/re/include/*.h)
 
 # Create target.
 add_library(${PROJECT_NAME} STATIC ${SOURCE_FILES_C} ${SOURCE_FILES} ${SOURCE_FILES_RE} ${HEADER_FILES_RE})
@@ -127,26 +121,26 @@ endif ()
 
 # Private (implementation) header files.
 target_include_directories(${PROJECT_NAME} PRIVATE
-        include
-        src/audio_effect
-        src/mediamgr
-        src/msystem
-        contrib/re
-        contrib/re/include)
+        "${PROJECT_SOURCE_DIR}/include"
+        "${PROJECT_SOURCE_DIR}/src/audio_effect"
+        "${PROJECT_SOURCE_DIR}/src/mediamgr"
+        "${PROJECT_SOURCE_DIR}/contrib/re"
+        "${PROJECT_SOURCE_DIR}/contrib/re/include"
+        )
 
 # Public (interface) headers from dependencies.
 target_include_directories(${PROJECT_NAME} PUBLIC
-        ../webrtc/src
-        ../webrtc/src/rtc_base
-        ../webrtc/src/third_party
-        ../webrtc/src/third_party/abseil-cpp
-        ../webrtc/src/third_party/ffmpeg
-        ../webrtc/src/third_party/opus/src
-        ../webrtc/src/third_party/opus/src/src
-        ../webrtc/src/third_party/opus/src/celt
-        ../webrtc/src/third_party/opus/src/include
-        ../webrtc/src/third_party/opus/src/silk
-        ../webrtc/src/third_party/boringssl/src/include
+        "${LIBWEBRTC_INCLUDE_PATH}"
+        "${LIBWEBRTC_INCLUDE_PATH}/rtc_base"
+        "${LIBWEBRTC_INCLUDE_PATH}/third_party"
+        "${LIBWEBRTC_INCLUDE_PATH}/third_party/abseil-cpp"
+        "${LIBWEBRTC_INCLUDE_PATH}/third_party/ffmpeg"
+        "${LIBWEBRTC_INCLUDE_PATH}/third_party/opus/src"
+        "${LIBWEBRTC_INCLUDE_PATH}/third_party/opus/src/src"
+        "${LIBWEBRTC_INCLUDE_PATH}/third_party/opus/src/celt"
+        "${LIBWEBRTC_INCLUDE_PATH}/third_party/opus/src/include"
+        "${LIBWEBRTC_INCLUDE_PATH}/third_party/opus/src/silk"
+        "${LIBWEBRTC_INCLUDE_PATH}/third_party/boringssl/src/include"
         )
 
 add_library(ffmpeg SHARED IMPORTED)

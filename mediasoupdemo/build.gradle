@@ -76,6 +76,7 @@ dependencies {
 //    implementation project(path: ':webrtc-made')
 //    implementation 'org.mediasoup.droid:mediasoup-client:3.0.8-beta-1'
 
+//    implementation project(path: ':audioeffect')
 
     implementation 'com.squareup.okhttp3:okhttp:4.3.0'
     implementation("com.squareup.okhttp3:logging-interceptor:4.3.0")
