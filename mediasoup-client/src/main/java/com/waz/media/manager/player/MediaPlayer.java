@@ -20,6 +20,18 @@ package com.waz.media.manager.player;
 
 import java.util.Date;
 
+import java.util.HashSet;
+import java.util.HashMap;
+
+import java.util.Iterator;
+
+import com.waz.media.manager.player.MediaSource;
+
+import com.waz.media.manager.player.MediaSourceListener;
+import com.waz.media.manager.player.MediaPlayerListener;
+
+import android.util.Log;
+
 
 public class MediaPlayer implements MediaSourceListener {
     private MediaSource _source = null;

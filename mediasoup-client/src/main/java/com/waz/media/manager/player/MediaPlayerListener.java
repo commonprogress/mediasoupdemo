@@ -18,6 +18,9 @@
 package com.waz.media.manager.player;
 
 
+import com.waz.media.manager.player.MediaPlayer;
+
+
 public interface MediaPlayerListener {
   public void onFinishedPlaying ( MediaPlayer player );
 }

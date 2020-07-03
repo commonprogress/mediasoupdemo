@@ -54,13 +54,19 @@ endif ()
 set(
         SOURCE_FILES_C
         src/audio_effect/aueffect.c
+        src/base/base.c
         src/dict/dict.c
+        src/extcodec/extcodec.c
         src/log/log.c
         src/mediamgr/mediamgr.c
         src/mediamgr/sound.c
         src/mediamgr/mm_platform_android.c
+        src/msystem/device.c
         src/msystem/msystem.c
         src/msystem/msys_default.c
+        src/queue/locked_queue.c
+        src/queue/packet_queue.c
+        src/sem/semaphore.c
         src/string/wordexp.c
         )
 
@@ -81,7 +87,9 @@ set(
         src/audio_effect/biquad.cpp
         src/audio_effect/wav_interface.cpp
         src/audio_effect/pcm_interface.cpp
-)
+        src/audio_io/audio_io.cpp
+        src/audio_io/mock/fake_audiodevice.cpp
+        )
 
 file(GLOB_RECURSE SOURCE_FILES_RE ${PROJECT_SOURCE_DIR}/contrib/re/src/*.c)
 
@@ -123,6 +131,8 @@ endif ()
 target_include_directories(${PROJECT_NAME} PRIVATE
         "${PROJECT_SOURCE_DIR}/include"
         "${PROJECT_SOURCE_DIR}/src/audio_effect"
+        "${PROJECT_SOURCE_DIR}/src/audio_io"
+        "${PROJECT_SOURCE_DIR}/src/audio_io/mock"
         "${PROJECT_SOURCE_DIR}/src/mediamgr"
         "${PROJECT_SOURCE_DIR}/contrib/re"
         "${PROJECT_SOURCE_DIR}/contrib/re/include"

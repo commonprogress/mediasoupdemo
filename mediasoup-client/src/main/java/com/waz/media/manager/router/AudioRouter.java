@@ -18,23 +18,35 @@
 package com.waz.media.manager.router;
 
 
-import android.bluetooth.BluetoothA2dp;
+import android.content.Context;
+import android.media.AudioManager;
+
+import android.media.AudioManager.OnAudioFocusChangeListener;
+
+import java.lang.Thread;
+
+import java.util.Arrays;
+
+import java.util.HashSet;
+import java.util.HashMap;
+
+import java.util.Iterator;
+
+import java.util.List;
+
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothProfile;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothHeadset;
-import android.bluetooth.BluetoothProfile;
+import android.bluetooth.BluetoothA2dp;
 import android.content.BroadcastReceiver;
-import android.content.Context;
+import android.os.Process;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.media.AudioManager;
-import android.media.AudioManager.OnAudioFocusChangeListener;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
-
-import java.util.List;
 
 public class AudioRouter {
     private Context _context = null;

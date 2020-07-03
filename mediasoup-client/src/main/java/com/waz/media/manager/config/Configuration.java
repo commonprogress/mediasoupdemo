@@ -18,10 +18,16 @@
 package com.waz.media.manager.config;
 
 
+import java.util.HashSet;
+import java.util.HashMap;
+
+import java.util.Iterator;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.json.JSONException;
 
-import java.util.HashMap;
+import com.waz.media.manager.config.MediaConfiguration;
 
 
 public class Configuration {

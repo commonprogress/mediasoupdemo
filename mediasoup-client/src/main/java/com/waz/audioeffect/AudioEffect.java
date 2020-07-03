@@ -19,6 +19,8 @@ package com.waz.audioeffect;
 
 import com.waz.avs.AVSystem;
 
+import com.waz.audioeffect.AudioEffectStatusHandler;
+
 public class AudioEffect {
     static {
         AVSystem.load();

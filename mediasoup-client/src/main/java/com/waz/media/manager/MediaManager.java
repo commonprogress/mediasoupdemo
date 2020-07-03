@@ -19,6 +19,7 @@ package com.waz.media.manager;
 
 import android.content.Context;
 import android.media.AudioManager;
+import android.media.AudioManager;
 
 import android.media.AudioManager.OnAudioFocusChangeListener;
 
@@ -29,7 +30,6 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Build;
 
-import android.support.annotation.RequiresApi;
 import com.waz.avs.AVSystem;
 import com.waz.media.manager.player.MediaSource;
 
@@ -63,6 +63,7 @@ import com.waz.media.manager.player.MediaPlayerListener;
 import com.waz.media.manager.player.SoundSource;
 import com.waz.media.manager.player.MediaSource;
 
+import android.support.annotation.RequiresApi;
 import android.util.Log;
 
 @RequiresApi(api = Build.VERSION_CODES.FROYO)

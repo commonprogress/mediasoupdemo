@@ -48,7 +48,7 @@ struct jmm *self2mm(JNIEnv *env, jobject self)
     return jmm;
 }
 
-#ifndef ANDROID // Android simulator dosnt include mm_platform_android.c    
+#ifndef ANDROID // Android simulator dosnt include mm_platform_android.c
 int mm_android_jni_init(JNIEnv *env, jobject jobj, jobject ctx){
     return 0;
 }

@@ -36,12 +36,15 @@
 extern "C" {
 #endif
 
+#include "avs_base.h"
 #include "avs_dict.h"
 #include "avs_log.h"
+#include "avs_msystem.h"
+#include "avs_packetqueue.h"
+#include "avs_string.h"
+#include "avs_vidcodec.h"
 #include "avs_mediamgr.h"
 #include "avs_audio_effect.h"
-#include "avs_msystem.h"
-#include "avs_string.h"
 
 #ifdef __cplusplus
 }
