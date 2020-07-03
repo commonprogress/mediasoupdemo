@@ -15,40 +15,41 @@
 * You should have received a copy of the GNU General Public License
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef AVS_H__
-#define AVS_H__
 
-#ifdef __APPLE__
-#define AVS_EXPORT __attribute__((visibility("default")))
-#else
-#ifdef ANDROID
-#define AVS_EXPORT __attribute__((visibility("default")))
-#else
-#ifdef __EMSCRIPTEN__
-#define AVS_EXPORT EMSCRIPTEN_KEEPALIVE
-#else
-#define AVS_EXPORT
-#endif
-#endif
-#endif
+#ifndef AVS_AUDIO_IO_H
+#define AVS_AUDIO_IO_H
+
+#define AUDIO_IO_BUF_DUR ((double)0.02)
+
+enum audio_io_mode{
+    AUDIO_IO_MODE_NORMAL = 0,
+    AUDIO_IO_MODE_MOCK,
+    AUDIO_IO_MODE_MOCK_REALTIME,
+};
+
+struct audio_io{
+    //webrtc::audio_io_class *aioc;
+    void *aioc;
+};
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+void *audio_io_create_adm(void);
 
-#include "avs_base.h"
-#include "avs_dict.h"
-#include "avs_log.h"
-#include "avs_msystem.h"
-#include "avs_packetqueue.h"
-#include "avs_string.h"
-#include "avs_vidcodec.h"
-#include "avs_mediamgr.h"
-#include "avs_audio_effect.h"
+int  audio_io_alloc(struct audio_io **aiop,
+                    enum audio_io_mode mode);
+
+int  audio_io_init(struct audio_io *aio);
+
+int  audio_io_terminate(struct audio_io *aio);
+
+int  audio_io_enable_sine(void);
+
+int  audio_io_reset(struct audio_io *aio);
 
 #ifdef __cplusplus
 }
 #endif
 
-
-#endif
+#endif // AVS_AUDIO_IO_H

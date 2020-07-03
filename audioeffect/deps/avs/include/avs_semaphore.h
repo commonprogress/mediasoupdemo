@@ -15,40 +15,28 @@
 * You should have received a copy of the GNU General Public License
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef AVS_H__
-#define AVS_H__
 
-#ifdef __APPLE__
-#define AVS_EXPORT __attribute__((visibility("default")))
-#else
-#ifdef ANDROID
-#define AVS_EXPORT __attribute__((visibility("default")))
-#else
-#ifdef __EMSCRIPTEN__
-#define AVS_EXPORT EMSCRIPTEN_KEEPALIVE
-#else
-#define AVS_EXPORT
-#endif
-#endif
-#endif
+#ifndef AVS_SEMAPHORE_H
+#define AVS_SEMAPHORE_H
+
+#include <stdlib.h>
+#include <stdbool.h>
+#include "re.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "avs_base.h"
-#include "avs_dict.h"
-#include "avs_log.h"
-#include "avs_msystem.h"
-#include "avs_packetqueue.h"
-#include "avs_string.h"
-#include "avs_vidcodec.h"
-#include "avs_mediamgr.h"
-#include "avs_audio_effect.h"
+
+struct avs_sem;
+
+int avs_sem_alloc(struct avs_sem **sp, int value);
+int avs_sem_post(struct avs_sem *s);
+int avs_sem_wait(struct avs_sem *s);
 
 #ifdef __cplusplus
 }
 #endif
 
+#endif //AVS_SEMAPHORE_H
 
-#endif

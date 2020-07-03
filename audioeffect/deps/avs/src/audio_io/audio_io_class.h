@@ -15,40 +15,23 @@
 * You should have received a copy of the GNU General Public License
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef AVS_H__
-#define AVS_H__
 
-#ifdef __APPLE__
-#define AVS_EXPORT __attribute__((visibility("default")))
-#else
-#ifdef ANDROID
-#define AVS_EXPORT __attribute__((visibility("default")))
-#else
-#ifdef __EMSCRIPTEN__
-#define AVS_EXPORT EMSCRIPTEN_KEEPALIVE
-#else
-#define AVS_EXPORT
-#endif
-#endif
-#endif
+#ifndef AVS_IO_CLASS_H_
+#define AVS_IO_CLASS_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "avs_audio_io.h"
+#include "modules/audio_device/include/audio_device.h"
 
-#include "avs_base.h"
-#include "avs_dict.h"
-#include "avs_log.h"
-#include "avs_msystem.h"
-#include "avs_packetqueue.h"
-#include "avs_string.h"
-#include "avs_vidcodec.h"
-#include "avs_mediamgr.h"
-#include "avs_audio_effect.h"
+namespace webrtc {
+    class audio_io_class : public AudioDeviceModule {
+    public:
+        virtual int32_t InitInternal() = 0;
 
-#ifdef __cplusplus
+        virtual int32_t TerminateInternal() = 0;
+        virtual int32_t ResetAudioDevice() = 0;
+                
+        virtual int32_t EnableSine() = 0;
+    };
 }
-#endif
-
 
 #endif

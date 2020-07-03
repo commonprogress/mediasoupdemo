@@ -69,6 +69,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         "${SOURCE_DIR}/"
         "${PROJECT_SOURCE_DIR}/deps/avs/include"
         "${PROJECT_SOURCE_DIR}/deps/avs/src/audio_effect"
+        "${PROJECT_SOURCE_DIR}/deps/avs/src/audio_io"
+        "${PROJECT_SOURCE_DIR}/deps/avs/src/audio_io/mock"
         "${PROJECT_SOURCE_DIR}/deps/avs/src/mediamgr"
         "${PROJECT_SOURCE_DIR}/deps/avs/src/msystem"
         "${PROJECT_SOURCE_DIR}/deps/avs/contrib/re"

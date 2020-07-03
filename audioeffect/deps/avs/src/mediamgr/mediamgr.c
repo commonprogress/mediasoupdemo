@@ -19,9 +19,12 @@
 #include <re.h>
 #include "avs.h"
 #include "avs_mediamgr.h"
+#include "avs_lockedqueue.h"
+#include "avs_audio_io.h"
 #include <pthread.h>
 #include "mediamgr.h"
 #include "mm_platform.h"
+//#include "avs_flowmgr.h"
 #include <unistd.h>
 
 #define MM_USE_THREAD   1
@@ -144,6 +147,7 @@ struct mm {
 	int intensity_thres;
 	bool user_starts_audio;
 
+	struct audio_io *aio;
 
 	struct list mml;
 };
@@ -510,30 +514,30 @@ static void incall_action(struct mm *mm)
 
 static void handle_incall(struct mm *mm, bool hold)
 {
-//	info("mediamgr: handle_incall: call_state=%s sys_state=%s hold=%d\n",
-//	     mmstate_name(mm->call_state), mm_sys_state_name(mm->sys_state),
-//	     hold);
-//
-//	if (mm->call_state == MEDIAMGR_STATE_INVIDEOCALL)
-//		mm->router.prefer_loudspeaker = true;
-//
-//	if (hold) {
-//		enter_call(mm);
-//		return;
-//	}
-//
-//	switch(mm->sys_state) {
-//	case MM_SYS_STATE_INCALL:
-//		incall_action(mm);
-//		break;
-//
-//	case MM_SYS_STATE_ENTERING_CALL:
-//		break;
-//
-//	default:
-//		enter_call(mm);
-//		break;
-//	}
+	info("mediamgr: handle_incall: call_state=%s sys_state=%s hold=%d\n",
+	     mmstate_name(mm->call_state), mm_sys_state_name(mm->sys_state),
+	     hold);
+
+	if (mm->call_state == MEDIAMGR_STATE_INVIDEOCALL)
+		mm->router.prefer_loudspeaker = true;
+
+	if (hold) {
+		enter_call(mm);
+		return;
+	}
+
+	switch(mm->sys_state) {
+	case MM_SYS_STATE_INCALL:
+		incall_action(mm);
+		break;
+
+	case MM_SYS_STATE_ENTERING_CALL:
+		break;
+
+	default:
+		enter_call(mm);
+		break;
+	}
 }
 
 
@@ -551,7 +555,7 @@ static void mm_destructor(void *arg)
 	dict_flush(mm->sounds);
 	mem_deref(mm->sounds);
 	mem_deref(mm->mq);
-//	mem_deref(mm->aio);
+	mem_deref(mm->aio);
 
 	mm_platform_free(mm);
 
@@ -850,27 +854,27 @@ static void enter_incoming(struct mm *mm)
 
 static void enter_call(struct mm *mm)
 {
-//	info("mediamgr: enter_call: sys_state=%s\n",
-//	     mm_sys_state_name(mm->sys_state));
-//
-//	mm->play_ready = true;
-//
-//	switch (mm->sys_state) {
-//	case MM_SYS_STATE_NORMAL:
-//	case MM_SYS_STATE_INCOMING:
-//	case MM_SYS_STATE_EXITING_CALL:
-//		set_sys_state(mm, MM_SYS_STATE_ENTERING_CALL);
-//		mm_platform_enter_call();
-//		break;
-//
-//	case MM_SYS_STATE_ENTERING_CALL:
-//	case MM_SYS_STATE_INCALL:
-//		mm_platform_enter_call();
-//		break;
-//
-//	default:
-//		break;
-//	}
+	info("mediamgr: enter_call: sys_state=%s\n",
+	     mm_sys_state_name(mm->sys_state));
+
+	mm->play_ready = true;
+
+	switch (mm->sys_state) {
+	case MM_SYS_STATE_NORMAL:
+	case MM_SYS_STATE_INCOMING:
+	case MM_SYS_STATE_EXITING_CALL:
+		set_sys_state(mm, MM_SYS_STATE_ENTERING_CALL);
+		mm_platform_enter_call();
+		break;
+
+	case MM_SYS_STATE_ENTERING_CALL:
+	case MM_SYS_STATE_INCALL:
+		mm_platform_enter_call();
+		break;
+
+	default:
+		break;
+	}
 }
 
 
@@ -1305,68 +1309,68 @@ static void sys_entered_call_handler(struct mm *mm)
 	info("mediamgr: sys_entered_call: sys_state=%s call_state=%s\n",
 	     mm_sys_state_name(mm->sys_state), mmstate_name(mm->call_state));
 
-//	if (mm->sys_state == MM_SYS_STATE_INCALL) {
-//		if (mm->call_state == MEDIAMGR_STATE_INCALL
-//		 || mm->call_state == MEDIAMGR_STATE_INVIDEOCALL) {
-//			info("mediamgr: sys_entered call: incall aio=%p\n",
-//			     mm->aio);
-//			if (mm->aio)
-//				fire_callback(mm);
-//			else
-//				incall_action(mm);
-//			return;
-//		}
-//	}
-//
-//	if (mm->sys_state == MM_SYS_STATE_INCALL
-//	    && mm->call_state != MEDIAMGR_STATE_RESUME) {
-//		info("mediamgr: already INCALL and not resuming\n");
-//		return;
-//	}
-//
-//	if (mm->sys_state != MM_SYS_STATE_ENTERING_CALL) {
-//		info("mediamgr: not requested to enter call, ignoring\n");
-//		return;
-//	}
-//
-//	set_sys_state(mm, MM_SYS_STATE_INCALL);
-//
-//	switch (mm->call_state) {
-//	case MEDIAMGR_STATE_OUTGOING_AUDIO_CALL:
-//		play_sound(mm, "ringing_from_me", false, true);
-//		break;
-//
-//	case MEDIAMGR_STATE_OUTGOING_VIDEO_CALL:
-//		if (!mm->router.bt_device_is_connected
-//		    && !mm->router.wired_hs_is_connected) {
-//			enable_speaker(mm, true);
-//		}
-//		play_sound(mm, "ringing_from_me_video", false, true);
-//		break;
-//
-//	case MEDIAMGR_STATE_INCALL:
-//	case MEDIAMGR_STATE_INVIDEOCALL:
-//		incall_action(mm);
-//		break;
-//
-//	case MEDIAMGR_STATE_RESUME:
-//		if (mm->aio)
-//			fire_callback(mm);
-//		else {
-//			mediamgr_post_media_cmd(mm,
-//						MM_MARSHAL_AUDIO_ALLOC,
-//						NULL);
-//		}
-//		set_state(mm, mm->hold_state);
-//		break;
-//
-//	case MEDIAMGR_STATE_NORMAL:
-//		exit_call(mm);
-//		break;
-//
-//	default:
-//		break;
-//	}
+	if (mm->sys_state == MM_SYS_STATE_INCALL) {
+		if (mm->call_state == MEDIAMGR_STATE_INCALL
+		 || mm->call_state == MEDIAMGR_STATE_INVIDEOCALL) {
+			info("mediamgr: sys_entered call: incall aio=%p\n",
+			     mm->aio);
+			if (mm->aio)
+				fire_callback(mm);
+			else
+				incall_action(mm);
+			return;
+		}
+	}
+
+	if (mm->sys_state == MM_SYS_STATE_INCALL
+	    && mm->call_state != MEDIAMGR_STATE_RESUME) {
+		info("mediamgr: already INCALL and not resuming\n");
+		return;
+	}
+
+	if (mm->sys_state != MM_SYS_STATE_ENTERING_CALL) {
+		info("mediamgr: not requested to enter call, ignoring\n");
+		return;
+	}
+
+	set_sys_state(mm, MM_SYS_STATE_INCALL);
+
+	switch (mm->call_state) {
+	case MEDIAMGR_STATE_OUTGOING_AUDIO_CALL:
+		play_sound(mm, "ringing_from_me", false, true);
+		break;
+
+	case MEDIAMGR_STATE_OUTGOING_VIDEO_CALL:
+		if (!mm->router.bt_device_is_connected
+		    && !mm->router.wired_hs_is_connected) {
+			enable_speaker(mm, true);
+		}
+		play_sound(mm, "ringing_from_me_video", false, true);
+		break;
+
+	case MEDIAMGR_STATE_INCALL:
+	case MEDIAMGR_STATE_INVIDEOCALL:
+		incall_action(mm);
+		break;
+
+	case MEDIAMGR_STATE_RESUME:
+		if (mm->aio)
+			fire_callback(mm);
+		else {
+			mediamgr_post_media_cmd(mm,
+						MM_MARSHAL_AUDIO_ALLOC,
+						NULL);
+		}
+		set_state(mm, mm->hold_state);
+		break;
+
+	case MEDIAMGR_STATE_NORMAL:
+		exit_call(mm);
+		break;
+
+	default:
+		break;
+	}
 }
 
 static void sys_left_call_handler(struct mm *mm)
@@ -1390,53 +1394,53 @@ static void sys_left_call_handler(struct mm *mm)
 
 static void audio_alloc(struct mm *mm)
 {
-//	int err = 0;
-//#if 0
-//	if (mm->aio) {
-//#if USE_AVSLIB
-//		voe_deregister_adm();
-//#endif
-//		mm->aio = mem_deref(mm->aio);
-//	}
-//#endif
-//	if (mm->aio) {
-//		info("mediamgr: audio already allocated, firing callback\n");
-//		fire_callback(mm);
-//		return;
-//	}
-//
-//	info("mediamgr: allocating audio\n");
-//	err = audio_io_alloc(&mm->aio, AUDIO_IO_MODE_NORMAL);
-//	if (err) {
-//		/* if we fail to alloc audio, we need to fail the call */
-//		warning("mediamgr: audio_alloc: failed to alloc audio\n");
-//
-//		fire_callback_internal(mm, MEDIAMGR_STATE_ERROR);
-//		goto out;
-//	}
-//#if USE_AVSLIB
-//	voe_register_adm(mm->aio);
-//#endif
-//
-//	info("mediamgr: audio_alloc: fire_callback\n");
-//	fire_callback(mm);
-//
-// out:
-//	mm->alloc_pending = false;
+	int err = 0;
+#if 0
+	if (mm->aio) {
+#if USE_AVSLIB
+		voe_deregister_adm();
+#endif
+		mm->aio = mem_deref(mm->aio);
+	}
+#endif
+	if (mm->aio) {
+		info("mediamgr: audio already allocated, firing callback\n");
+		fire_callback(mm);
+		return;
+	}
+
+	info("mediamgr: allocating audio\n");
+	err = audio_io_alloc(&mm->aio, AUDIO_IO_MODE_NORMAL);
+	if (err) {
+		/* if we fail to alloc audio, we need to fail the call */
+		warning("mediamgr: audio_alloc: failed to alloc audio\n");
+
+		fire_callback_internal(mm, MEDIAMGR_STATE_ERROR);
+		goto out;
+	}
+#if USE_AVSLIB
+	voe_register_adm(mm->aio);
+#endif
+
+	info("mediamgr: audio_alloc: fire_callback\n");
+	fire_callback(mm);
+
+ out:
+	mm->alloc_pending = false;
 }
 
 
 static void audio_release(struct mm *mm)
 {
-//	info("mediamgr: audio_release: aio=%p\n", mm->aio);
-//
-//	if (mm->aio) {
-//#if USE_AVSLIB
-//		voe_deregister_adm();
-//#endif
-//		mm->aio = mem_deref(mm->aio);
-//	}
-//	mm->alloc_pending = false;
+	info("mediamgr: audio_release: aio=%p\n", mm->aio);
+
+	if (mm->aio) {
+#if USE_AVSLIB
+		voe_deregister_adm();
+#endif
+		mm->aio = mem_deref(mm->aio);
+	}
+	mm->alloc_pending = false;
 }
 
 
@@ -1457,21 +1461,21 @@ void mediamgr_audio_release(struct mediamgr *mediamgr)
 
 static void audio_reset(struct mm *mm)
 {
-//	info("mediamgr: audio_reset: aio=%p\n", mm->aio);
-//
-//	if (mm->aio) {
-//		int res;
-//
-//		res = audio_io_reset(mm->aio);
-//		if (res < 0) {
-//			warning("mediamgr: audio_reset failed\n");
-//
-//			fire_callback_internal(mm, MEDIAMGR_STATE_ERROR);
-//		}
-//	}
-//	else {
-//		enter_call(mm);
-//	}
+	info("mediamgr: audio_reset: aio=%p\n", mm->aio);
+
+	if (mm->aio) {
+		int res;
+
+		res = audio_io_reset(mm->aio);
+		if (res < 0) {
+			warning("mediamgr: audio_reset failed\n");
+
+			fire_callback_internal(mm, MEDIAMGR_STATE_ERROR);
+		}
+	}
+	else {
+		enter_call(mm);
+	}
 }
 
 void mediamgr_audio_reset_mm(struct mm *mm)
@@ -1499,168 +1503,168 @@ void mediamgr_audio_start(struct mediamgr *mediamgr)
 
 static void call_state_handler(struct mm *mm, enum mediamgr_state new_state)
 {
-//	enum mediamgr_state old_state = mm->call_state;
-//
-//	info("mediamgr: call_state_handler: %s->%s\n",
-//	     mmstate_name(old_state), mmstate_name(new_state));
-//
-//	if (new_state == old_state) {
-//		if (new_state == MEDIAMGR_STATE_INVIDEOCALL ||
-//		    new_state == MEDIAMGR_STATE_INCALL) {
-//			if (mm->aio)
-//				fire_callback(mm);
-//		}
-//
-//		return;
-//	}
-//
-//	switch (new_state) {
-//	case MEDIAMGR_STATE_NORMAL:
-//		set_state(mm, new_state);
-//		stop_all_media(mm);
-//		audio_release(mm);
-//		msystem_set_muted(false);
-//		mm->audio_started = false;
-//		switch (mm->sys_state) {
-//		case MM_SYS_STATE_NORMAL:
-//			break;
-//
-//		case MM_SYS_STATE_INCALL:
-//			if (old_state == MEDIAMGR_STATE_INCALL ||
-//			    old_state == MEDIAMGR_STATE_INVIDEOCALL) {
-//				play_sound(mm, "talk_later", true, false);
-//			}
-//			exit_call(mm);
-//			break;
-//
-//		default:
-//			exit_call(mm);
-//			break;
-//		}
-//		mm->router.prefer_loudspeaker = false;
-//		break;
-//
-//	case MEDIAMGR_STATE_OUTGOING_AUDIO_CALL:
-//		switch(old_state) {
-//		case MEDIAMGR_STATE_NORMAL:
-//			set_state(mm, new_state);
-//			enter_call(mm);
-//			break;
-//
-//		case MEDIAMGR_STATE_RESUME:
-//			mm->hold_state = MEDIAMGR_STATE_OUTGOING_AUDIO_CALL;
-//			enter_call(mm);
-//			break;
-//
-//		case MEDIAMGR_STATE_HOLD:
-//			if (mm->sys_state == MM_SYS_STATE_INCALL)
-//				play_sound(mm, "ringing_from_me", false, true);
-//			break;
-//
-//		default:
-//			break;
-//		}
-//		break;
-//
-//	case MEDIAMGR_STATE_OUTGOING_VIDEO_CALL:
-//		mm->router.prefer_loudspeaker = true;
-//		switch(old_state) {
-//		case MEDIAMGR_STATE_NORMAL:
-//			set_state(mm, new_state);
-//			enter_call(mm);
-//			break;
-//
-//		case MEDIAMGR_STATE_RESUME:
-//			mm->hold_state = MEDIAMGR_STATE_OUTGOING_VIDEO_CALL;
-//			enter_call(mm);
-//			break;
-//
-//		case MEDIAMGR_STATE_HOLD:
-//			if (mm->sys_state == MM_SYS_STATE_INCALL) {
-//				if (!mm->router.bt_device_is_connected
-//				    && !mm->router.wired_hs_is_connected) {
-//					enable_speaker(mm, true);
-//				}
-//				play_sound(mm, "ringing_from_me_video",
-//					   false, true);
-//			}
-//			break;
-//
-//		default:
-//			break;
-//		}
-//		break;
-//
-//	case MEDIAMGR_STATE_INCOMING_AUDIO_CALL:
-//		if (old_state == MEDIAMGR_STATE_NORMAL) {
-//			set_state(mm, new_state);
-//			enter_incoming(mm);
-//		}
-//		else if (old_state == MEDIAMGR_STATE_RESUME) {
-//			mm->hold_state = MEDIAMGR_STATE_INCOMING_AUDIO_CALL;
-//			enter_incoming(mm);
-//		}
-//		break;
-//
-//	case MEDIAMGR_STATE_INCOMING_VIDEO_CALL:
-//		if (old_state == MEDIAMGR_STATE_NORMAL)
-//			set_state(mm, new_state);
-//		else if (old_state == MEDIAMGR_STATE_RESUME)
-//			mm->hold_state = MEDIAMGR_STATE_INCOMING_VIDEO_CALL;
-//		enter_incoming(mm);
-//		break;
-//
-//	case MEDIAMGR_STATE_INCALL:
-//	case MEDIAMGR_STATE_INVIDEOCALL:
-//		set_state(mm, new_state);
-//		if (old_state == MEDIAMGR_STATE_INCALL) {
-//			if (new_state == MEDIAMGR_STATE_INVIDEOCALL)
-//				set_video_route(mm);
-//			if (mm->aio)
-//				fire_callback(mm);
-//		}
-//		else if (old_state == MEDIAMGR_STATE_INVIDEOCALL) {
-//			if (mm->aio)
-//				fire_callback(mm);
-//		}
-//		else {
-//			handle_incall(mm, old_state == MEDIAMGR_STATE_HOLD);
-//		}
-//		break;
-//
-//	case MEDIAMGR_STATE_ROAMING:
-//		break;
-//
-//	case MEDIAMGR_STATE_HOLD:
-//		mm->hold_state = old_state;
-//		mm->should_reset = true;
-//		set_state(mm, new_state);
-//		fire_callback(mm);
-//		break;
-//
-//	case MEDIAMGR_STATE_RESUME:
-//		if (old_state == MEDIAMGR_STATE_HOLD) {
-//			set_state(mm, new_state);
-//			if (mm->hold_state == MEDIAMGR_STATE_INCALL
-//			    || mm->hold_state == MEDIAMGR_STATE_INVIDEOCALL) {
-//				if (mm->sys_state == MM_SYS_STATE_INCALL) {
-//					if (mm->aio)
-//						fire_callback(mm);
-//					set_state(mm, mm->hold_state);
-//				}
-//				else {
-//					enter_call(mm);
-//				}
-//			}
-//		}
-//		break;
-//
-//	case MEDIAMGR_STATE_UNKNOWN:
-//		break;
-//
-//	default:
-//		break;
-//	}
+	enum mediamgr_state old_state = mm->call_state;
+
+	info("mediamgr: call_state_handler: %s->%s\n",
+	     mmstate_name(old_state), mmstate_name(new_state));
+
+	if (new_state == old_state) {
+		if (new_state == MEDIAMGR_STATE_INVIDEOCALL ||
+		    new_state == MEDIAMGR_STATE_INCALL) {
+			if (mm->aio)
+				fire_callback(mm);
+		}
+
+		return;
+	}
+
+	switch (new_state) {
+	case MEDIAMGR_STATE_NORMAL:
+		set_state(mm, new_state);
+		stop_all_media(mm);
+		audio_release(mm);
+		msystem_set_muted(false);
+		mm->audio_started = false;
+		switch (mm->sys_state) {
+		case MM_SYS_STATE_NORMAL:
+			break;
+
+		case MM_SYS_STATE_INCALL:
+			if (old_state == MEDIAMGR_STATE_INCALL ||
+			    old_state == MEDIAMGR_STATE_INVIDEOCALL) {
+				play_sound(mm, "talk_later", true, false);
+			}
+			exit_call(mm);
+			break;
+
+		default:
+			exit_call(mm);
+			break;
+		}
+		mm->router.prefer_loudspeaker = false;
+		break;
+
+	case MEDIAMGR_STATE_OUTGOING_AUDIO_CALL:
+		switch(old_state) {
+		case MEDIAMGR_STATE_NORMAL:
+			set_state(mm, new_state);
+			enter_call(mm);
+			break;
+
+		case MEDIAMGR_STATE_RESUME:
+			mm->hold_state = MEDIAMGR_STATE_OUTGOING_AUDIO_CALL;
+			enter_call(mm);
+			break;
+
+		case MEDIAMGR_STATE_HOLD:
+			if (mm->sys_state == MM_SYS_STATE_INCALL)
+				play_sound(mm, "ringing_from_me", false, true);
+			break;
+
+		default:
+			break;
+		}
+		break;
+
+	case MEDIAMGR_STATE_OUTGOING_VIDEO_CALL:
+		mm->router.prefer_loudspeaker = true;
+		switch(old_state) {
+		case MEDIAMGR_STATE_NORMAL:
+			set_state(mm, new_state);
+			enter_call(mm);
+			break;
+
+		case MEDIAMGR_STATE_RESUME:
+			mm->hold_state = MEDIAMGR_STATE_OUTGOING_VIDEO_CALL;
+			enter_call(mm);
+			break;
+
+		case MEDIAMGR_STATE_HOLD:
+			if (mm->sys_state == MM_SYS_STATE_INCALL) {
+				if (!mm->router.bt_device_is_connected
+				    && !mm->router.wired_hs_is_connected) {
+					enable_speaker(mm, true);
+				}
+				play_sound(mm, "ringing_from_me_video",
+					   false, true);
+			}
+			break;
+
+		default:
+			break;
+		}
+		break;
+
+	case MEDIAMGR_STATE_INCOMING_AUDIO_CALL:
+		if (old_state == MEDIAMGR_STATE_NORMAL) {
+			set_state(mm, new_state);
+			enter_incoming(mm);
+		}
+		else if (old_state == MEDIAMGR_STATE_RESUME) {
+			mm->hold_state = MEDIAMGR_STATE_INCOMING_AUDIO_CALL;
+			enter_incoming(mm);
+		}
+		break;
+
+	case MEDIAMGR_STATE_INCOMING_VIDEO_CALL:
+		if (old_state == MEDIAMGR_STATE_NORMAL)
+			set_state(mm, new_state);
+		else if (old_state == MEDIAMGR_STATE_RESUME)
+			mm->hold_state = MEDIAMGR_STATE_INCOMING_VIDEO_CALL;
+		enter_incoming(mm);
+		break;
+
+	case MEDIAMGR_STATE_INCALL:
+	case MEDIAMGR_STATE_INVIDEOCALL:
+		set_state(mm, new_state);
+		if (old_state == MEDIAMGR_STATE_INCALL) {
+			if (new_state == MEDIAMGR_STATE_INVIDEOCALL)
+				set_video_route(mm);
+			if (mm->aio)
+				fire_callback(mm);
+		}
+		else if (old_state == MEDIAMGR_STATE_INVIDEOCALL) {
+			if (mm->aio)
+				fire_callback(mm);
+		}
+		else {
+			handle_incall(mm, old_state == MEDIAMGR_STATE_HOLD);
+		}
+		break;
+
+	case MEDIAMGR_STATE_ROAMING:
+		break;
+
+	case MEDIAMGR_STATE_HOLD:
+		mm->hold_state = old_state;
+		mm->should_reset = true;
+		set_state(mm, new_state);
+		fire_callback(mm);
+		break;
+
+	case MEDIAMGR_STATE_RESUME:
+		if (old_state == MEDIAMGR_STATE_HOLD) {
+			set_state(mm, new_state);
+			if (mm->hold_state == MEDIAMGR_STATE_INCALL
+			    || mm->hold_state == MEDIAMGR_STATE_INVIDEOCALL) {
+				if (mm->sys_state == MM_SYS_STATE_INCALL) {
+					if (mm->aio)
+						fire_callback(mm);
+					set_state(mm, mm->hold_state);
+				}
+				else {
+					enter_call(mm);
+				}
+			}
+		}
+		break;
+
+	case MEDIAMGR_STATE_UNKNOWN:
+		break;
+
+	default:
+		break;
+	}
 }
 
 
@@ -1781,47 +1785,47 @@ static void mqueue_handler(int id, void *data, void *arg)
 	break;
 
 	case MM_MARSHAL_ENTER_CALL:
-//		enter_call(mm);
+		enter_call(mm);
 		break;
 
 	case MM_MARSHAL_AUDIO_ALLOC:
-//		audio_alloc(mm);
+		audio_alloc(mm);
 		break;
 
 	case MM_MARSHAL_AUDIO_RELEASE:
-//		audio_release(mm);
+		audio_release(mm);
 		break;
 
 	case MM_MARSHAL_AUDIO_RESET:
-//		audio_reset(mm);
+		audio_reset(mm);
 		break;
 
 	case MM_MARSHAL_EXIT_CALL:
-//		exit_call(mm);
+		exit_call(mm);
 		break;
 
 	case MM_MARSHAL_SYS_INCOMING:
-//		sys_incoming_handler(mm);
+		sys_incoming_handler(mm);
 		break;
 
 	case MM_MARSHAL_SYS_ENTERED_CALL:
-//		sys_entered_call_handler(mm);
+		sys_entered_call_handler(mm);
 		break;
 
 	case MM_MARSHAL_SYS_LEFT_CALL:
-//		sys_left_call_handler(mm);
+		sys_left_call_handler(mm);
 		break;
 
 	case MM_MARSHAL_INVOKE_INCOMINGH:
-//		if (msg->incomingh.incomingh) {
-//			msg->incomingh.incomingh(msg->incomingh.convid,
-//						 msg->incomingh.msg_time,
-//						 msg->incomingh.userid,
-//						 msg->incomingh.video_call,
-//						 msg->incomingh.should_ring,
-//						 msg->incomingh.conv_type,
-//						 msg->incomingh.arg);
-//		}
+		if (msg->incomingh.incomingh) {
+			msg->incomingh.incomingh(msg->incomingh.convid,
+						 msg->incomingh.msg_time,
+						 msg->incomingh.userid,
+						 msg->incomingh.video_call,
+						 msg->incomingh.should_ring,
+						 msg->incomingh.conv_type,
+						 msg->incomingh.arg);
+		}
 		break;
 
 	case MM_MARSHAL_START_RECORDING:

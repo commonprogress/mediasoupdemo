@@ -15,40 +15,38 @@
 * You should have received a copy of the GNU General Public License
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef AVS_H__
-#define AVS_H__
 
-#ifdef __APPLE__
-#define AVS_EXPORT __attribute__((visibility("default")))
-#else
-#ifdef ANDROID
-#define AVS_EXPORT __attribute__((visibility("default")))
-#else
-#ifdef __EMSCRIPTEN__
-#define AVS_EXPORT EMSCRIPTEN_KEEPALIVE
-#else
-#define AVS_EXPORT
-#endif
-#endif
-#endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include "avs_base.h"
-#include "avs_dict.h"
-#include "avs_log.h"
+#include <string.h>
+#include <re.h>
+#include "avs_aucodec.h"
 #include "avs_msystem.h"
-#include "avs_packetqueue.h"
-#include "avs_string.h"
-#include "avs_vidcodec.h"
-#include "avs_mediamgr.h"
-#include "avs_audio_effect.h"
 
-#ifdef __cplusplus
+int msystem_start_mic_file_playout(const char fileNameUTF8[1024], int fs)
+{
+    int err = 0;
+
+    err = voe_start_playing_PCM_file_as_microphone(fileNameUTF8, fs);
+
+    return err;
 }
-#endif
 
 
-#endif
+void msystem_stop_mic_file_playout(void)
+{
+    voe_stop_playing_PCM_file_as_microphone();
+}
+
+
+void msystem_set_bitrate(int rate_bps)
+{
+    voe_set_bitrate(rate_bps);
+}
+
+
+void msystem_set_packet_size(int packet_size_ms)
+{
+    voe_set_packet_size(packet_size_ms);
+}
+
+
+

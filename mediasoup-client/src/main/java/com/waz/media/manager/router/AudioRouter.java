@@ -508,7 +508,7 @@ public class AudioRouter {
         return(context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_TELEPHONY));
     }
 
-//    private native void setPlaybackRoute(int route);
+    private native void setPlaybackRoute(int route);
 
     final String logTag = "avs AudioRouter";
 

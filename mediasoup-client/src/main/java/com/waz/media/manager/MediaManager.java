@@ -17,6 +17,7 @@
  */
 package com.waz.media.manager;
 
+import android.app.Activity;
 import android.content.Context;
 import android.media.AudioManager;
 import android.media.AudioManager;
@@ -72,7 +73,7 @@ public class MediaManager implements OnAudioFocusChangeListener {
         AVSystem.load();
     }
     // Set to true to enable debug logs.
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = true;
 
     private static MediaManager _instance = null;
     private Context ctx;
@@ -93,6 +94,8 @@ public class MediaManager implements OnAudioFocusChangeListener {
 
     private Configuration config;
 
+    private AudioRouter audioRouter;
+
     private MediaManager ( final Context context) {
         attach(context);
 
@@ -103,6 +106,9 @@ public class MediaManager implements OnAudioFocusChangeListener {
         audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
 
         try {
+            if(null != context){
+                audioRouter = new AudioRouter(context, 0);
+            }
             audioManager.setSpeakerphoneOn(false);
         }
         catch(Exception e) {
@@ -277,18 +283,20 @@ public class MediaManager implements OnAudioFocusChangeListener {
         // Should be a native function
     }
 
-    public boolean isLoudSpeakerOn ( ) {
-        DoLog("isLoudSpeakerOn");
-        if ( this.route == AudioRouter.ROUTE_SPEAKER ) {
+    public boolean isLoudSpeakerOn() {
+        boolean isSpeakerphoneOn = null == audioManager ? false : audioManager.isSpeakerphoneOn();
+        DoLog("isLoudSpeakerOn isSpeakerphoneOn:" + isSpeakerphoneOn + ",route:" + route);
+        if (this.route == AudioRouter.ROUTE_SPEAKER) {
             return true;
         } else {
             return false;
         }
     }
 
-    public boolean isLoudSpeakerOff ( ) {
-        DoLog("isLoudSpeakerOff");
-        if ( this.route != AudioRouter.ROUTE_SPEAKER ) {
+    public boolean isLoudSpeakerOff() {
+        boolean isSpeakerphoneOn = null == audioManager ? false : audioManager.isSpeakerphoneOn();
+        DoLog("isLoudSpeakerOff isSpeakerphoneOn:" + isSpeakerphoneOn + ",route:" + route);
+        if (this.route != AudioRouter.ROUTE_SPEAKER) {
             return true;
         } else {
             return false;
@@ -297,14 +305,51 @@ public class MediaManager implements OnAudioFocusChangeListener {
 
     public void turnLoudSpeakerOn ( ) {
         DoLog("turnLoudSpeakerOn");
-
-        this.EnableSpeaker(true);
+        changeEnableSpeaker(true);
+//        this.EnableSpeaker(true);
     }
 
     public void turnLoudSpeakerOff ( ) {
         DoLog("turnLoudSpeakerOff");
+        changeEnableSpeaker(false);
+//        this.EnableSpeaker(false);
+    }
 
-        this.EnableSpeaker(false);
+    /**
+     * 喇叭扩音器打开或关闭.
+     * @param enable true 打开
+     */
+    private void changeEnableSpeaker(boolean enable) {
+        int curRoute = AudioRouter.ROUTE_INVALID;
+        if (null != audioManager) {
+            boolean isSpeakerphoneOn = null == audioManager ? false : audioManager.isSpeakerphoneOn();
+            DoLog("changeEnableSpeaker enable:" + enable + ",this.route:" + this.route + ",isSpeakerphoneOn:" + audioManager.isSpeakerphoneOn());
+            if (isSpeakerphoneOn == enable) {
+                curRoute = enable ? AudioRouter.ROUTE_SPEAKER : (this.route != AudioRouter.ROUTE_SPEAKER ? this.route : AudioRouter.ROUTE_INVALID);
+            } else {
+                if (!enable) {
+                    audioManager.setSpeakerphoneOn(false);//关闭扬声器
+                    audioManager.setRouting(AudioManager.MODE_NORMAL, AudioManager.ROUTE_EARPIECE, AudioManager.ROUTE_ALL);
+//            ((Activity)ctx).setVolumeControlStream(AudioManager.STREAM_VOICE_CALL);
+                    //把声音设定成Earpiece（听筒）出来，设定为正在通话中
+                    audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
+                    curRoute = this.route != AudioRouter.ROUTE_SPEAKER ? this.route : AudioRouter.ROUTE_INVALID;
+//            mMediaPlayer.setAudioStreamType(AudioManager.STREAM_VOICE_CALL);
+                } else {
+                    // 为true打开喇叭扩音器；为false关闭喇叭扩音器.
+                    audioManager.setSpeakerphoneOn(true);
+                    // 2016年06月18日 添加的代码，恢复系统声音设置
+                    audioManager.setMode(AudioManager.STREAM_SYSTEM);
+//            audioManager.setMode(AudioManager.MODE_NORMAL);
+//            ((Activity)ctx).setVolumeControlStream(AudioManager.USE_DEFAULT_STREAM_TYPE);
+//            mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                    curRoute = AudioRouter.ROUTE_SPEAKER;
+                }
+            }
+        } else {
+            DoLogErr("changeEnableSpeaker null== audioManager ,enable:" + enable + ",this.route:" + this.route);
+        }
+        onPlaybackRouteChanged(curRoute);
     }
 
     public boolean isWiredHsOn(){
@@ -319,7 +364,7 @@ public class MediaManager implements OnAudioFocusChangeListener {
 
     public void onPlaybackRouteChanged ( int route ) {
         // SSJ will there ever be more than one listener ??
-        DoLog("onPlaybackRouteChanged \n");
+        DoLog("onPlaybackRouteChanged route:" + route);
         this.route = route;
 
         HashSet<MediaManagerListener>  listenerSet = (HashSet<MediaManagerListener>)((HashSet)this.getListenerSet()).clone();

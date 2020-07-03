@@ -18,7 +18,14 @@
 package com.waz.media.manager.config;
 
 
+import java.util.HashSet;
+import java.util.HashMap;
+
+import java.util.Iterator;
+
+import org.json.JSONArray;
 import org.json.JSONObject;
+import org.json.JSONException;
 
 
 public class MediaConfiguration {

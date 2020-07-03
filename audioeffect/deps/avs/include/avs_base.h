@@ -15,40 +15,32 @@
 * You should have received a copy of the GNU General Public License
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef AVS_H__
-#define AVS_H__
 
-#ifdef __APPLE__
-#define AVS_EXPORT __attribute__((visibility("default")))
-#else
-#ifdef ANDROID
-#define AVS_EXPORT __attribute__((visibility("default")))
-#else
-#ifdef __EMSCRIPTEN__
-#define AVS_EXPORT EMSCRIPTEN_KEEPALIVE
-#else
-#define AVS_EXPORT
-#endif
-#endif
-#endif
+#ifndef AVS_BASE_H
+#define AVS_BASE_H    1
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include "avs_base.h"
-#include "avs_dict.h"
-#include "avs_log.h"
-#include "avs_msystem.h"
-#include "avs_packetqueue.h"
-#include "avs_string.h"
-#include "avs_vidcodec.h"
-#include "avs_mediamgr.h"
-#include "avs_audio_effect.h"
-
-#ifdef __cplusplus
-}
-#endif
+enum {
+    AVS_FLAG_EXPERIMENTAL   = 1<<0,
+    AVS_FLAG_AUDIO_TEST     = 1<<1,
+    AVS_FLAG_VIDEO_TEST     = 1<<2
+};
 
 
-#endif
+int  avs_init(uint64_t flags);
+int  avs_start(const char *token);
+void avs_close(void);
+uint64_t  avs_get_flags(void);
+void avs_print_versions(void);
+void avs_print_network(void);
+
+
+/* Special error codes for AVS */
+#define ETIMEDOUT_ECONN    (-1000)
+#define ETIMEDOUT_OTR      (-1001)
+#define ETIMEDOUT_CRYPTO   (-1002)
+#define EDATACHANNEL       (-1003)
+
+#define E2EE_SESSIONKEY_SIZE 32
+
+
+#endif //#ifndef AVS_BASE_H

@@ -15,40 +15,43 @@
 * You should have received a copy of the GNU General Public License
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef AVS_H__
-#define AVS_H__
 
-#ifdef __APPLE__
-#define AVS_EXPORT __attribute__((visibility("default")))
-#else
-#ifdef ANDROID
-#define AVS_EXPORT __attribute__((visibility("default")))
-#else
-#ifdef __EMSCRIPTEN__
-#define AVS_EXPORT EMSCRIPTEN_KEEPALIVE
-#else
-#define AVS_EXPORT
-#endif
-#endif
-#endif
+#ifndef AVS_PACKET_QUEUE_H
+#define AVS_PACKET_QUEUE_H
+
+#include <stdlib.h>
+#include <stdbool.h>
+
+typedef struct locked_queue_t packet_queue_t;
+
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "avs_base.h"
-#include "avs_dict.h"
-#include "avs_log.h"
-#include "avs_msystem.h"
-#include "avs_packetqueue.h"
-#include "avs_string.h"
-#include "avs_vidcodec.h"
-#include "avs_mediamgr.h"
-#include "avs_audio_effect.h"
+typedef enum {
+    PACKET_TYPE_RTP = 0,
+    PACKET_TYPE_RTCP = 1
+} packet_type_t;
+
+struct packet_queue_item_t {
+    struct le list_elem;
+    packet_type_t packet_type;
+    uint8_t *packet_data;
+    size_t packet_size;
+};
+
+int packet_queue_alloc(packet_queue_t **pqp, bool blocking);
+
+int packet_queue_push(packet_queue_t *q, packet_type_t packet_type,
+                      const uint8_t *packet_data, size_t packet_size);
+
+int packet_queue_pop(packet_queue_t *q, packet_type_t *packet_type,
+                     uint8_t **packet_data, size_t *packet_size);
 
 #ifdef __cplusplus
 }
 #endif
 
 
-#endif
+#endif //AVS_PACKET_QUEUE_H

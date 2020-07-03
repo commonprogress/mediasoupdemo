@@ -18,6 +18,9 @@
 package com.waz.media.manager.player;
 
 
+import com.waz.media.manager.player.MediaSourceListener;
+
+
 public interface MediaSource {
   public void play ( );
   public void stop ( );
