@@ -49,4 +49,12 @@
         android:text="不产生音视频"
         android:textSize="50sp" />
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:onClick="p2pModeClick"
+        android:text="p2p模式"
+        android:textSize="50sp" />
+
 </LinearLayout>

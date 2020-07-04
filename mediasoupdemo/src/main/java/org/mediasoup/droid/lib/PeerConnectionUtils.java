@@ -70,7 +70,7 @@ public class PeerConnectionUtils {
 
   private final ThreadUtils.ThreadChecker mThreadChecker;
   private PeerConnectionFactory mPeerConnectionFactory;
-//  private MediaStream mMediaStream;
+  private MediaStream mMediaStream;
   private AudioSource mAudioSource;
   private VideoSource mVideoSource;
   private VideoCapturer mVideoCapturer;
@@ -78,6 +78,14 @@ public class PeerConnectionUtils {
   public PeerConnectionUtils() {
     mThreadChecker = new ThreadUtils.ThreadChecker();
   }
+
+    public PeerConnectionFactory getPeerConnectionFactory() {
+        return mPeerConnectionFactory;
+    }
+
+    public MediaStream getMediaStream() {
+        return mMediaStream;
+    }
 
     private static final VideoEncoder.Settings ENCODER_SETTINGS =
             new VideoEncoder.Settings(1 /* core */, 640 /* width */, 480 /* height */, 300 /* kbps */,
@@ -260,7 +268,7 @@ public class PeerConnectionUtils {
             .setVideoEncoderFactory(encoderFactory)
             .setVideoDecoderFactory(decoderFactory)
             .createPeerConnectionFactory();
-//      mMediaStream = mPeerConnectionFactory.createLocalMediaStream(MEDIA_STREAM_ID);
+      mMediaStream = mPeerConnectionFactory.createLocalMediaStream(MEDIA_STREAM_ID);
   }
 
     /**
@@ -692,7 +700,7 @@ public class PeerConnectionUtils {
     }
 
     public void addAudioTrackMediaStream(AudioTrack audioTrack) {
-//     mMediaStream.addTrack(audioTrack);
+     mMediaStream.addTrack(audioTrack);
     }
 
     /**
@@ -713,7 +721,7 @@ public class PeerConnectionUtils {
     }
 
     public void addVideoTrackMediaStream(VideoTrack videoTrack) {
-//    mMediaStream.addTrack(videoTrack);
+    mMediaStream.addTrack(videoTrack);
     }
 
     /**
@@ -775,10 +783,10 @@ public class PeerConnectionUtils {
       mAudioSource = null;
     }
 
-//    if(null != mMediaStream){
-//        mMediaStream.dispose();
-//        mMediaStream = null;
-//    }
+    if(null != mMediaStream){
+        mMediaStream.dispose();
+        mMediaStream = null;
+    }
 
     if (mPeerConnectionFactory != null) {
       mPeerConnectionFactory.dispose();

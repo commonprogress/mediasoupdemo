@@ -6,6 +6,8 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
+import com.dongxl.p2p.P2PTestActivity;
+
 public class RoomConfigurationActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -49,6 +51,13 @@ public class RoomConfigurationActivity extends AppCompatActivity {
         Intent intent = new Intent();
         intent.putExtra(MediasoupConstant.key_intent_roommode, MediasoupConstant.roommode_noall);
         intent.setClass(this, RoomActivity.class);
+        startActivity(intent);
+        finish();
+    }
+
+    public void p2pModeClick(View view) {
+        Intent intent = new Intent();
+        intent.setClass(this, P2PTestActivity.class);
         startActivity(intent);
         finish();
     }
