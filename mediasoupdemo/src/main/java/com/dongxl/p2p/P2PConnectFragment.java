@@ -12,7 +12,7 @@ import android.view.ViewGroup;
 import com.jsy.mediasoup.R;
 
 import org.mediasoup.droid.lib.PeerConnectionUtils;
-import org.webrtc.EglBase;
+import org.mediasoup.droid.lib.lv.RoomStore;
 import org.webrtc.RendererCommon;
 import org.webrtc.SurfaceViewRenderer;
 
@@ -95,12 +95,26 @@ public class P2PConnectFragment extends Fragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         if (null == p2PConnectFactory) {
-            p2PConnectFactory = new P2PConnectFactory(getActivity());
+            p2PConnectFactory = new P2PConnectFactory(getActivity(), new RoomStore(), localSurface,
+                    remoteSurface);
         }
-        p2PConnectFactory.init(getActivity(),
-                PeerConnectionUtils.getEglContext(),
-                localSurface,
-                remoteSurface);
+        p2PConnectFactory.initRoom(1);
+        //是否发起方
+        boolean isFaqifang = getArguments().getBoolean("isFaqifang", true);
+        p2PConnectFactory.onCreateRoom();
+        if (isFaqifang) {
+//1 发起：
+            p2PConnectFactory.faqifang1("");
+//2 对方响应
+            p2PConnectFactory.faqifang2("",null);
+//3 建立连接
+            p2PConnectFactory.faqifang3("",null);
+        } else {
+//1 接收发起
+            p2PConnectFactory.jieshoufang1("",null);
+//2 对方响应
+            p2PConnectFactory.jieshoufang2("",null);
+        }
     }
 
     @Override

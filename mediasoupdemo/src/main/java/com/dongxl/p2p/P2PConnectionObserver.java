@@ -57,30 +57,42 @@ public class P2PConnectionObserver implements PeerConnection.Observer {
 
     @Override
     public void onIceCandidate(IceCandidate iceCandidate) {
-        LogUtils.i(TAG, "onIceCandidate " + iceCandidate);
+        LogUtils.i(TAG, "onIceCandidate " + iceCandidate.toString());
+    }
+
+    private String getIceCandidateStr(IceCandidate[] iceCandidates) {
+        int length = null != iceCandidates ? iceCandidates.length : 0;
+        if (length > 0) {
+            String str = "length:" + length + "[";
+            for (IceCandidate iceCandidate : iceCandidates) {
+                str += (iceCandidate.toString() + "],[");
+            }
+            return str;
+        }
+        return "length=null";
     }
 
     @Override
     public void onIceCandidatesRemoved(IceCandidate[] iceCandidates) {
-        LogUtils.i(TAG, "onIceCandidatesRemoved " + iceCandidates);
+        LogUtils.i(TAG, "onIceCandidatesRemoved iceCandidates:" + getIceCandidateStr(iceCandidates));
 //        mPeerConnection?.removeIceCandidates(candidates)
     }
 
     @Override
     public void onAddStream(MediaStream mediaStream) {
-        LogUtils.i(TAG, "onAddStream " + mediaStream);
+        LogUtils.i(TAG, "onAddStream audioTracks:" + mediaStream.audioTracks.size() + ", videoTracks:" + mediaStream.videoTracks.size());
     }
 
     @Override
     public void onRemoveStream(MediaStream mediaStream) {
-        LogUtils.i(TAG, "onRemoveStream " + mediaStream);
+        LogUtils.i(TAG, "onRemoveStream audioTracks:" + mediaStream.audioTracks.size() + ", videoTracks:" + mediaStream.videoTracks.size());
 //        remoteSurface?.release()
 //        mPeerConnection?.close()
     }
 
     @Override
     public void onDataChannel(DataChannel dataChannel) {
-        LogUtils.i(TAG, "onDataChannel " + dataChannel);
+        LogUtils.i(TAG, "onDataChannel label:" + dataChannel.label() + ",id:" + dataChannel.id() + ",state:" + dataChannel.state());
     }
 
     @Override
@@ -90,7 +102,7 @@ public class P2PConnectionObserver implements PeerConnection.Observer {
 
     @Override
     public void onAddTrack(RtpReceiver rtpReceiver, MediaStream[] mediaStreams) {
-        LogUtils.i(TAG, "onAddTrack rtpReceiver:" + rtpReceiver + ",mediaStreams:" + mediaStreams);
+        LogUtils.i(TAG, "onAddTrack rtpReceiver:" + rtpReceiver.id() + ",getParameters:" + rtpReceiver.getParameters() + ",mediaStreams:" + mediaStreams.length);
 //        isCall = true
 //        val track = rtpReceiver?.track()
 //        if (track is VideoTrack) {

@@ -2,8 +2,6 @@ package com.dongxl.p2p;
 
 import com.jsy.mediasoup.utils.LogUtils;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.webrtc.SdpObserver;
 import org.webrtc.SessionDescription;
 
@@ -21,7 +19,7 @@ public class P2PSdpObserver implements SdpObserver {
 
     @Override
     public void onCreateSuccess(SessionDescription sessionDescription) {
-        LogUtils.i(TAG, "onCreateSuccess " + sessionDescription);
+        LogUtils.i(TAG, "onCreateSuccess type:" + sessionDescription.type + ",description:" + sessionDescription.description);
     }
 
     @Override
