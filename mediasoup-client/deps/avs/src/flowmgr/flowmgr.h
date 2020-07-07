@@ -15,42 +15,13 @@
 * You should have received a copy of the GNU General Public License
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef AVS_H__
-#define AVS_H__
-
-#ifdef __APPLE__
-#define AVS_EXPORT __attribute__((visibility("default")))
-#else
-#ifdef ANDROID
-#define AVS_EXPORT __attribute__((visibility("default")))
-#else
-#ifdef __EMSCRIPTEN__
-#define AVS_EXPORT EMSCRIPTEN_KEEPALIVE
-#else
-#define AVS_EXPORT
-#endif
-#endif
-#endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include "avs_base.h"
-#include "avs_dict.h"
-#include "avs_log.h"
-#include "avs_msystem.h"
-#include "avs_packetqueue.h"
-#include "avs_string.h"
-#include "avs_vidcodec.h"
-#include "avs_flowmgr.h"
-#include "avs_mediamgr.h"
-#include "avs_version.h"
-#include "avs_audio_effect.h"
-
-#ifdef __cplusplus
-}
-#endif
 
 
-#endif
+struct flowmgr {
+
+	struct le le;
+};
+
+
+int  marshal_init(void);
+void marshal_close(void);

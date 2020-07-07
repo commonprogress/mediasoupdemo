@@ -23,6 +23,11 @@
 
 #include "avs_log.h"
 #include "avs_base.h"
+//#include "avs_uuid.h"
+//#include "avs_zapi.h"
+//#include "avs_icall.h"
+#include "avs_flowmgr.h"
+#include "avs_version.h"
 
 
 #define DEBUG_MODULE ""
@@ -88,7 +93,7 @@ int avs_init(uint64_t flags)
 
 	dbg_handler_set(debug_handler, NULL);
 
-//	info("AVS inited with flags=0x%llx [%s]\n", flags, avs_version_str());
+	info("AVS inited with flags=0x%llx [%s]\n", flags, avs_version_str());
 
 	info("init: using async polling method '%s'\n",
 	     poll_method_name(poll_method_best()));
@@ -106,14 +111,14 @@ int avs_start(const char *token)
 	int err;
 
 	info("avs_start: token=%s\n", token);
-	
+
 	err = str_dup(&base.token, token);
 	if (err)
 		goto out;
 
-//	err = flowmgr_start();
-//	if (err)
-//		goto out;
+	err = flowmgr_start();
+	if (err)
+		goto out;
 
  out:
 	return err;
@@ -136,7 +141,7 @@ uint64_t avs_get_flags(void)
 
 void avs_print_versions(void)
 {
-//	info("init: avs:      %s\n", avs_version_str());
+	info("init: avs:      %s\n", avs_version_str());
 	info("init: libre:    %s\n", sys_libre_version_get());
 #ifndef __EMSCRIPTEN__
 	info("init: openssl:  %s (%s)\n",

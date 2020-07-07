@@ -94,9 +94,12 @@ public class MediaManager implements OnAudioFocusChangeListener {
 
     private Configuration config;
 
-    private AudioRouter audioRouter;
+//    private AudioRouter audioRouter;
+
+    private Map<String,MediamgrPlay> mapMediamgrs  = new HashMap<>();
 
     private MediaManager ( final Context context) {
+        DoLog("MediaManager supe");
         attach(context);
 
         setIntensity ( IntensityLevel.FULL );
@@ -106,9 +109,9 @@ public class MediaManager implements OnAudioFocusChangeListener {
         audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
 
         try {
-            if(null != context){
-                audioRouter = new AudioRouter(context, 0);
-            }
+//            if(null != context){
+//                audioRouter = new AudioRouter(context, 0);
+//            }
             audioManager.setSpeakerphoneOn(false);
         }
         catch(Exception e) {
@@ -128,7 +131,7 @@ public class MediaManager implements OnAudioFocusChangeListener {
         if ( _instance.getContext() != context ) {
             _instance = new MediaManager(context);
         }
-
+        Log.i("avs MediaManager","MediaManager getInstance");
         return _instance;
     }
 
@@ -139,7 +142,8 @@ public class MediaManager implements OnAudioFocusChangeListener {
     protected void finalize ( ) throws Throwable  {
         if (ctx != null)
             detach();
-
+        DoLog("MediaManager finalize");
+        unregisterAllMedia();
         super.finalize();
     }
 
@@ -158,12 +162,13 @@ public class MediaManager implements OnAudioFocusChangeListener {
     }
 
     public IntensityLevel getIntensity ( ) {
+        DoLog("MediaManager getIntensity:" + this._intensity);
         return this._intensity;
     }
 
     public void setIntensity ( IntensityLevel intensity ) {
         this._intensity = intensity;
-
+        DoLog("MediaManager setIntensity:" + this._intensity);
         switch ( intensity ) {
             case NONE: setIntensityNone(); DoLog("setIntensity to NONE \n"); break;
             case SOME: setIntensitySome(); DoLog("setIntensity to SOME \n"); break;
@@ -172,7 +177,7 @@ public class MediaManager implements OnAudioFocusChangeListener {
     }
 
     public void registerMediaFromConfiguration ( JSONObject configuration ) {
-        DoLog("registerMediaFromConfiguration");
+        DoLog("registerMediaFromConfiguration configuration:" + (null == configuration ? "null" : configuration.toString()));
 
         Context context = this.getContext();
         String namespace = context.getPackageName();
@@ -197,7 +202,7 @@ public class MediaManager implements OnAudioFocusChangeListener {
 
     public int registerMediaFileUrl ( String Name, Uri file_uri ) {
         unregisterMedia(Name);
-
+        DoLog("registerMediaFileUrl Name:" + Name + ",file_uri:" + file_uri);
         Context context = this.getContext();
 
         if(config == null){
@@ -215,7 +220,7 @@ public class MediaManager implements OnAudioFocusChangeListener {
         }
 
         int stream = android.media.AudioManager.USE_DEFAULT_STREAM_TYPE;
-
+        DoLog("registerMediaFileUrl stream:" + stream + ",value.getIncall():" + value.getIncall());
         if ( value.getIncall() ) {
             stream = android.media.AudioManager.STREAM_VOICE_CALL;
         }
@@ -251,9 +256,11 @@ public class MediaManager implements OnAudioFocusChangeListener {
         if ( media != null && options != null && source != null ) {
             MediaConfiguration config = new MediaConfiguration(media, options);
 
-            DoLog("registerMedia: " + media);
+            DoLog("registerMedia1: " + media);
 
             this.registerMedia(media, config, source);
+        }else{
+            DoLogErr("registerMedia1 media:" + media + ",options:" + (null == options ? "null" : options.toString()));
         }
     }
 
@@ -272,7 +279,8 @@ public class MediaManager implements OnAudioFocusChangeListener {
 
         player.setName(media);
         player.setShouldLoop(looping);
-
+        DoLog("registerMedia2 mixing:" + mixing + ", incall:" + incall + ", looping:" + looping + ", requirePlaybackMode:" + requirePlaybackMode
+                + ", requireRecordingMode:" + requireRecordingMode + ", intensity:" + intensity + ", media:" + media);
         //player.setListener(this);
 
         this.registerMedia(media, player, (boolean)mixing, (boolean)incall, intensity);
@@ -281,6 +289,10 @@ public class MediaManager implements OnAudioFocusChangeListener {
     public void unregisterAllMedia ( ) {
         DoLog("unregisterAllMedia");
         // Should be a native function
+        for (Map.Entry<String, MediamgrPlay> entry : mapMediamgrs.entrySet()) {
+            unregisterMedia(entry.getKey());
+        }
+        mapMediamgrs.clear();
     }
 
     public boolean isLoudSpeakerOn() {
@@ -305,61 +317,25 @@ public class MediaManager implements OnAudioFocusChangeListener {
 
     public void turnLoudSpeakerOn ( ) {
         DoLog("turnLoudSpeakerOn");
-        changeEnableSpeaker(true);
-//        this.EnableSpeaker(true);
+        this.EnableSpeaker(true);
     }
 
     public void turnLoudSpeakerOff ( ) {
         DoLog("turnLoudSpeakerOff");
-        changeEnableSpeaker(false);
-//        this.EnableSpeaker(false);
-    }
-
-    /**
-     * 喇叭扩音器打开或关闭.
-     * @param enable true 打开
-     */
-    private void changeEnableSpeaker(boolean enable) {
-        int curRoute = AudioRouter.ROUTE_INVALID;
-        if (null != audioManager) {
-            boolean isSpeakerphoneOn = null == audioManager ? false : audioManager.isSpeakerphoneOn();
-            DoLog("changeEnableSpeaker enable:" + enable + ",this.route:" + this.route + ",isSpeakerphoneOn:" + audioManager.isSpeakerphoneOn());
-            if (isSpeakerphoneOn == enable) {
-                curRoute = enable ? AudioRouter.ROUTE_SPEAKER : (this.route != AudioRouter.ROUTE_SPEAKER ? this.route : AudioRouter.ROUTE_INVALID);
-            } else {
-                if (!enable) {
-                    audioManager.setSpeakerphoneOn(false);//关闭扬声器
-                    audioManager.setRouting(AudioManager.MODE_NORMAL, AudioManager.ROUTE_EARPIECE, AudioManager.ROUTE_ALL);
-//            ((Activity)ctx).setVolumeControlStream(AudioManager.STREAM_VOICE_CALL);
-                    //把声音设定成Earpiece（听筒）出来，设定为正在通话中
-                    audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
-                    curRoute = this.route != AudioRouter.ROUTE_SPEAKER ? this.route : AudioRouter.ROUTE_INVALID;
-//            mMediaPlayer.setAudioStreamType(AudioManager.STREAM_VOICE_CALL);
-                } else {
-                    // 为true打开喇叭扩音器；为false关闭喇叭扩音器.
-                    audioManager.setSpeakerphoneOn(true);
-                    // 2016年06月18日 添加的代码，恢复系统声音设置
-                    audioManager.setMode(AudioManager.STREAM_SYSTEM);
-//            audioManager.setMode(AudioManager.MODE_NORMAL);
-//            ((Activity)ctx).setVolumeControlStream(AudioManager.USE_DEFAULT_STREAM_TYPE);
-//            mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-                    curRoute = AudioRouter.ROUTE_SPEAKER;
-                }
-            }
-        } else {
-            DoLogErr("changeEnableSpeaker null== audioManager ,enable:" + enable + ",this.route:" + this.route);
-        }
-        onPlaybackRouteChanged(curRoute);
+        this.EnableSpeaker(false);
     }
 
     public boolean isWiredHsOn(){
+        if (null == this.audioManager) {
+            return false;
+        }
         return this.audioManager.isWiredHeadsetOn();
     }
 
     public void onFinishedPlaying ( MediaPlayer player ) {
         // ToDo Maybe
-
-        //this.stopMedia(player.getName());
+        DoLog("onFinishedPlaying");
+        this.stopMedia(player.getName());
     }
 
     public void onPlaybackRouteChanged ( int route ) {
@@ -401,7 +377,10 @@ public class MediaManager implements OnAudioFocusChangeListener {
     }
 
     public void onEnterCall(){
-        DoLog("onEnterCall: mode=" + this.audioManager.getMode());
+        DoLog("onEnterCall: mode=" + (null != this.audioManager ? this.audioManager.getMode() : "null"));
+        if (null == this.audioManager) {
+            return;
+        }
         if(this.prev_mode == AudioManager.MODE_INVALID){
             this.prev_mode = this.audioManager.getMode();
         }
@@ -412,13 +391,18 @@ public class MediaManager implements OnAudioFocusChangeListener {
     }
 
     public void onAudioFocus() {
-        DoLog("onAudioFocus: mode=" + this.audioManager.getMode());
-
+        DoLog("onAudioFocus: mode=" + (null != this.audioManager ? this.audioManager.getMode() : "null"));
+        if (null == this.audioManager) {
+            return;
+        }
         this.audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
         this.audioManager.requestAudioFocus(this, AudioManager.STREAM_VOICE_CALL, AudioManager.AUDIOFOCUS_GAIN);
     }
 
     public void onExitCall(){
+        if (null == this.audioManager) {
+            return;
+        }
         audioManager.abandonAudioFocus(this);
         DoLog("onExitCall prev_mode=" + this.prev_mode);
         if(this.prev_mode != AudioManager.MODE_INVALID){
@@ -470,15 +454,89 @@ public class MediaManager implements OnAudioFocusChangeListener {
 
     private native void attach ( Context context );
     private native void detach ( );
-    public native void playMedia (String name);
-    public native void stopMedia (String name);
-    public native void EnableSpeaker(boolean enable);
-    public native void registerMedia(String name, MediaPlayer mp, boolean mixing, boolean incall, int intensity);
-    public native void unregisterMedia(String name);
+    //    public native void playMedia (String name);
+//    public native void stopMedia (String name);
+//    public native void EnableSpeaker(boolean enable);
+//    public native void registerMedia(String name, MediaPlayer mp, boolean mixing, boolean incall, int intensity);
+//    public native void unregisterMedia(String name);
     private native void setCallState(boolean incall);
     private native void setVideoCallState();
     private native void setIntensityAll();
     private native void setIntensitySome();
     private native void setIntensityNone();
-}
 
+
+    public void playMedia(String name) {
+        MediamgrPlay mediamgrPlay = getCurMediamgrPlay(name);
+        DoLog("playMedia name:" + name + ", null == mediamgrPlay:" + (null == mediamgrPlay));
+        if (null != mediamgrPlay) {
+            mediamgrPlay.playMedia(name);
+        }
+    }
+
+    public void stopMedia(String name) {
+        MediamgrPlay mediamgrPlay = getCurMediamgrPlay(name);
+        DoLog("stopMedia name:" + name + ", null == mediamgrPlay:" + (null == mediamgrPlay));
+        if (null != mediamgrPlay) {
+            mediamgrPlay.stopMedia(name);
+        }
+    }
+
+    /**
+     * 喇叭扩音器打开或关闭.
+     * @param enable true 打开
+     */
+    private void EnableSpeaker(boolean enable) {
+        int curRoute = AudioRouter.ROUTE_INVALID;
+        if (null != audioManager) {
+            boolean isSpeakerphoneOn = null == audioManager ? false : audioManager.isSpeakerphoneOn();
+            DoLog("changeEnableSpeaker enable:" + enable + ",this.route:" + this.route + ",isSpeakerphoneOn:" + audioManager.isSpeakerphoneOn());
+            if (isSpeakerphoneOn == enable) {
+                curRoute = enable ? AudioRouter.ROUTE_SPEAKER : (this.route != AudioRouter.ROUTE_SPEAKER ? this.route : AudioRouter.ROUTE_INVALID);
+            } else {
+                if (!enable) {
+                    audioManager.setSpeakerphoneOn(false);//关闭扬声器
+                    audioManager.setRouting(AudioManager.MODE_NORMAL, AudioManager.ROUTE_EARPIECE, AudioManager.ROUTE_ALL);
+//            ((Activity)ctx).setVolumeControlStream(AudioManager.STREAM_VOICE_CALL);
+                    //把声音设定成Earpiece（听筒）出来，设定为正在通话中
+                    audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
+                    curRoute = this.route != AudioRouter.ROUTE_SPEAKER ? this.route : AudioRouter.ROUTE_INVALID;
+//            mMediaPlayer.setAudioStreamType(AudioManager.STREAM_VOICE_CALL);
+                } else {
+                    // 为true打开喇叭扩音器；为false关闭喇叭扩音器.
+                    audioManager.setSpeakerphoneOn(true);
+                    // 2016年06月18日 添加的代码，恢复系统声音设置
+                    audioManager.setMode(AudioManager.STREAM_SYSTEM);
+//            audioManager.setMode(AudioManager.MODE_NORMAL);
+//            ((Activity)ctx).setVolumeControlStream(AudioManager.USE_DEFAULT_STREAM_TYPE);
+//            mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                    curRoute = AudioRouter.ROUTE_SPEAKER;
+                }
+            }
+        } else {
+            DoLogErr("changeEnableSpeaker null== audioManager ,enable:" + enable + ",this.route:" + this.route);
+        }
+        onPlaybackRouteChanged(curRoute);
+    }
+
+    public void registerMedia(String name, MediaPlayer mp, boolean mixing, boolean incall, int intensity) {
+        DoLog("registerMedia name:"+name);
+        MediamgrPlay mediamgrPlay = new MediamgrPlay(name, mp, (boolean) mixing, (boolean) incall, intensity);
+        mapMediamgrs.put(name, mediamgrPlay);
+    }
+
+    public void unregisterMedia(String name) {
+        DoLog("unregisterMedia name:"+name);
+        MediamgrPlay mediamgrPlay = getCurMediamgrPlay(name);
+        if (null != mediamgrPlay) {
+            mediamgrPlay.unregisterMedia();
+        }
+    }
+
+    private MediamgrPlay getCurMediamgrPlay(String name){
+        if(!mapMediamgrs.isEmpty() && mapMediamgrs.containsKey(name)){
+            return mapMediamgrs.get(name);
+        }
+        return null;
+    }
+}

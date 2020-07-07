@@ -15,42 +15,24 @@
 * You should have received a copy of the GNU General Public License
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef AVS_H__
-#define AVS_H__
-
-#ifdef __APPLE__
-#define AVS_EXPORT __attribute__((visibility("default")))
-#else
-#ifdef ANDROID
-#define AVS_EXPORT __attribute__((visibility("default")))
-#else
-#ifdef __EMSCRIPTEN__
-#define AVS_EXPORT EMSCRIPTEN_KEEPALIVE
-#else
-#define AVS_EXPORT
-#endif
-#endif
-#endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include "avs_base.h"
-#include "avs_dict.h"
-#include "avs_log.h"
-#include "avs_msystem.h"
-#include "avs_packetqueue.h"
-#include "avs_string.h"
-#include "avs_vidcodec.h"
-#include "avs_flowmgr.h"
-#include "avs_mediamgr.h"
-#include "avs_version.h"
-#include "avs_audio_effect.h"
-
-#ifdef __cplusplus
-}
-#endif
 
 
-#endif
+enum avs_vidframe_type {
+	AVS_VIDFRAME_NV12 = 1,
+	AVS_VIDFRAME_NV21,
+	AVS_VIDFRAME_I420,
+};
+
+struct avs_vidframe {
+	enum avs_vidframe_type type;
+	uint8_t *y;
+	uint8_t *u;
+	uint8_t *v;
+	size_t ys; /* y-stride */
+	size_t us; /* u-stride */
+	size_t vs; /* v-stride */
+	int w; /* width */
+	int h; /* height */
+	int rotation;
+	uint32_t ts;
+};

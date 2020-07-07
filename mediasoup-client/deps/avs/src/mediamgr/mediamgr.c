@@ -24,7 +24,7 @@
 #include <pthread.h>
 #include "mediamgr.h"
 #include "mm_platform.h"
-//#include "avs_flowmgr.h"
+#include "avs_flowmgr.h"
 #include <unistd.h>
 
 #define MM_USE_THREAD   1

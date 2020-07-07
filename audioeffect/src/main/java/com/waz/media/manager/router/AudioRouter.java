@@ -107,7 +107,7 @@ public class AudioRouter {
         this._context = context;
         this._nativeMM = nativeMM;
 
-        Log.i(logTag, "AudioRouter: incall=" + _inCall);
+        Log.i(logTag, "AudioRouter: incall=" + _inCall + ", _nativeMM:" + _nativeMM);
 
         if ( context != null ) {
             _audio_manager = (AudioManager)context.getSystemService(Context.AUDIO_SERVICE);
@@ -136,6 +136,7 @@ public class AudioRouter {
         bluetoothHeadset = btHeadset;
 
         devices = bluetoothHeadset.getConnectedDevices();
+        Log.i(logTag, "btHeadsetService");
         if (!devices.isEmpty())
             bluetoothDevice = devices.get(0);
         if (bluetoothDevice != null)
@@ -173,7 +174,7 @@ public class AudioRouter {
         List<BluetoothDevice> devices;
 
         bluetoothA2dp = btA2dp;
-
+        Log.i(logTag, "btA2dpService");
         devices = bluetoothA2dp.getConnectedDevices();
         if (!devices.isEmpty())
             bluetoothDevice = devices.get(0);
@@ -210,7 +211,7 @@ public class AudioRouter {
             Log.w(logTag, "bluetooth: no BT adapter present\n");
             return;
         }
-
+        Log.i(logTag, "setupBluetooth");
         BluetoothProfile.ServiceListener profileListener = new BluetoothProfile.ServiceListener() {
             public void onServiceConnected(int profile, BluetoothProfile proxy) {
                 Log.i(logTag, "bluetooth: service connected for profile: " + profile);
@@ -242,7 +243,7 @@ public class AudioRouter {
 
 
     private int startBluetooth() {
-
+        Log.i(logTag, "startBluetooth bluetoothDevice:" + bluetoothDevice);
         if (bluetoothDevice == null) {
             return -1;
         }
@@ -269,6 +270,7 @@ public class AudioRouter {
         }
     }
     private void stopBluetooth() {
+        Log.i(logTag, "stopBluetooth _audio_manager:" + _audio_manager);
         _audio_manager.stopBluetoothSco();
         _audio_manager.setBluetoothScoOn(false);
 
@@ -354,7 +356,7 @@ public class AudioRouter {
         int route;
 
         route = GetAudioRoute();
-
+        Log.i(logTag, "UpdateRoute route:" + route);
         // call route change callback
         nativeUpdateRoute(route, this._nativeMM);
     }
@@ -508,7 +510,7 @@ public class AudioRouter {
         return(context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_TELEPHONY));
     }
 
-    private native void setPlaybackRoute(int route);
+//    private native void setPlaybackRoute(int route);
 
     final String logTag = "avs AudioRouter";
 
@@ -525,4 +527,16 @@ public class AudioRouter {
     private native void nativeUpdateRoute(int route, long nativeMM);
     private native void nativeHeadsetConnected(boolean connected, long nativeMM);
     private native void nativeBTDeviceConnected(boolean connected, long nativeMM);
+//
+//    private void nativeUpdateRoute(int route, long nativeMM) {
+//        Log.i(logTag, "nativeUpdateRoute nativeMM:" + nativeMM + ", route:" + route);
+//    }
+//
+//    private void nativeHeadsetConnected(boolean connected, long nativeMM) {
+//        Log.i(logTag, "nativeHeadsetConnected nativeMM:" + nativeMM + ", connected:" + connected);
+//    }
+//
+//    private void nativeBTDeviceConnected(boolean connected, long nativeMM) {
+//        Log.i(logTag, "nativeBTDeviceConnected nativeMM:" + nativeMM + ", connected:" + connected);
+//    }
 }

@@ -75,7 +75,6 @@ public class P2PConnectFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         localSurface = view.findViewById(R.id.local_surface);
-        remoteSurface = view.findViewById(R.id.local_surface);
         localSurface.init(PeerConnectionUtils.getEglContext(), null);
         localSurface.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FILL);
         //镜像
@@ -83,12 +82,12 @@ public class P2PConnectFragment extends Fragment {
         localSurface.setEnableHardwareScaler(false);
         localSurface.setZOrderMediaOverlay(true);
 
+        remoteSurface = view.findViewById(R.id.local_surface);
         remoteSurface.init(PeerConnectionUtils.getEglContext(), null);
         remoteSurface.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FILL);
         remoteSurface.setMirror(false);
         remoteSurface.setEnableHardwareScaler(true);
         remoteSurface.setZOrderMediaOverlay(true);
-
     }
 
     @Override

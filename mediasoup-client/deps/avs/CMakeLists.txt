@@ -57,6 +57,9 @@ set(
         src/base/base.c
         src/dict/dict.c
         src/extcodec/extcodec.c
+        src/flowmgr/device.c
+        src/flowmgr/flowmgr.c
+        src/flowmgr/marshal.c
         src/log/log.c
         src/mediamgr/mediamgr.c
         src/mediamgr/sound.c
@@ -68,6 +71,7 @@ set(
         src/queue/packet_queue.c
         src/sem/semaphore.c
         src/string/wordexp.c
+        src/version/version.c
         )
 
 set(
@@ -133,7 +137,9 @@ target_include_directories(${PROJECT_NAME} PRIVATE
         "${PROJECT_SOURCE_DIR}/src/audio_effect"
         "${PROJECT_SOURCE_DIR}/src/audio_io"
         "${PROJECT_SOURCE_DIR}/src/audio_io/mock"
+        "${PROJECT_SOURCE_DIR}/src/flowmgr"
         "${PROJECT_SOURCE_DIR}/src/mediamgr"
+        "${PROJECT_SOURCE_DIR}/src/msystem"
         "${PROJECT_SOURCE_DIR}/contrib/re"
         "${PROJECT_SOURCE_DIR}/contrib/re/include"
         )
