@@ -20,10 +20,10 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import android.support.annotation.Nullable;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.filters.MediumTest;
-import android.support.test.filters.SmallTest;
+import androidx.annotation.Nullable;
+import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.filters.MediumTest;
+import androidx.test.filters.SmallTest;
 import java.io.File;
 import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
@@ -45,7 +45,6 @@ import org.chromium.base.test.util.DisabledTest;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.webrtc.Logging;
 import org.webrtc.Metrics.HistogramInfo;
 import org.webrtc.PeerConnection.IceConnectionState;
 import org.webrtc.PeerConnection.IceGatheringState;
@@ -53,9 +52,7 @@ import org.webrtc.PeerConnection.IceTransportsType;
 import org.webrtc.PeerConnection.PeerConnectionState;
 import org.webrtc.PeerConnection.SignalingState;
 import org.webrtc.PeerConnection.TlsCertPolicy;
-import org.webrtc.RtpParameters;
 import org.webrtc.RtpParameters.Encoding;
-import org.webrtc.RtpTransceiver;
 import org.webrtc.RtpTransceiver.RtpTransceiverInit;
 
 /** End-to-end tests for PeerConnection.java. */

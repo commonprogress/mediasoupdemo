@@ -1,7 +1,7 @@
 package org.mediasoup.droid.lib.model;
 
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import org.json.JSONArray;
 import org.mediasoup.droid.Producer;

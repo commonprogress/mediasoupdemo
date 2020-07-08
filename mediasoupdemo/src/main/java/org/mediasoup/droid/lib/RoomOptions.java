@@ -1,6 +1,6 @@
 package org.mediasoup.droid.lib;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import org.mediasoup.droid.lib.model.DeviceInfo;
 

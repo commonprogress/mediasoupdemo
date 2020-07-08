@@ -4,8 +4,8 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
-import android.support.annotation.NonNull;
-import android.support.annotation.WorkerThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
 
 import com.dongxl.p2p.utils.P2PConnectUtils;
 import com.jsy.mediasoup.utils.LogUtils;
@@ -15,9 +15,7 @@ import org.mediasoup.droid.lib.Async;
 import org.mediasoup.droid.lib.PeerConnectionUtils;
 import org.mediasoup.droid.lib.RoomClient;
 import org.mediasoup.droid.lib.RoomConstant;
-import org.mediasoup.droid.lib.UrlFactory;
 import org.mediasoup.droid.lib.lv.RoomStore;
-import org.mediasoup.droid.lib.model.Producers;
 import org.webrtc.AudioTrack;
 import org.webrtc.IceCandidate;
 import org.webrtc.MediaConstraints;
@@ -47,7 +45,7 @@ public class P2PConnectFactory {
     // local Video Track for cam.
     private VideoTrack mLocalVideoTrack;
     private RoomConstant.ConnectionState mRoomState;
-    private HashMap<String, PeerConnection> peerConnectionMap;
+    private Map<String, PeerConnection> peerConnectionMap = new HashMap<>();
     // jobs worker handler.
     private Handler mWorkHandler;
     // main looper handler.

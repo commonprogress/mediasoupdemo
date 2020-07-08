@@ -1,6 +1,6 @@
 package org.mediasoup.droid.lib.lv;
 
-import android.arch.lifecycle.MutableLiveData;
+import androidx.lifecycle.MutableLiveData;
 import android.text.TextUtils;
 
 import org.json.JSONArray;

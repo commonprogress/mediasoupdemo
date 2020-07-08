@@ -1,7 +1,7 @@
 package org.mediasoup.droid.lib.model;
 
 import android.os.Build;
-import android.support.annotation.RequiresApi;
+import androidx.annotation.RequiresApi;
 
 import java.util.Objects;
 

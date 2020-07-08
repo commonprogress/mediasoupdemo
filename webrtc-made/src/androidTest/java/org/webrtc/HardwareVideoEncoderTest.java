@@ -18,8 +18,8 @@ import static org.junit.Assert.fail;
 import android.annotation.TargetApi;
 import android.graphics.Matrix;
 import android.opengl.GLES11Ext;
-import android.support.annotation.Nullable;
-import android.support.test.filters.SmallTest;
+import androidx.annotation.Nullable;
+import androidx.test.filters.SmallTest;
 import android.util.Log;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -34,7 +34,6 @@ import org.chromium.base.test.params.ParameterSet;
 import org.chromium.base.test.params.ParameterizedRunner;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 

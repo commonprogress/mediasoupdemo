@@ -15,10 +15,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import android.annotation.TargetApi;
-import android.opengl.GLES11Ext;
-import android.opengl.GLES20;
 import android.os.Build;
-import android.support.test.filters.SmallTest;
+import androidx.test.filters.SmallTest;
 import android.util.Log;
 import java.nio.ByteBuffer;
 import org.chromium.base.test.BaseJUnit4ClassRunner;

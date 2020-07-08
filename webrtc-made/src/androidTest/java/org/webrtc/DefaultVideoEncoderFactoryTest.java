@@ -12,13 +12,12 @@ package org.webrtc;
 
 import static org.junit.Assert.assertEquals;
 
-import android.support.annotation.Nullable;
-import android.support.test.filters.SmallTest;
-import android.util.Log;
+import androidx.annotation.Nullable;
+import androidx.test.filters.SmallTest;
+
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
+
 import org.chromium.base.test.BaseJUnit4ClassRunner;
 import org.junit.Before;
 import org.junit.Test;

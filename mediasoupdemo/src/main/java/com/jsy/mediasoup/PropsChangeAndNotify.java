@@ -1,8 +1,8 @@
 package com.jsy.mediasoup;
 
 import android.app.Application;
-import android.arch.lifecycle.LifecycleOwner;
-import android.arch.lifecycle.Observer;
+import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.Observer;
 import android.content.Context;
 
 import com.jsy.mediasoup.interfaces.PropsLiveDataChange;

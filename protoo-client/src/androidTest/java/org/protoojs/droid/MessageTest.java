@@ -1,7 +1,7 @@
 package org.protoojs.droid;
 
 
-import android.support.test.runner.AndroidJUnit4;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import org.json.JSONObject;
 import org.junit.Test;

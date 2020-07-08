@@ -27,7 +27,7 @@ import android.content.pm.PackageManager;
 import android.media.AudioManager;
 import android.media.AudioManager.OnAudioFocusChangeListener;
 import android.os.Build;
-import android.support.annotation.RequiresApi;
+import androidx.annotation.RequiresApi;
 import android.util.Log;
 import com.waz.media.manager.MediamgrPlay;
 

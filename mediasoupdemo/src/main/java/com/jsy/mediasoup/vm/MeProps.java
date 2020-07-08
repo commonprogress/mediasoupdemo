@@ -1,11 +1,11 @@
 package com.jsy.mediasoup.vm;
 
 import android.app.Application;
-import android.arch.lifecycle.LifecycleOwner;
-import android.databinding.BaseObservable;
-import android.databinding.Observable;
-import android.databinding.ObservableField;
-import android.support.annotation.NonNull;
+import androidx.lifecycle.LifecycleOwner;
+import androidx.databinding.BaseObservable;
+import androidx.databinding.Observable;
+import androidx.databinding.ObservableField;
+import androidx.annotation.NonNull;
 
 import com.jsy.mediasoup.utils.LogUtils;
 

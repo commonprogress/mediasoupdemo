@@ -1,7 +1,7 @@
 package org.mediasoup.droid.lib;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.WorkerThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
 
 import org.json.JSONArray;
 import org.json.JSONException;

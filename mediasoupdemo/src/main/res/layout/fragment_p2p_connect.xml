@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     tools:context="com.dongxl.p2p.P2PConnectFragment">
 
-    <android.support.v7.widget.CardView
+    <androidx.cardview.widget.CardView
         android:id="@+id/self_cardView"
         android:layout_width="80dp"
         android:layout_height="120dp"
@@ -15,7 +15,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="center" />
-    </android.support.v7.widget.CardView>
+    </androidx.cardview.widget.CardView>
 
     <org.webrtc.SurfaceViewRenderer
         android:id="@+id/remote_surface"

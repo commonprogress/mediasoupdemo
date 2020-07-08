@@ -4,8 +4,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.media.projection.MediaProjectionManager;
 import android.os.Build;
-import android.support.annotation.RequiresApi;
-import android.support.v4.app.Fragment;
+import androidx.annotation.RequiresApi;
+import androidx.fragment.app.Fragment;
 import android.text.TextUtils;
 
 import java.util.Random;

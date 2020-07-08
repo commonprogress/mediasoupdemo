@@ -64,7 +64,7 @@ import com.waz.media.manager.player.MediaPlayerListener;
 import com.waz.media.manager.player.SoundSource;
 import com.waz.media.manager.player.MediaSource;
 
-import android.support.annotation.RequiresApi;
+import androidx.annotation.RequiresApi;
 import android.util.Log;
 
 @RequiresApi(api = Build.VERSION_CODES.FROYO)
