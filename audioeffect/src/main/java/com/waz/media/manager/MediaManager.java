@@ -110,7 +110,7 @@ public class MediaManager implements OnAudioFocusChangeListener {
 
         try {
 //            if(null != context){
-//                audioRouter = new AudioRouter(context, 0);
+//                audioRouter = new AudioRouter(context, audioRouterCallback);
 //            }
             audioManager.setSpeakerphoneOn(false);
         }
@@ -297,22 +297,26 @@ public class MediaManager implements OnAudioFocusChangeListener {
 
     public boolean isLoudSpeakerOn() {
         boolean isSpeakerphoneOn = null == audioManager ? false : audioManager.isSpeakerphoneOn();
-        DoLog("isLoudSpeakerOn isSpeakerphoneOn:" + isSpeakerphoneOn + ",route:" + route);
-        if (this.route == AudioRouter.ROUTE_SPEAKER) {
-            return true;
-        } else {
-            return false;
-        }
+        boolean isMicrophoneMute = null == audioManager ? false : audioManager.isMicrophoneMute();
+        DoLog("isLoudSpeakerOn isSpeakerphoneOn:" + isSpeakerphoneOn + ",isMicrophoneMute:" + isMicrophoneMute + ",route:" + route);
+        return isSpeakerphoneOn;
+//        if (this.route == AudioRouter.ROUTE_SPEAKER) {
+//            return true;
+//        } else {
+//            return false;
+//        }
     }
 
     public boolean isLoudSpeakerOff() {
         boolean isSpeakerphoneOn = null == audioManager ? false : audioManager.isSpeakerphoneOn();
-        DoLog("isLoudSpeakerOff isSpeakerphoneOn:" + isSpeakerphoneOn + ",route:" + route);
-        if (this.route != AudioRouter.ROUTE_SPEAKER) {
-            return true;
-        } else {
-            return false;
-        }
+        boolean isMicrophoneMute = null == audioManager ? false : audioManager.isMicrophoneMute();
+        DoLog("isLoudSpeakerOff isSpeakerphoneOn:" + isSpeakerphoneOn + ",isMicrophoneMute:" + isMicrophoneMute + ",route:" + route);
+        return !isSpeakerphoneOn;
+//        if (this.route != AudioRouter.ROUTE_SPEAKER) {
+//            return true;
+//        } else {
+//            return false;
+//        }
     }
 
     public void turnLoudSpeakerOn ( ) {
@@ -377,7 +381,9 @@ public class MediaManager implements OnAudioFocusChangeListener {
     }
 
     public void onEnterCall(){
-        DoLog("onEnterCall: mode=" + (null != this.audioManager ? this.audioManager.getMode() : "null"));
+        boolean isMicrophoneMute = null == audioManager ? false : audioManager.isMicrophoneMute();
+        boolean isSpeakerphoneOn = null == audioManager ? false : audioManager.isSpeakerphoneOn();
+        DoLog("onEnterCall: mode=" + (null != this.audioManager ? this.audioManager.getMode() : "null") + ",isSpeakerphoneOn:" + isSpeakerphoneOn + ",isMicrophoneMute:" + isMicrophoneMute);
         if (null == this.audioManager) {
             return;
         }
@@ -400,6 +406,9 @@ public class MediaManager implements OnAudioFocusChangeListener {
     }
 
     public void onExitCall(){
+        boolean isMicrophoneMute = null == audioManager ? false : audioManager.isMicrophoneMute();
+        boolean isSpeakerphoneOn = null == audioManager ? false : audioManager.isSpeakerphoneOn();
+        DoLog("onExitCall: mode=" + (null != this.audioManager ? this.audioManager.getMode() : "null") + ",isSpeakerphoneOn:" + isSpeakerphoneOn + ",isMicrophoneMute:" + isMicrophoneMute);
         if (null == this.audioManager) {
             return;
         }
@@ -489,8 +498,9 @@ public class MediaManager implements OnAudioFocusChangeListener {
     private void EnableSpeaker(boolean enable) {
         int curRoute = AudioRouter.ROUTE_INVALID;
         if (null != audioManager) {
+            boolean isMicrophoneMute = null == audioManager ? false : audioManager.isMicrophoneMute();
             boolean isSpeakerphoneOn = null == audioManager ? false : audioManager.isSpeakerphoneOn();
-            DoLog("changeEnableSpeaker enable:" + enable + ",this.route:" + this.route + ",isSpeakerphoneOn:" + audioManager.isSpeakerphoneOn());
+            DoLog("changeEnableSpeaker enable:" + enable + ",this.route:" + this.route + ",isSpeakerphoneOn:" + isSpeakerphoneOn + ",isMicrophoneMute:" + isMicrophoneMute + ", mode=" + (null != this.audioManager ? this.audioManager.getMode() : "null"));
             if (isSpeakerphoneOn == enable) {
                 curRoute = enable ? AudioRouter.ROUTE_SPEAKER : (this.route != AudioRouter.ROUTE_SPEAKER ? this.route : AudioRouter.ROUTE_INVALID);
             } else {
@@ -506,8 +516,8 @@ public class MediaManager implements OnAudioFocusChangeListener {
                     // 为true打开喇叭扩音器；为false关闭喇叭扩音器.
                     audioManager.setSpeakerphoneOn(true);
                     // 2016年06月18日 添加的代码，恢复系统声音设置
-                    audioManager.setMode(AudioManager.STREAM_SYSTEM);
-//            audioManager.setMode(AudioManager.MODE_NORMAL);
+//                    audioManager.setMode(AudioManager.STREAM_SYSTEM);
+                    audioManager.setMode(AudioManager.MODE_NORMAL);
 //            ((Activity)ctx).setVolumeControlStream(AudioManager.USE_DEFAULT_STREAM_TYPE);
 //            mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
                     curRoute = AudioRouter.ROUTE_SPEAKER;
@@ -539,4 +549,13 @@ public class MediaManager implements OnAudioFocusChangeListener {
         }
         return null;
     }
+
+    private MediamgrPlay.AudioRouterCallback audioRouterCallback = new MediamgrPlay.AudioRouterCallback(){
+        @Override
+        public void onAudioRouteChanged(int route) {
+            DoLog("audioRouterCallback onAudioRouteChanged route:"+route);
+            onPlaybackRouteChanged(route);
+        }
+    };
+
 }

@@ -43,7 +43,7 @@ public class PeerConnectionUtils {
   private static final String MEDIA_STREAM_ID = "ARDAMS";
   private static final String VIDEO_TRACK_ID = "ARDAMSv0";
   private static final String AUDIO_TRACK_ID = "ARDAMSa0";
-  private static String mPreferCameraFace;
+  private static String mPreferCameraFace = "front";
   private static EglBase mEglBase = EglBase.create();
 
     private int curVideoSize;
@@ -402,7 +402,7 @@ public class PeerConnectionUtils {
     final String[] deviceNames = cameraEnumerator.getDeviceNames();
       Logger.d(TAG, "createCamCapture() deviceNames:" + Arrays.toString(deviceNames));
     for (String deviceName : deviceNames) {
-      boolean needFrontFacing = "front".endsWith(mPreferCameraFace);
+      boolean needFrontFacing = Utils.isEmptyString(mPreferCameraFace) ? true : "front".endsWith(mPreferCameraFace);
       String selectedDeviceName = null;
       if (needFrontFacing) {
         if (cameraEnumerator.isFrontFacing(deviceName)) {

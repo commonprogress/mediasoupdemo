@@ -82,7 +82,7 @@ public class P2PConnectFragment extends Fragment {
         localSurface.setEnableHardwareScaler(false);
         localSurface.setZOrderMediaOverlay(true);
 
-        remoteSurface = view.findViewById(R.id.local_surface);
+        remoteSurface = view.findViewById(R.id.remote_surface);
         remoteSurface.init(PeerConnectionUtils.getEglContext(), null);
         remoteSurface.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FILL);
         remoteSurface.setMirror(false);

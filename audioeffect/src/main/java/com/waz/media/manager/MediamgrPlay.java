@@ -57,4 +57,8 @@ public class MediamgrPlay {
     public int getIntensity() {
         return intensity;
     }
+
+    public interface AudioRouterCallback{
+        void onAudioRouteChanged(int route);
+    }
 }

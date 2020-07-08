@@ -18,39 +18,23 @@
 package com.waz.media.manager.router;
 
 
-import android.content.Context;
-import android.media.AudioManager;
-
-import android.media.AudioManager.OnAudioFocusChangeListener;
-
-import java.lang.Thread;
-
-import java.util.Arrays;
-
-import java.util.HashSet;
-import java.util.HashMap;
-
-import java.util.Iterator;
-
-import java.util.List;
-
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothProfile;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothHeadset;
-import android.bluetooth.BluetoothA2dp;
+import android.bluetooth.*;
 import android.content.BroadcastReceiver;
-import android.os.Process;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.media.AudioManager;
+import android.media.AudioManager.OnAudioFocusChangeListener;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
+import com.waz.media.manager.MediamgrPlay;
 
-public class AudioRouter {
+import java.util.List;
+
+public class JavaAudioRouter {
     private Context _context = null;
-    private long _nativeMM = 0;
     private AudioManager _audio_manager = null;
 
     private boolean _shouldMuteIncomingSound = false;
@@ -77,8 +61,8 @@ public class AudioRouter {
     public static final int ROUTE_BT = 3;
 
 
-    private BluetoothHeadset  bluetoothHeadset = null;
-    private BluetoothA2dp  bluetoothA2dp = null;
+    private BluetoothHeadset bluetoothHeadset = null;
+    private BluetoothA2dp bluetoothA2dp = null;
     private static BluetoothDevice bluetoothDevice = null;
 
     private boolean btScoConnected = false;
@@ -87,6 +71,9 @@ public class AudioRouter {
     // Stores the audio states for a wired headset
     private int _WiredHsState = STATE_WIRED_HS_UNPLUGGED;
 
+    private MediamgrPlay.AudioRouterCallback _javaListener = null;
+    private boolean isHeadsetConnected;
+    private boolean isBTDeviceConnected;
 
     private static boolean runningOnJellyBeanOrHigher() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN;
@@ -103,14 +90,14 @@ public class AudioRouter {
     private boolean _inCall = false;
 
     @RequiresApi(api = Build.VERSION_CODES.FROYO)
-    public AudioRouter (Context context, long nativeMM ) {
+    public JavaAudioRouter(Context context, MediamgrPlay.AudioRouterCallback javaListener) {
         this._context = context;
-        this._nativeMM = nativeMM;
+        this._javaListener = javaListener;
 
-        Log.i(logTag, "AudioRouter: incall=" + _inCall + ", _nativeMM:" + _nativeMM);
+        Log.i(logTag, "initAudioRouter: incall=" + _inCall + ", _javaListener:" + _javaListener);
 
-        if ( context != null ) {
-            _audio_manager = (AudioManager)context.getSystemService(Context.AUDIO_SERVICE);
+        if (context != null) {
+            _audio_manager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         }
 
         this.subscribeToRouteUpdates();
@@ -119,13 +106,14 @@ public class AudioRouter {
             setupBluetooth();
             registerForBluetoothScoIntentBroadcast(); // Where should we Unregister ??
             registerForWiredHeadsetIntentBroadcast();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             // Bluetooth might not be supported on emulator
         }
 
-        _afListener = new OnAudioFocusChangeListener ( ) {
-            public void onAudioFocusChange ( int focusChange ) { DoLog("DVA: On Audio Focus Change"); }
+        _afListener = new OnAudioFocusChangeListener() {
+            public void onAudioFocusChange(int focusChange) {
+                DoLog("DVA: On Audio Focus Change");
+            }
         };
     }
 
@@ -140,29 +128,28 @@ public class AudioRouter {
         if (!devices.isEmpty())
             bluetoothDevice = devices.get(0);
         if (bluetoothDevice != null)
-            nativeBTDeviceConnected(true, _nativeMM);
+            nativeBTDeviceConnected(true);
 
         Context context = this._context;
-        IntentFilter filter = new IntentFilter(android.bluetooth.BluetoothHeadset.ACTION_CONNECTION_STATE_CHANGED);
+        IntentFilter filter = new IntentFilter(BluetoothHeadset.ACTION_CONNECTION_STATE_CHANGED);
 
         /** Receiver which handles changes in BT headset availability. */
         BroadcastReceiver btReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                int state = intent.getIntExtra(android.bluetooth.BluetoothHeadset.EXTRA_STATE,
-                        android.bluetooth.BluetoothHeadset.STATE_DISCONNECTED);
-                if (state == android.bluetooth.BluetoothHeadset.STATE_CONNECTED) {
-                    bluetoothDevice = intent.getParcelableExtra(android.bluetooth.BluetoothDevice.EXTRA_DEVICE);
+                int state = intent.getIntExtra(BluetoothHeadset.EXTRA_STATE,
+                        BluetoothHeadset.STATE_DISCONNECTED);
+                if (state == BluetoothHeadset.STATE_CONNECTED) {
+                    bluetoothDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                     Log.i(logTag, "bluetoothHeadset: connected: btdev=" + bluetoothDevice);
-                    nativeBTDeviceConnected(true, _nativeMM);
-                }
-                else if (state == android.bluetooth.BluetoothHeadset.STATE_DISCONNECTED) {
+                    nativeBTDeviceConnected(true);
+                } else if (state == BluetoothHeadset.STATE_DISCONNECTED) {
                     Log.i(logTag, "bluetoothHeadset: disconnected");
                     bluetoothDevice = null;
                     int route = GetAudioRoute();
                     if (route == ROUTE_SPEAKER)
                         EnableSpeaker();
-                    nativeBTDeviceConnected(false, _nativeMM);
+                    nativeBTDeviceConnected(false);
                 }
             }
         };
@@ -180,23 +167,22 @@ public class AudioRouter {
             bluetoothDevice = devices.get(0);
 
         Context context = this._context;
-        IntentFilter filter = new IntentFilter(android.bluetooth.BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED);
+        IntentFilter filter = new IntentFilter(BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED);
 
         /** Receiver which handles changes in BT a2dp availability. */
         BroadcastReceiver btReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                int state = intent.getIntExtra(android.bluetooth.BluetoothA2dp.EXTRA_STATE,
-                        android.bluetooth.BluetoothA2dp.STATE_DISCONNECTED);
-                if (state == android.bluetooth.BluetoothA2dp.STATE_CONNECTED) {
-                    bluetoothDevice = intent.getParcelableExtra(android.bluetooth.BluetoothDevice.EXTRA_DEVICE);
+                int state = intent.getIntExtra(BluetoothA2dp.EXTRA_STATE,
+                        BluetoothA2dp.STATE_DISCONNECTED);
+                if (state == BluetoothA2dp.STATE_CONNECTED) {
+                    bluetoothDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                     Log.i(logTag, "bluetoothA2dp: connected: btdev=" + bluetoothDevice);
-                    nativeBTDeviceConnected(true, _nativeMM);
-                }
-                else if (state == android.bluetooth.BluetoothA2dp.STATE_DISCONNECTED) {
+                    nativeBTDeviceConnected(true);
+                } else if (state == BluetoothA2dp.STATE_DISCONNECTED) {
                     Log.i(logTag, "bluetootA2dp: disconnected");
                     bluetoothDevice = null;
-                    nativeBTDeviceConnected(false, _nativeMM);
+                    nativeBTDeviceConnected(false);
                 }
             }
         };
@@ -217,13 +203,14 @@ public class AudioRouter {
                 Log.i(logTag, "bluetooth: service connected for profile: " + profile);
                 if (profile == BluetoothProfile.HEADSET) {
                     Log.i(logTag, "bluetooth: HEADSET connected");
-                    btHeadsetService((BluetoothHeadset)proxy);
+                    btHeadsetService((BluetoothHeadset) proxy);
                 }
                 if (profile == BluetoothProfile.A2DP) {
                     Log.i(logTag, "bluetooth: A2DP connected");
-                    bluetoothA2dp = (BluetoothA2dp)proxy;
+                    bluetoothA2dp = (BluetoothA2dp) proxy;
                 }
             }
+
             public void onServiceDisconnected(int profile) {
                 Log.i(logTag, "bluetooth: service disconnected for profile: " + profile);
                 if (profile == BluetoothProfile.HEADSET) {
@@ -246,16 +233,14 @@ public class AudioRouter {
         Log.i(logTag, "startBluetooth bluetoothDevice:" + bluetoothDevice);
         if (bluetoothDevice == null || null == _audio_manager) {
             return -1;
-        }
-        else {
+        } else {
             int n = 5;
 
             _audio_manager.startBluetoothSco();
-            while(!btScoConnected && n > 0) {
+            while (!btScoConnected && n > 0) {
                 try {
                     Thread.sleep(1000);
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                 }
                 n--;
             }
@@ -269,18 +254,20 @@ public class AudioRouter {
             return 0;
         }
     }
+
     private void stopBluetooth() {
         Log.i(logTag, "stopBluetooth _audio_manager:" + _audio_manager);
-        if(null == _audio_manager){
+        if (null == _audio_manager) {
             return;
         }
         _audio_manager.stopBluetoothSco();
         _audio_manager.setBluetoothScoOn(false);
 
     }
-    public int EnableSpeaker(){
+
+    public int EnableSpeaker() {
         DoLog("EnableSpeaker ");
-        if(null == _audio_manager){
+        if (null == _audio_manager) {
             return 0;
         }
         if (_audio_manager.isBluetoothScoOn())
@@ -291,9 +278,9 @@ public class AudioRouter {
         return 0;
     }
 
-    public int EnableHeadset(){
+    public int EnableHeadset() {
         DoLog("EnableHeadset ");
-        if(null == _audio_manager){
+        if (null == _audio_manager) {
             return 0;
         }
         if (_audio_manager.isBluetoothScoOn())
@@ -304,13 +291,13 @@ public class AudioRouter {
         return 0;
     }
 
-    public int EnableEarpiece(){
+    public int EnableEarpiece() {
         DoLog("EnableEarpiece ");
-        if(!hasEarpiece() || null == _audio_manager){
+        if (!hasEarpiece() || null == _audio_manager) {
             return -1;
         }
         int cur_route = GetAudioRoute();
-        if(cur_route == ROUTE_HEADSET){
+        if (cur_route == ROUTE_HEADSET) {
             // Cannot use Earpiece when a HS is plugged in
             return -1;
         }
@@ -333,27 +320,23 @@ public class AudioRouter {
 
     public int GetAudioRoute() {
         int route = ROUTE_INVALID;
-        if(null == _audio_manager){
+        if (null == _audio_manager) {
             return route;
         }
         if (_audio_manager.isBluetoothScoOn()) {
             route = ROUTE_BT;
             DoLog("GetAudioRoute() BT");
-        }
-        else if(_audio_manager.isSpeakerphoneOn()) {
+        } else if (_audio_manager.isSpeakerphoneOn()) {
             route = ROUTE_SPEAKER;
             DoLog("GetAudioRoute() Speaker");
-        }
-        else if(_WiredHsState == STATE_WIRED_HS_PLUGGED) {
+        } else if (_WiredHsState == STATE_WIRED_HS_PLUGGED) {
             route = ROUTE_HEADSET;
             DoLog("GetAudioRoute() Headset");
-        }
-        else {
-            if(hasEarpiece()) {
+        } else {
+            if (hasEarpiece()) {
                 route = ROUTE_EARPIECE;
                 DoLog("GetAudioRoute() Earpiece");
-            }
-            else {
+            } else {
                 route = ROUTE_SPEAKER; /* Goes here if a tablet where iSpaekerPhoneOn dosnt tell the truth  */
                 DoLog("GetAudioRoute() Speaker \n");
             }
@@ -361,25 +344,24 @@ public class AudioRouter {
         return route;
     }
 
-    private void UpdateRoute(){
+    private void UpdateRoute() {
         int route;
 
         route = GetAudioRoute();
         Log.i(logTag, "UpdateRoute route:" + route);
         // call route change callback
-        nativeUpdateRoute(route, this._nativeMM);
+        nativeUpdateRoute(route);
     }
 
-    public void OnStartingCall(){
-        Log.i(logTag,"OnStartingCall: incall=" + _inCall);
-        if(!_inCall) {
+    public void OnStartingCall() {
+        Log.i(logTag, "OnStartingCall: incall=" + _inCall);
+        if (!_inCall) {
             Log.i(logTag, "OnStartingCall btdev=" + bluetoothDevice);
             _inCall = true;
-            if(bluetoothDevice != null && null != _audio_manager) {
-                Log.i(logTag,"OnStartingCall: startingBluetooth: scoOn: " + _audio_manager.isBluetoothScoOn());
+            if (bluetoothDevice != null && null != _audio_manager) {
+                Log.i(logTag, "OnStartingCall: startingBluetooth: scoOn: " + _audio_manager.isBluetoothScoOn());
                 startBluetooth();
-            }
-            else {
+            } else {
                 // Enable earpiece
             }
         }
@@ -389,13 +371,13 @@ public class AudioRouter {
         Log.i(logTag, "OnStoppingCall incall=" + _inCall);
 
         _inCall = false;
-        if(null != _audio_manager && _audio_manager.getMode() != AudioManager.MODE_NORMAL){
+        if (null != _audio_manager && _audio_manager.getMode() != AudioManager.MODE_NORMAL) {
             _audio_manager.setMode(AudioManager.MODE_NORMAL);
         }
         stopBluetooth();
     }
 
-    private void subscribeToRouteUpdates ( ) {
+    private void subscribeToRouteUpdates() {
         // TODO: should somehow subscribe to OS route changed updates
     }
 
@@ -423,7 +405,7 @@ public class AudioRouter {
                         + ", n=" + name
                         + ", sb=" + isInitialStickyBroadcast());
 
-                AudioManager audioManager = (AudioManager)context.getSystemService(Context.AUDIO_SERVICE);
+                AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
 
                 int route = GetAudioRoute();
 
@@ -436,12 +418,12 @@ public class AudioRouter {
                         }
                         if (route == ROUTE_SPEAKER)
                             EnableSpeaker();
-                        nativeHeadsetConnected(false, _nativeMM);
+                        nativeHeadsetConnected(false);
                         break;
                     case STATE_PLUGGED:
                         DoLog("Headset plugged");
                         _WiredHsState = STATE_WIRED_HS_PLUGGED;
-                        nativeHeadsetConnected(true, _nativeMM);
+                        nativeHeadsetConnected(true);
                         break;
                     default:
                         DoLog("Invalid state");
@@ -516,12 +498,10 @@ public class AudioRouter {
 
     private boolean hasEarpiece() {
         Context context = this._context;
-        return(context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_TELEPHONY));
+        return (context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_TELEPHONY));
     }
 
-//    private native void setPlaybackRoute(int route);
-
-    final String logTag = "avs AudioRouter";
+    final String logTag = "avs JavaAudioRouter";
 
     private void DoLog(String msg) {
         if (DEBUG) {
@@ -533,7 +513,28 @@ public class AudioRouter {
         Log.e(logTag, msg);
     }
 
-    private native void nativeUpdateRoute(int route, long nativeMM);
-    private native void nativeHeadsetConnected(boolean connected, long nativeMM);
-    private native void nativeBTDeviceConnected(boolean connected, long nativeMM);
+    private void nativeUpdateRoute(int route) {
+        Log.i(logTag, "nativeUpdateRoute _javaListener:" + _javaListener + ", route:" + route);
+        if (null != _javaListener) {
+            _javaListener.onAudioRouteChanged(route);
+        }
+    }
+
+    private void nativeHeadsetConnected(boolean connected) {
+        Log.i(logTag, "nativeHeadsetConnected _javaListener:" + _javaListener + ", connected:" + connected);
+        this.isHeadsetConnected = connected;
+    }
+
+    private void nativeBTDeviceConnected(boolean connected) {
+        Log.i(logTag, "nativeBTDeviceConnected _javaListener:" + _javaListener + ", connected:" + connected);
+        this.isBTDeviceConnected = connected;
+    }
+
+    public boolean isHeadsetConnected() {
+        return isHeadsetConnected;
+    }
+
+    public boolean isBTDeviceConnected() {
+        return isBTDeviceConnected;
+    }
 }
