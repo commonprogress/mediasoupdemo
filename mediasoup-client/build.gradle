@@ -64,10 +64,10 @@ dependencies {
 //    api fileTree(dir: WEBRTC_LIB_PATH, include: ['libwebrtc.jar'])
     implementation project(path: ':webrtc-made')
 
-    implementation 'androidx.appcompat:appcompat:1.0.0'
-    testImplementation 'junit:junit:4.12'
+    implementation 'androidx.appcompat:appcompat:1.1.0'
+    testImplementation 'junit:junit:4.13'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 }
 
 publish {

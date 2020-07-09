@@ -34,7 +34,8 @@ public class CombinedLiveData<A, B, OUTPUT> extends MediatorLiveData<OUTPUT> {
     }
 
     @Override
-    public <S1> void addSource(@NonNull LiveData<S1> source, @NonNull Observer<S1> onChanged) {
+    public <S1> void addSource(
+            @NonNull LiveData<S1> source, @NonNull Observer<? super S1> onChanged) {
         throw new UnsupportedOperationException();
     }
 

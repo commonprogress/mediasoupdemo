@@ -6,6 +6,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import android.view.View;
 
+import com.dongxl.mediasoup.MediasoupMainActivity;
 import com.dongxl.p2p.P2PTestActivity;
 
 public class RoomConfigurationActivity extends AppCompatActivity {
@@ -13,6 +14,13 @@ public class RoomConfigurationActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_room_configuration);
+    }
+
+    public void normalModeClick(View view) {
+        Intent intent = new Intent();
+        intent.setClass(this, MediasoupMainActivity.class);
+        startActivity(intent);
+        finish();
     }
 
     public void videoModeClick(View view) {
