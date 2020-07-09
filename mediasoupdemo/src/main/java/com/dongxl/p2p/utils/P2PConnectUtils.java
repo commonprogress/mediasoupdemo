@@ -23,9 +23,6 @@ public class P2PConnectUtils {
         PeerConnection.IceServer.Builder stunIceServer1 = PeerConnection.IceServer.builder("stun:stun.l.google.com:19302");
         iceServers.add(stunIceServer1.createIceServer());
 
-        PeerConnection.IceServer.Builder stunIceServer2 = PeerConnection.IceServer.builder("stun:47.93.186.97:3478?transport=udp");
-        iceServers.add(stunIceServer2.createIceServer());
-
         PeerConnection.IceServer.Builder stunIceServer3 = PeerConnection.IceServer.builder("stun:stun.xten.com:3478");
         iceServers.add(stunIceServer3.createIceServer());
         PeerConnection.IceServer.Builder stunIceServer4 = PeerConnection.IceServer.builder("stun:stun.voipbuster.com:3478");
@@ -65,6 +62,8 @@ public class P2PConnectUtils {
         PeerConnection.IceServer.Builder stunIceServer21 = PeerConnection.IceServer.builder("stun:numb.viagenie.ca:3478");
         iceServers.add(stunIceServer21.createIceServer());
 
+        PeerConnection.IceServer.Builder stunIceServer2 = PeerConnection.IceServer.builder("stun:47.93.186.97:3478?transport=udp");
+        iceServers.add(stunIceServer2.createIceServer());
 
         PeerConnection.IceServer.Builder turnIceServer1 = PeerConnection.IceServer.builder("turn:47.93.186.97:3478?transport=udp")
                 .setUsername("ddssingsong")

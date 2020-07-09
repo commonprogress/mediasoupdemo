@@ -28,44 +28,49 @@
         app:layout_constraintTop_toBottomOf="@+id/self_sdp_txt" />
 
     <LinearLayout
-        android:id="@+id/op_layout"
-        android:layout_width="match_parent"
-        android:layout_height="60dp"
+        android:id="@+id/opt_layout"
+        android:layout_width="0dp"
+        android:layout_height="55dp"
         android:orientation="horizontal"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/other_sdp_txt">
 
         <Button
-            android:layout_width="75dp"
+            android:id="@+id/button1"
+            android:layout_width="55dp"
             android:layout_height="wrap_content"
             android:layout_marginLeft="5dp"
             android:onClick="clearEditClick"
             android:text="清除" />
 
         <Button
-            android:layout_width="75dp"
+            android:id="@+id/button2"
+            android:layout_width="55dp"
             android:layout_height="wrap_content"
             android:layout_marginLeft="5dp"
             android:onClick="copyClick"
             android:text="复制" />
 
         <Button
-            android:layout_width="75dp"
+            android:id="@+id/button3"
+            android:layout_width="70dp"
             android:layout_height="wrap_content"
             android:layout_marginLeft="5dp"
             android:onClick="firstClick"
             android:text="交换一" />
 
         <Button
-            android:layout_width="75dp"
+            android:id="@+id/button4"
+            android:layout_width="70dp"
             android:layout_height="wrap_content"
             android:layout_marginLeft="5dp"
             android:onClick="secondClick"
             android:text="交换二" />
 
         <Button
-            android:layout_width="75dp"
+            android:id="@+id/button5"
+            android:layout_width="70dp"
             android:layout_height="wrap_content"
             android:layout_marginLeft="5dp"
             android:onClick="thirdClick"
@@ -75,11 +80,12 @@
 
     <FrameLayout
         android:id="@+id/p2p_connect_container"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="#ee7788"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/op_layout" />
+        app:layout_constraintTop_toBottomOf="@+id/opt_layout" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

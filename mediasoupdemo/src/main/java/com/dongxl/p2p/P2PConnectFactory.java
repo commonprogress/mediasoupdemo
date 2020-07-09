@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
@@ -35,6 +36,7 @@ public class P2PConnectFactory {
     private final Context mContext;
     @NonNull
     final RoomStore mRroomStore;
+    private final P2PConnectCallback p2PConnectCallback;
     // Closed flag.
     private volatile boolean mClosed;
     // PeerConnection util.
@@ -51,12 +53,13 @@ public class P2PConnectFactory {
     // main looper handler.
     private Handler mMainHandler;
 
-    public P2PConnectFactory(Context context, RoomStore roomStore, SurfaceViewRenderer localSurface, SurfaceViewRenderer remoteSurface) {
+    public P2PConnectFactory(Context context, P2PConnectCallback p2PConnectCallback, RoomStore roomStore, SurfaceViewRenderer localSurface, SurfaceViewRenderer remoteSurface) {
         LogUtils.i(TAG, "supe P2PConnectFactory");
         this.mContext = context;
         this.mRroomStore = roomStore;
         this.remoteSurface = remoteSurface;
         this.localSurface = localSurface;
+        this.p2PConnectCallback = p2PConnectCallback;
 //        this.mRroomStore.setMe(peerId, displayName, this.mOptions.getDevice());
         //设置房间的url
 //        this.mRroomStore.setRoomUrl(roomId, UrlFactory.getInvitationLink(roomId, forceH264, forceVP9));
@@ -75,6 +78,7 @@ public class P2PConnectFactory {
                 () -> {
                     getLocalAudioTrack();
                     getLocalVideoTrack(RoomConstant.VideoCapturerType.CAMERA);
+                    mLocalVideoTrack.addSink(localSurface);
                 });
     }
 
@@ -131,7 +135,7 @@ public class P2PConnectFactory {
                         @Override
                         public void onCreateSuccess(SessionDescription sessionDescription) {
                             super.onCreateSuccess(sessionDescription);
-                            LogUtils.i(TAG, "faqifang1 onCreateSuccess peerId:" + peerId + ",sessionDescription.type:" + sessionDescription.type + ",sessionDescription.description:" + sessionDescription.description);
+                            LogUtils.i(P2PConnectFactory.TAG, "faqifang1 onCreateSuccess peerId:" + peerId + ",sessionDescription.type:" + sessionDescription.type + ",sessionDescription.description:" + sessionDescription.description);
                             peerConnection.setLocalDescription(new P2PSdpObserver("setLocalSdp:" + peerId), sessionDescription);
 //                SignalingClient.get().sendSessionDescription(sessionDescription, socketId);
 //                P2PConnectUtils.sendSessionDescription(sessionDescription, socketId);
@@ -145,8 +149,15 @@ public class P2PConnectFactory {
 //                } catch (JSONException e) {
 //                    e.printStackTrace();
 //                }
+
+                            if (null != p2PConnectCallback) {
+                                p2PConnectCallback.sendOfferSdpToReceive(peerId, sessionDescription.type.canonicalForm(), sessionDescription.description);
+                            }
                         }
                     }, new MediaConstraints());
+                    if (null != p2PConnectCallback) {
+                        p2PConnectCallback.onSendSelfState(peerId);
+                    }
                 });
     }
 
@@ -221,13 +232,19 @@ public class P2PConnectFactory {
                         @Override
                         public void onCreateSuccess(SessionDescription sdp) {
                             super.onCreateSuccess(sdp);
-                            LogUtils.i(TAG, "jieshoufang1 onCreateSuccess peerId:" + peerId + ",sdp.type:" + sdp.type + ",sdp.description:" + sdp.description);
+                            LogUtils.i(P2PConnectFactory.TAG, "jieshoufang1 onCreateSuccess peerId:" + peerId + ",sdp.type:" + sdp.type + ",sdp.description:" + sdp.description);
                             mRroomStore.addPeer(peerId, data);
                             peerConnectionMap.get(peerId).setLocalDescription(new P2PSdpObserver("setLocalSdp:" + peerId), sdp);
 //                    SignalingClient.get().sendSessionDescription(sdp, socketId);
 //                P2PConnectUtils.sendSessionDescription(sdp,socketId);
+                            if (null != p2PConnectCallback) {
+                                p2PConnectCallback.sendAnswerSdpToSend(peerId, sdp.type.canonicalForm(), sdp.description);
+                            }
                         }
                     }, new MediaConstraints());
+                    if (null != p2PConnectCallback) {
+                        p2PConnectCallback.onReceiveSelfState(peerId);
+                    }
                 });
     }
 
@@ -268,7 +285,7 @@ public class P2PConnectFactory {
             @Override
             public void onIceCandidate(IceCandidate iceCandidate) {
                 super.onIceCandidate(iceCandidate);
-                LogUtils.i(TAG, "getOrCreatePeerConnection onIceCandidate peerId:" + socketId + ",iceCandidate:" + iceCandidate.toString());
+                LogUtils.i(P2PConnectFactory.TAG, "getOrCreatePeerConnection onIceCandidate peerId:" + socketId + ",iceCandidate:" + iceCandidate.toString());
 //                JSONObject payload = new JSONObject();
 //                payload.put("label", iceCandidate.sdpMLineIndex);
 //                payload.put("id", iceCandidate.sdpMid);
@@ -276,17 +293,24 @@ public class P2PConnectFactory {
 
 //                SignalingClient.get().sendIceCandidate(iceCandidate, socketId);
                 //P2PConnectUtils.sendIceCandidate(iceCandidate, socketId);
+                if (null != p2PConnectCallback) {
+                    p2PConnectCallback.sendIceCandidateOtherSide(socketId, iceCandidate.sdpMid, iceCandidate.sdpMLineIndex, iceCandidate.sdp, iceCandidate.serverUrl, iceCandidate.adapterType.bitMask);
+                }
             }
 
             @Override
             public void onAddStream(MediaStream mediaStream) {
                 super.onAddStream(mediaStream);
-                LogUtils.i(TAG, "getOrCreatePeerConnection onAddStream peerId:" + socketId);
-                VideoTrack remoteVideoTrack = mediaStream.videoTracks.get(0);
+                LogUtils.i(P2PConnectFactory.TAG, "getOrCreatePeerConnection onAddStream peerId:" + socketId + ",mediaStream:" + mediaStream.toString() + ",mediaStream.preservedVideoTracks:" + mediaStream.preservedVideoTracks.size());
+                final VideoTrack remoteVideoTrack = mediaStream.videoTracks.get(0);
 //                mRroomStore.addConsumer(socketId, type, consumer, producerPaused);
-//                runOnUiThread(() -> {
-//                    remoteVideoTrack.addSink(remoteViews[remoteViewsIndex++]);
-//                });
+                mWorkHandler.post(
+                        () -> {
+                            remoteVideoTrack.addSink(remoteSurface);
+                        });
+                if (null != p2PConnectCallback) {
+                    p2PConnectCallback.onP2PConnectSuc(socketId);
+                }
             }
         });
         peerConnection.addStream(mPeerConnectionUtils.getMediaStream());
@@ -295,122 +319,6 @@ public class P2PConnectFactory {
 
         peerConnectionMap.put(socketId, peerConnection);
         return peerConnection;
-    }
-
-    /**
-     * 有人加入
-     *
-     * @param socketId
-     */
-    @Async
-    public void onPeerJoined(String socketId) {
-        mWorkHandler.post(
-                () -> {
-                    LogUtils.i(TAG, "onPeerJoined  socketId:" + socketId);
-                    final PeerConnection peerConnection = getOrCreatePeerConnection(socketId);
-                    peerConnection.createOffer(new P2PSdpObserver("createOfferSdp:" + socketId) {
-                        @Override
-                        public void onCreateSuccess(SessionDescription sessionDescription) {
-                            super.onCreateSuccess(sessionDescription);
-                            LogUtils.i(TAG, "onPeerJoined onCreateSuccess socketId:" + socketId + ",sessionDescription.type:" + sessionDescription.type + ",sessionDescription.description:" + sessionDescription.description);
-                            peerConnection.setLocalDescription(new P2PSdpObserver("setLocalSdp:" + socketId), sessionDescription);
-//                SignalingClient.get().sendSessionDescription(sessionDescription, socketId);
-//                P2PConnectUtils.sendSessionDescription(sessionDescription, socketId);
-
-//                try {
-//                    JSONObject payload = new JSONObject();
-//                    payload.put("type", sessionDescription.type.canonicalForm());
-//                    payload.put("sdp", sessionDescription.description);
-//                    SocketManager.instance.sendMessage(socketId, sessionDescription.type.canonicalForm(), payload);
-//                    peerConnection.setLocalDescription(this, sessionDescription);
-//                } catch (JSONException e) {
-//                    e.printStackTrace();
-//                }
-                        }
-                    }, new MediaConstraints());
-                });
-    }
-
-    /**
-     * 自己加入
-     */
-    @Async
-    public void onSelfJoined() {
-        LogUtils.i(TAG, "onSelfJoined :");
-    }
-
-    /**
-     * 有人离开
-     *
-     * @param msg
-     */
-    @Async
-    public void onPeerLeave(String msg) {
-        LogUtils.i(TAG, "onPeerLeave  msg:" + msg);
-    }
-
-    /**
-     * 响应邀请
-     *
-     * @param data
-     */
-    @Async
-    public void onOfferReceived(JSONObject data) {
-        LogUtils.i(TAG, "onOfferReceived  data:" + data.toString());
-        mWorkHandler.post(
-                () -> {
-                    final String socketId = data.optString("from");
-                    PeerConnection peerConnection = getOrCreatePeerConnection(socketId);
-                    peerConnection.setRemoteDescription(new P2PSdpObserver("setRemoteSdp:" + socketId),
-                            new SessionDescription(SessionDescription.Type.OFFER, data.optString("sdp")));
-                    peerConnection.createAnswer(new P2PSdpObserver("localAnswerSdp") {
-                        @Override
-                        public void onCreateSuccess(SessionDescription sdp) {
-                            super.onCreateSuccess(sdp);
-                            LogUtils.i(TAG, "onOfferReceived  onCreateSuccess sdp.type:" + sdp.type + ",sdp.description:" + sdp.description);
-                            peerConnectionMap.get(socketId).setLocalDescription(new P2PSdpObserver("setLocalSdp:" + socketId), sdp);
-//                    SignalingClient.get().sendSessionDescription(sdp, socketId);
-//                P2PConnectUtils.sendSessionDescription(sdp,socketId);
-                        }
-                    }, new MediaConstraints());
-                });
-    }
-
-    /**
-     * 回答邀请
-     *
-     * @param data
-     */
-    @Async
-    public void onAnswerReceived(JSONObject data) {
-        mWorkHandler.post(
-                () -> {
-                    LogUtils.i(TAG, "onAnswerReceived  data:" + data.toString());
-                    String socketId = data.optString("from");
-                    PeerConnection peerConnection = getOrCreatePeerConnection(socketId);
-                    peerConnection.setRemoteDescription(new P2PSdpObserver("setRemoteSdp:" + socketId),
-                            new SessionDescription(SessionDescription.Type.ANSWER, data.optString("sdp")));
-                });
-    }
-
-    /**
-     * ice 响应
-     *
-     * @param data
-     */
-    @Async
-    public void onIceCandidateReceived(JSONObject data) {
-        mWorkHandler.post(
-                () -> {
-                    LogUtils.i(TAG, "onIceCandidateReceived  data:" + data.toString());
-                    String socketId = data.optString("from");
-                    PeerConnection peerConnection = getOrCreatePeerConnection(socketId);
-                    peerConnection.addIceCandidate(new IceCandidate(
-                            data.optString("id"),
-                            data.optInt("label"),
-                            data.optString("candidate")
-                    ));
-                });
     }
 
     public void resume() {

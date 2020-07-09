@@ -4,6 +4,12 @@
     android:layout_height="match_parent"
     tools:context="com.dongxl.p2p.P2PConnectFragment">
 
+    <org.webrtc.SurfaceViewRenderer
+        android:id="@+id/remote_surface"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center" />
+
     <androidx.cardview.widget.CardView
         android:id="@+id/self_cardView"
         android:layout_width="80dp"
@@ -17,10 +23,11 @@
             android:layout_gravity="center" />
     </androidx.cardview.widget.CardView>
 
-    <org.webrtc.SurfaceViewRenderer
-        android:id="@+id/remote_surface"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_gravity="center" />
+    <TextView
+        android:id="@+id/zijistate_txt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:maxWidth="280dp"
+        android:textColor="#ee4555" />
 
 </FrameLayout>
