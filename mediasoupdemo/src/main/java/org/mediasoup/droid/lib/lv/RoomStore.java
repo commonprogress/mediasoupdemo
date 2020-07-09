@@ -9,6 +9,7 @@ import org.mediasoup.droid.Consumer;
 import org.mediasoup.droid.Logger;
 import org.mediasoup.droid.Producer;
 import org.mediasoup.droid.lib.RoomClient;
+import org.mediasoup.droid.lib.RoomConstant;
 import org.mediasoup.droid.lib.model.Consumers;
 import org.mediasoup.droid.lib.model.DeviceInfo;
 import org.mediasoup.droid.lib.model.Me;
@@ -16,6 +17,8 @@ import org.mediasoup.droid.lib.model.Notify;
 import org.mediasoup.droid.lib.model.Peers;
 import org.mediasoup.droid.lib.model.Producers;
 import org.mediasoup.droid.lib.model.RoomInfo;
+import org.webrtc.AudioTrack;
+import org.webrtc.VideoTrack;
 
 /**
  * Room state.
@@ -70,10 +73,10 @@ public class RoomStore {
    * 设置房间状态
    * @param state
    */
-  public void setRoomState(RoomClient.ConnectionState state) {
+  public void setRoomState(RoomConstant.ConnectionState state) {
     roomInfo.postValue(roomInfo -> roomInfo.setConnectionState(state));
 
-    if (RoomClient.ConnectionState.CLOSED.equals(state)) {
+    if (RoomConstant.ConnectionState.CLOSED.equals(state)) {
       Logger.e(TAG, "setRoomState RoomClient.ConnectionState.CLOSED");
       peers.postValue(Peers::clear);
       me.postValue(Me::clear);
@@ -82,14 +85,25 @@ public class RoomStore {
     }
   }
 
-//  public RoomClient.ConnectionState getRoomState(){
-//
-//  }
+  /**
+   * 设置房间连接模式
+   * @param isP2PMode
+   */
+  public void setP2PMode(final boolean isP2PMode) {
+    roomInfo.postValue(
+            roomInfo -> {
+              roomInfo.setP2PMode(isP2PMode);
+            });
+    me.postValue(
+            me -> {
+              me.setP2PMode(isP2PMode);
+            });
+  }
 
-    /**
-     * 设置有声音room？
-     * @param peerId
-     */
+  /**
+   * 设置有声音room？
+   * @param peerId
+  */
   public void setRoomActiveSpeaker(String peerId) {
     roomInfo.postValue(roomInfo -> roomInfo.setActiveSpeakerId(peerId));
   }
@@ -172,9 +186,9 @@ public class RoomStore {
      * 设置听筒和扬声器切换
      * @param enabled
      */
-    public void setSpeakerMuteState(boolean enabled) {
-        me.postValue(me -> me.setSpeakerMute(enabled));
-    }
+  public void setSpeakerMuteState(boolean enabled) {
+    me.postValue(me -> me.setSpeakerMute(enabled));
+  }
 
   /**
    * 启用摄像头 进度
@@ -196,9 +210,9 @@ public class RoomStore {
      * 切换摄像头完成
      * @param isFrontCamera 是否前置
      */
-    public void cameraSwitchDone(boolean isFrontCamera) {
-        me.postValue(me -> me.setFrontCamera(isFrontCamera));
-    }
+  public void cameraSwitchDone(boolean isFrontCamera) {
+    me.postValue(me -> me.setFrontCamera(isFrontCamera));
+  }
 
   public void addProducer(Producer producer) {
     producers.postValue(producers -> producers.addProducer(producer));
@@ -239,6 +253,17 @@ public class RoomStore {
     // TODO(HaiyangWU): support data consumer.
   }
 
+  public void addP2PSelfAudioTrack(String peerId, AudioTrack audioTrack) {
+    producers.postValue(producers -> producers.addP2PAudioTrack(peerId, audioTrack));
+  }
+
+  public void addP2PSelfVideoTrack(String peerId, String type, VideoTrack videoTrack) {
+    producers.postValue(producers -> {
+      producers.addP2PVideoTrack(peerId, videoTrack);
+      producers.setProducerType(peerId, type);
+    });
+  }
+
   /**
    * 添加连接用户
    * @param peerId
@@ -264,7 +289,11 @@ public class RoomStore {
    * @param isAudioEnabled
    */
   public void updatePeerVideoAudioState(String peerId, boolean isVideoVisible, boolean isAudioEnabled) {
-      peers.postValue(peersInfo -> peersInfo.updatePeerVideoAudioState(peerId, isVideoVisible, isAudioEnabled));
+    peers.postValue(peersInfo -> peersInfo.updatePeerVideoAudioState(peerId, isVideoVisible, isAudioEnabled));
+  }
+
+  public void updatePeerP2PMode(String peerId, boolean isP2PMode) {
+    peers.postValue(peersInfo -> peersInfo.updatePeerP2PMode(peerId, isP2PMode));
   }
 
   /**
@@ -333,6 +362,14 @@ public class RoomStore {
 
   public void removeDataConsumer(String peerId, String dataConsumerId) {
     // TODO(HaiyangWU): support data consumer.
+  }
+
+  public void addP2POtherAudioTrack(String peerId, AudioTrack audioTrack) {
+    consumers.postValue(consumers -> consumers.addP2PAudioTrack(peerId, audioTrack));
+  }
+
+  public void addP2POtherVideoTrack(String peerId, VideoTrack videoTrack) {
+    consumers.postValue(consumers -> consumers.addP2PVideoTrack(peerId, videoTrack));
   }
 
   public void addNotify(String text) {

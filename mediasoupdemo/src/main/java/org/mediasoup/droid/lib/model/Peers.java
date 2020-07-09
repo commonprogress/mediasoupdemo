@@ -79,6 +79,15 @@ public class Peers {
     peer.setAudioEnabled(isAudioEnabled);
   }
 
+  public void updatePeerP2PMode(String peerId, boolean isP2PMode) {
+    Peer peer = getPeer(peerId);
+    if (peer == null) {
+      Logger.e(TAG, "updatePeerP2PMode no Peer found for update P2PMode");
+      return;
+    }
+    peer.setP2PMode(isP2PMode);
+  }
+
   /**
    * 添加 其他用户相关的 consumer
    * @param peerId

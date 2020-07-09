@@ -21,7 +21,7 @@ public class Peer extends Info {
     private String mClientId;
     private String mDisplayName;//用户名
     private DeviceInfo mDevice;//设备信息
-
+    private boolean isP2PMode;
     private boolean mVideoVisible;
     private boolean mAudioEnabled;
 
@@ -31,6 +31,7 @@ public class Peer extends Info {
         mId = info.optString("id");
         mClientId = Utils.getRandomString(16);
         mDisplayName = info.optString("displayName");
+        isP2PMode = info.optBoolean("isP2PMode", false);
         JSONObject deviceInfo = info.optJSONObject("device");
         if (deviceInfo != null) {
             mDevice =
@@ -52,6 +53,15 @@ public class Peer extends Info {
     @Override
     public String getDisplayName() {
         return mDisplayName;
+    }
+
+    @Override
+    public boolean isP2PMode() {
+        return isP2PMode;
+    }
+
+    public void setP2PMode(boolean p2PMode) {
+        isP2PMode = p2PMode;
     }
 
     @Override

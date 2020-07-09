@@ -47,24 +47,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <!--
-<activity
+        <activity
             android:name="com.dongxl.mediasoup.MediasoupMainActivity"
             android:hardwareAccelerated="true"
             android:launchMode="singleTask"
             android:screenOrientation="portrait"
-            android:showOnLockScreen="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-
-        <activity
-            android:name=".RoomConfigurationActivity"
-            android:screenOrientation="portrait" />
-        -->
+            android:showOnLockScreen="true" />
         <!-- android:launchMode="singleInstance" -->
         <activity android:name=".SplashScreenActivity" />
         <activity

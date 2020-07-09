@@ -1,4 +1,4 @@
-package com.dongxl.p2p.utils;
+package com.jsy.mediasoup.utils;
 
 import android.os.Build;
 import android.view.View;

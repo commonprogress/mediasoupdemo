@@ -12,6 +12,7 @@ import com.jsy.mediasoup.utils.LogUtils;
 
 import org.mediasoup.droid.lib.PeerConnectionUtils;
 import org.mediasoup.droid.lib.RoomClient;
+import org.mediasoup.droid.lib.RoomConstant;
 import org.mediasoup.droid.lib.RoomOptions;
 import org.mediasoup.droid.lib.interfaces.MediasoupConnectCallback;
 import org.mediasoup.droid.lib.lv.RoomStore;
@@ -27,7 +28,8 @@ public class RoomManagement implements MediasoupConnectCallback {
     private String mRoomId, mPeerId, mClientId, mDisplayName;
     //视频编码
     private boolean mForceH264, mForceVP9;
-    private RoomClient.ConnectionState connectionState = RoomClient.ConnectionState.NEW;
+    private boolean mP2PMode;
+    private RoomConstant.ConnectionState connectionState = RoomConstant.ConnectionState.NEW;
     private RoomOptions mOptions;//房间的配置信息
     private RoomStore mRoomStore;
     private RoomClient mRoomClient;//房间操作类
@@ -96,7 +98,7 @@ public class RoomManagement implements MediasoupConnectCallback {
         return mRoomClient;
     }
 
-    public void setConnectionState(RoomClient.ConnectionState connectionState) {
+    public void setConnectionState(RoomConstant.ConnectionState connectionState) {
         this.connectionState = connectionState;
         MediasoupLoaderUtils.getInstance().joinMediasoupState(connectionState.ordinal());
     }
@@ -105,21 +107,21 @@ public class RoomManagement implements MediasoupConnectCallback {
         if (null == connectionState) {
             return false;
         }
-        return isMediasoupCalling && (RoomClient.ConnectionState.CONNECTED.equals(connectionState) || RoomClient.ConnectionState.DISCONNECTED.equals(connectionState) || RoomClient.ConnectionState.CONNECTING.equals(connectionState));
+        return isMediasoupCalling && (RoomConstant.ConnectionState.CONNECTED.equals(connectionState) || RoomConstant.ConnectionState.DISCONNECTED.equals(connectionState) || RoomConstant.ConnectionState.CONNECTING.equals(connectionState));
     }
 
     public boolean isRoomConnected() {
         if (null == connectionState) {
             return false;
         }
-        return isMediasoupCalling && (RoomClient.ConnectionState.CONNECTED.equals(connectionState));
+        return isMediasoupCalling && (RoomConstant.ConnectionState.CONNECTED.equals(connectionState));
     }
 
     public boolean isRoomClosed() {
         if (null == connectionState) {
             return false;
         }
-        return RoomClient.ConnectionState.CLOSED.equals(connectionState) || (null != mRoomClient ? mRoomClient.isClosed() : true);
+        return RoomConstant.ConnectionState.CLOSED.equals(connectionState) || (null != mRoomClient ? mRoomClient.isClosed() : true);
     }
 
     public boolean isOtherJoin() {
@@ -171,7 +173,7 @@ public class RoomManagement implements MediasoupConnectCallback {
 //        mDisplayName = preferences.getString("displayName", "");
         mForceH264 = preferences.getBoolean("forceH264", false);
         mForceVP9 = preferences.getBoolean("forceVP9", false);
-
+        mP2PMode = MediasoupLoaderUtils.getInstance().isOneOnOneCall();
         mRoomId = MediasoupLoaderUtils.getInstance().getCurRConvId();
         mPeerId = MediasoupLoaderUtils.getInstance().getCurUserId();
         mDisplayName = MediasoupLoaderUtils.getInstance().getDisplayName();
@@ -208,8 +210,8 @@ public class RoomManagement implements MediasoupConnectCallback {
         mRoomStore = new RoomStore();
         //初始化房间
         mRoomClient =
-            new RoomClient(
-                mContext, mRoomStore, mRoomId, mPeerId, mClientId, mDisplayName, mForceH264, mForceVP9, mOptions, this);
+                new RoomClient(
+                        mContext, mRoomStore, mP2PMode, mRoomId, mPeerId, mClientId, mDisplayName, mForceH264, mForceVP9, mOptions, this);
         boolean isReady = MediasoupLoaderUtils.getInstance().setRoomClientStoreOptions(mRoomClient, mRoomStore, mOptions);
         if (null != managementCallback) {
             managementCallback.onMediasoupReady(isReady);

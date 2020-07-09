@@ -14,6 +14,10 @@ public class Info {
     return "";
   }
 
+  public boolean isP2PMode() {
+    return false;
+  }
+
   public DeviceInfo getDevice() {
     return DeviceInfo.androidDevice();
   }

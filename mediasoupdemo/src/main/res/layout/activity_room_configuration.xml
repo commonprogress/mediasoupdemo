@@ -13,7 +13,8 @@
         android:layout_margin="10dp"
         android:onClick="normalModeClick"
         android:text="正常模式"
-        android:textSize="50sp" />
+        android:textColor="@color/colorAccent"
+        android:textSize="25dp" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -21,7 +22,8 @@
         android:layout_margin="10dp"
         android:onClick="audioModeClick"
         android:text="音频模式"
-        android:textSize="50sp" />
+        android:textColor="@color/state_connecting"
+        android:textSize="25dp" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -30,7 +32,7 @@
         android:onClick="videoModeClick"
         android:text="视频模式"
         android:textColor="@color/colorAccent"
-        android:textSize="50sp" />
+        android:textSize="25dp" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -38,7 +40,8 @@
         android:layout_margin="10dp"
         android:onClick="muteModeClick"
         android:text="静音模式"
-        android:textSize="50sp" />
+        android:textColor="@color/state_connecting"
+        android:textSize="25dp" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -47,7 +50,7 @@
         android:onClick="seeModeClick"
         android:text="观看模式"
         android:textColor="@color/colorAccent"
-        android:textSize="50sp" />
+        android:textSize="25dp" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -55,7 +58,8 @@
         android:layout_margin="10dp"
         android:onClick="noAllModeClick"
         android:text="不产生音视频"
-        android:textSize="50sp" />
+        android:textColor="@color/state_connecting"
+        android:textSize="25dp" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -63,6 +67,7 @@
         android:layout_margin="10dp"
         android:onClick="p2pModeClick"
         android:text="p2p模式"
-        android:textSize="50sp" />
+        android:textColor="@color/colorAccent"
+        android:textSize="25dp" />
 
 </LinearLayout>

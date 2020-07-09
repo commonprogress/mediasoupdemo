@@ -1,6 +1,7 @@
 package com.jsy.mediasoup.vm;
 
 import android.app.Application;
+
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.Observer;
 import androidx.databinding.BaseObservable;
@@ -15,6 +16,7 @@ import org.mediasoup.droid.Logger;
 import org.mediasoup.droid.lib.RoomClient;
 import org.mediasoup.droid.lib.lv.RoomStore;
 import org.mediasoup.droid.lib.model.Consumers;
+import org.mediasoup.droid.lib.model.P2PTrack;
 import org.mediasoup.droid.lib.model.Peer;
 import org.mediasoup.droid.lib.model.Peers;
 import org.webrtc.AudioTrack;
@@ -47,44 +49,58 @@ public class PeerProps extends PeerViewProps {
                         if (!isConnecting) {
                             LogUtils.e(TAG, "PeerProps, onPropertyChanged isConnecting=false");
                         }
-                        Consumers.ConsumerWrapper audioCW = mStateComposer.getConsumer("audio");
-                        Consumers.ConsumerWrapper videoCW = mStateComposer.getConsumer("video");
-                        Consumer audioConsumer = !isConnecting ? null : (audioCW != null ? audioCW.getConsumer() : null);
-                        Consumer videoConsumer = !isConnecting ? null : (videoCW != null ? videoCW.getConsumer() : null);
+                        Peer peer = mStateComposer.mPeer;
+                        mPeer.set(peer);
+                        if (peer.isP2PMode()) {
+                            Consumers.ConsumerWrapper wrapper = mStateComposer.getP2PTrack();
+                            P2PTrack p2PTrack = !isConnecting ? null : (wrapper != null ? wrapper.getP2PTrack() : null);
 
-                        mPeer.set(mStateComposer.mPeer);
-                        mAudioProducerId.set(audioConsumer != null ? audioConsumer.getId() : null);
-                        mVideoProducerId.set(videoConsumer != null ? videoConsumer.getId() : null);
-                        mAudioRtpParameters.set(
-                                audioConsumer != null ? audioConsumer.getRtpParameters() : null);
-                        mVideoRtpParameters.set(
-                                videoConsumer != null ? videoConsumer.getRtpParameters() : null);
-                        mAudioTrack.set(audioConsumer != null ? (AudioTrack) audioConsumer.getTrack() : null);
-                        mVideoTrack.set(videoConsumer != null ? (VideoTrack) videoConsumer.getTrack() : null);
-                        // TODO(HaiyangWu) : support codec property
-                        // mAudioCodec.set(videoConsumer != null ? videoConsumer.getCodec() : null);
-                        // mVideoCodec.set(videoConsumer != null ? videoConsumer.getCodec() : null);
-                        mAudioScore.set(audioCW != null ? audioCW.getScore() : null);
-                        mVideoScore.set(videoCW != null ? videoCW.getScore() : null);
+                            mAudioProducerId.set(p2PTrack != null ? p2PTrack.getPeerId() : null);
+                            mVideoProducerId.set(p2PTrack != null ? p2PTrack.getPeerId() : null);
+                            mAudioTrack.set(p2PTrack != null ? p2PTrack.getAudioTrack() : null);
+                            mVideoTrack.set(p2PTrack != null ? p2PTrack.getVideoTrack() : null);
+                            mAudioEnabled.set(
+                                    wrapper != null && null != p2PTrack && null != p2PTrack.getAudioTrack());
+                            mVideoVisible.set(
+                                    wrapper != null && null != p2PTrack && null != p2PTrack.getVideoTrack());
+                        } else {
+                            Consumers.ConsumerWrapper audioCW = mStateComposer.getConsumer("audio");
+                            Consumers.ConsumerWrapper videoCW = mStateComposer.getConsumer("video");
+                            Consumer audioConsumer = !isConnecting ? null : (audioCW != null ? audioCW.getConsumer() : null);
+                            Consumer videoConsumer = !isConnecting ? null : (videoCW != null ? videoCW.getConsumer() : null);
 
-                        mAudioEnabled.set(
-                                audioCW != null && !audioCW.isLocallyPaused() && !audioCW.isRemotelyPaused());
-                        mVideoVisible.set(
-                                videoCW != null && !videoCW.isLocallyPaused() && !videoCW.isRemotelyPaused());
+                            mAudioProducerId.set(audioConsumer != null ? audioConsumer.getId() : null);
+                            mVideoProducerId.set(videoConsumer != null ? videoConsumer.getId() : null);
+                            mAudioRtpParameters.set(
+                                    audioConsumer != null ? audioConsumer.getRtpParameters() : null);
+                            mVideoRtpParameters.set(
+                                    videoConsumer != null ? videoConsumer.getRtpParameters() : null);
+                            mAudioTrack.set(audioConsumer != null ? (AudioTrack) audioConsumer.getTrack() : null);
+                            mVideoTrack.set(videoConsumer != null ? (VideoTrack) videoConsumer.getTrack() : null);
+                            // TODO(HaiyangWu) : support codec property
+                            // mAudioCodec.set(videoConsumer != null ? videoConsumer.getCodec() : null);
+                            // mVideoCodec.set(videoConsumer != null ? videoConsumer.getCodec() : null);
+                            mAudioScore.set(audioCW != null ? audioCW.getScore() : null);
+                            mVideoScore.set(videoCW != null ? videoCW.getScore() : null);
 
-                        LogUtils.i(TAG, "PeerProps, onPropertyChanged mAudioProducerId:" + mAudioProducerId.get()
-                                + ", mVideoProducerId:" + mVideoProducerId.get()
-                                + ", audioPW.getType():" + (audioCW != null ? audioCW.getType() : "null")
-                                + ", videoPW.getType():" + (videoCW != null ? videoCW.getType() : "null")
-                                + ", mAudioEnabled:" + mAudioEnabled.get()
-                                + ", mVideoVisible:" + mVideoVisible.get()
-                                + ", \nmAudioScore:" + mAudioScore.get()
-                                + ", \nmVideoScore:" + mVideoScore.get()
-                                + ", \nmAudioTrack:" + mAudioTrack.get()
-                                + ", \nmVideoTrack:" + mVideoTrack.get()
-                                + ", \nmAudioRtpParameters:" + mAudioRtpParameters.get() + "\n"
-                                + ", \nmVideoRtpParameters:" + mVideoRtpParameters.get() + "\n");
+                            mAudioEnabled.set(
+                                    audioCW != null && !audioCW.isLocallyPaused() && !audioCW.isRemotelyPaused());
+                            mVideoVisible.set(
+                                    videoCW != null && !videoCW.isLocallyPaused() && !videoCW.isRemotelyPaused());
 
+                            LogUtils.i(TAG, "PeerProps, onPropertyChanged mAudioProducerId:" + mAudioProducerId.get()
+                                    + ", mVideoProducerId:" + mVideoProducerId.get()
+                                    + ", audioPW.getType():" + (audioCW != null ? audioCW.getType() : "null")
+                                    + ", videoPW.getType():" + (videoCW != null ? videoCW.getType() : "null")
+                                    + ", mAudioEnabled:" + mAudioEnabled.get()
+                                    + ", mVideoVisible:" + mVideoVisible.get()
+                                    + ", \nmAudioScore:" + mAudioScore.get()
+                                    + ", \nmVideoScore:" + mVideoScore.get()
+                                    + ", \nmAudioTrack:" + mAudioTrack.get()
+                                    + ", \nmVideoTrack:" + mVideoTrack.get()
+                                    + ", \nmAudioRtpParameters:" + mAudioRtpParameters.get() + "\n"
+                                    + ", \nmVideoRtpParameters:" + mVideoRtpParameters.get() + "\n");
+                        }
                         if (null != mPropsLiveDataChange) {
                             mPropsLiveDataChange.onDataChanged(PeerProps.this);
                         }
@@ -187,6 +203,17 @@ public class PeerProps extends PeerViewProps {
             }
             LogUtils.e(TAG, "Consumers.ConsumerWrapper getConsumer kind:" + kind + ",null == consumerIds:" + (null == consumerIds));
             return null;
+        }
+
+        public Consumers.ConsumerWrapper getP2PTrack() {
+            final Consumers consumers = mConsumers;
+            final Peer peer = mPeer;
+            if (peer == null || consumers == null) {
+                Logger.e(TAG, "Consumers.ConsumerWrapper getConsumer peer == null:" + (peer == null) + ", consumers == null:" + (consumers == null));
+                return null;
+            }
+            Consumers.ConsumerWrapper wp = consumers.getConsumer(peer.getId());
+            return wp;
         }
     }
 }

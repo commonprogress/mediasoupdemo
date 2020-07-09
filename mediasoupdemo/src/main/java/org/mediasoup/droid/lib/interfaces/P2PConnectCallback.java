@@ -1,4 +1,4 @@
-package com.dongxl.p2p;
+package org.mediasoup.droid.lib.interfaces;
 
 public interface P2PConnectCallback {
     void onSendSelfState(String peerId);

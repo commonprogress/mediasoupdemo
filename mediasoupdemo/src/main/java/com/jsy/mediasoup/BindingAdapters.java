@@ -10,6 +10,7 @@ import com.jsy.mediasoup.utils.LogUtils;
 import com.jsy.mediasoup.vm.MeProps;
 
 import org.mediasoup.droid.lib.RoomClient;
+import org.mediasoup.droid.lib.RoomConstant;
 import org.mediasoup.droid.lib.model.DeviceInfo;
 import org.webrtc.SurfaceViewRenderer;
 import org.webrtc.VideoTrack;
@@ -19,14 +20,14 @@ public class BindingAdapters {
   private static final String TAG = "BindingAdapters";
 
   public static void roomState(
-      ImageView view, RoomClient.ConnectionState state, Animation animation) {
+          ImageView view, RoomConstant.ConnectionState state, Animation animation) {
     if (state == null) {
       return;
     }
-    if (RoomClient.ConnectionState.CONNECTING.equals(state)) {
+    if (RoomConstant.ConnectionState.CONNECTING.equals(state)) {
       view.setImageResource(R.drawable.ic_state_connecting);
       view.startAnimation(animation);
-    } else if (RoomClient.ConnectionState.CONNECTED.equals(state)) {
+    } else if (RoomConstant.ConnectionState.CONNECTED.equals(state)) {
       view.setImageResource(R.drawable.ic_state_connected);
       animation.cancel();
       view.clearAnimation();

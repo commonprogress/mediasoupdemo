@@ -11,7 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.WorkerThread;
 import android.text.TextUtils;
-
+import org.mediasoup.droid.lib.p2p.P2PConnectFactory;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -42,35 +42,19 @@ import static org.mediasoup.droid.lib.JsonUtils.toJsonObject;
  * 房间创建和连接状态
  */
 public class RoomClient extends RoomMessageHandler {
-
-    /**
-     * 连接状态 枚举
-     */
-    public enum ConnectionState {
-        // initial state.初始化
-        NEW,
-        // connecting or reconnecting.连接或者重连中
-        CONNECTING,
-        // connected.已经连接
-        CONNECTED,
-        //disconnected and reconnecting.中断 重连中
-        DISCONNECTED,
-        // mClosed.关闭
-        CLOSED,
-    }
-
     // Closed flag.
     private volatile boolean mClosed;
     // Android context.
     private final Context mContext;
     // PeerConnection util.
     private PeerConnectionUtils mPeerConnectionUtils;
+    private P2PConnectFactory mP2PConnectFactory;
     // Room mOptions.
     private @NonNull
     RoomOptions mOptions;
     // Display name.
     private String mDisplayName;
-
+    private final boolean mP2PMode;
     private final String mClientId;
     // TODO(Haiyangwu):Next expected dataChannel test number.
     private long mNextDataChannelTestNumber;
@@ -131,7 +115,7 @@ public class RoomClient extends RoomMessageHandler {
 
     public RoomClient(
             Context context, RoomStore roomStore, String roomId, String peerId, String clientId, String displayName) {
-        this(context, roomStore, roomId, peerId, clientId, displayName, false, false, null, null);
+        this(context, roomStore, false, roomId, peerId, clientId, displayName, false, false, null, null);
     }
 
     public RoomClient(
@@ -142,7 +126,7 @@ public class RoomClient extends RoomMessageHandler {
             String clientId,
             String displayName,
             RoomOptions options) {
-        this(context, roomStore, roomId, peerId, clientId, displayName, false, false, options, null);
+        this(context, roomStore, false, roomId, peerId, clientId, displayName, false, false, options, null);
     }
 
     /**
@@ -160,6 +144,7 @@ public class RoomClient extends RoomMessageHandler {
     public RoomClient(
             Context context,
             RoomStore roomStore,
+            boolean p2PMode,
             String roomId,
             String peerId,
             String clientId,
@@ -173,6 +158,7 @@ public class RoomClient extends RoomMessageHandler {
         this.mOptions = options == null ? new RoomOptions() : options;
         this.mDisplayName = displayName;
         this.mClientId = clientId;
+        this.mP2PMode = p2PMode;
         this.mClosed = false;
         //连接url
         this.mProtooUrl = UrlFactory.getProtooUrl(roomId, peerId, forceH264, forceVP9);
@@ -180,6 +166,7 @@ public class RoomClient extends RoomMessageHandler {
         this.mStore.setMe(peerId, displayName, this.mOptions.getDevice());
         //设置房间的url
         this.mStore.setRoomUrl(roomId, UrlFactory.getInvitationLink(roomId, forceH264, forceVP9));
+        this.mStore.setP2PMode(mP2PMode);
         this.mPreferences = PreferenceManager.getDefaultSharedPreferences(this.mContext);
         this.connectCallback = connectCallback;
         // init worker handler.
@@ -187,8 +174,11 @@ public class RoomClient extends RoomMessageHandler {
         handlerThread.start();
         mWorkHandler = new Handler(handlerThread.getLooper());
         mMainHandler = new Handler(Looper.getMainLooper());
-        mWorkHandler.post(() -> mPeerConnectionUtils = new PeerConnectionUtils());
-        Logger.e(TAG, "RoomClient() mDisplayName:" + mDisplayName + ", roomId:" + roomId + ", peerId:" + peerId);
+        mWorkHandler.post(() -> {
+            mPeerConnectionUtils = new PeerConnectionUtils();
+            mP2PConnectFactory = new P2PConnectFactory(mContext,roomStore, p2PMode, roomId, peerId, clientId, displayName, forceVP9, forceH264, options, connectCallback, mPeerConnectionUtils);
+        });
+        Logger.e(TAG, "RoomClient() mDisplayName:" + mDisplayName + ", roomId:" + roomId + ", peerId:" + peerId + ",mP2PMode:" + mP2PMode);
     }
 
     /**
@@ -197,7 +187,7 @@ public class RoomClient extends RoomMessageHandler {
     @Async
     public void joinRoom() {
         Logger.d(TAG, "join() mProtooUrl:" + this.mProtooUrl);
-        mStore.setRoomState(ConnectionState.CONNECTING);
+        mStore.setRoomState(RoomConstant.ConnectionState.CONNECTING);
         mWorkHandler.post(
                 () -> {
                     //初始化连接mediasoup WebSocket服务器
@@ -698,7 +688,7 @@ public class RoomClient extends RoomMessageHandler {
                         mProtoo.close();
                         mProtoo = null;
                     }
-
+                    mP2PConnectFactory.destroy();
                     // dispose all transport and device.
                     disposeTransportDevice();
                     Logger.e(TAG, "close() mid mClosed：" + mClosed);
@@ -730,7 +720,7 @@ public class RoomClient extends RoomMessageHandler {
         mCompositeDisposable.dispose();
 
         // Set room state.
-        mStore.setRoomState(ConnectionState.CLOSED);
+        mStore.setRoomState(RoomConstant.ConnectionState.CLOSED);
         Logger.e(TAG, "close() mClosed：end1:" + mClosed);
     }
 
@@ -797,7 +787,7 @@ public class RoomClient extends RoomMessageHandler {
                     mWorkHandler.post(
                             () -> {
                                 mStore.addNotify("error", "WebSocket connection failed");
-                                mStore.setRoomState(ConnectionState.CONNECTING);
+                                mStore.setRoomState(RoomConstant.ConnectionState.CONNECTING);
                                 if (null != connectCallback) {
                                     connectCallback.onConnectFail();
                                 }
@@ -863,7 +853,7 @@ public class RoomClient extends RoomMessageHandler {
                     mWorkHandler.post(
                             () -> {
                                 mStore.addNotify("error", "WebSocket disconnected");
-                                mStore.setRoomState(ConnectionState.DISCONNECTED);
+                                mStore.setRoomState(RoomConstant.ConnectionState.DISCONNECTED);
 
                                 // Close All Transports created by device.
                                 // All will reCreated After ReJoin.
@@ -930,7 +920,7 @@ public class RoomClient extends RoomMessageHandler {
                             });
 //      mOptions.isUseDataChannel() ? mMediasoupDevice.getRtpCapabilities() : "";
             Logger.d(TAG, "joinImpl() joinResponse：" + joinResponse);
-            mStore.setRoomState(ConnectionState.CONNECTED);//设置状态 已经连接
+            mStore.setRoomState(RoomConstant.ConnectionState.CONNECTED);//设置状态 已经连接
             mStore.addNotify("You are in the room!", 3000);//添加一个已经加入房间通知
 
             JSONObject resObj = JsonUtils.toJsonObject(joinResponse);
@@ -1125,7 +1115,7 @@ public class RoomClient extends RoomMessageHandler {
                 if (capturerType == RoomConstant.VideoCapturerType.SCREEN) {
 //                    mWorkHandler.post(
 //                            () ->
-                                    disableShareImpl(false);
+                    disableShareImpl(false);
 //                    );
                 } else if (capturerType == RoomConstant.VideoCapturerType.FILE) {
 

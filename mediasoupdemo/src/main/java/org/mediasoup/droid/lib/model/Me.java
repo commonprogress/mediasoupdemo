@@ -15,7 +15,7 @@ public class Me extends Info {
   private String mDisplayName;
   private boolean mDisplayNameSet;
   private DeviceInfo mDevice;
-
+  private boolean isP2PMode;
   private boolean mCanSendMic;
   private boolean mCanSendCam;
   private boolean mCanChangeCam;
@@ -29,9 +29,9 @@ public class Me extends Info {
   private boolean mRestartIceInProgress;
 
   private boolean mSpeakerMute;
-    private boolean mFrontCamera = true;
+  private boolean mFrontCamera = true;
 
-    @Override
+  @Override
   public String getId() {
     return mId;
   }
@@ -49,7 +49,7 @@ public class Me extends Info {
     this.mClientId = clientId;
   }
 
-    @Override
+  @Override
   public String getDisplayName() {
     return mDisplayName;
   }
@@ -64,6 +64,15 @@ public class Me extends Info {
 
   public void setDisplayNameSet(boolean displayNameSet) {
     this.mDisplayNameSet = displayNameSet;
+  }
+
+  @Override
+  public boolean isP2PMode() {
+    return isP2PMode;
+  }
+
+  public void setP2PMode(boolean p2PMode) {
+    isP2PMode = p2PMode;
   }
 
   @Override

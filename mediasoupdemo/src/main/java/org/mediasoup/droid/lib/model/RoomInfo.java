@@ -1,7 +1,6 @@
 package org.mediasoup.droid.lib.model;
 
-import static org.mediasoup.droid.lib.RoomClient.ConnectionState;
-import static org.mediasoup.droid.lib.RoomClient.ConnectionState.NEW;
+import org.mediasoup.droid.lib.RoomConstant;
 
 /**
  * 房间实体信息
@@ -10,10 +9,11 @@ public class RoomInfo {
 
   private String mUrl;//房间url
   private String mRoomId;//房间id
-  private ConnectionState mConnectionState = NEW;//连接状态
+  private RoomConstant.ConnectionState mConnectionState = RoomConstant.ConnectionState.NEW;//连接状态
   private String mActiveSpeakerId;//
   private String mStatsPeerId;//
   private boolean mFaceDetection = false;
+  private boolean isP2PMode;
 
   public String getUrl() {
     return mUrl;
@@ -31,11 +31,11 @@ public class RoomInfo {
     this.mRoomId = roomId;
   }
 
-  public ConnectionState getConnectionState() {
+  public RoomConstant.ConnectionState getConnectionState() {
     return mConnectionState;
   }
 
-  public void setConnectionState(ConnectionState connectionState) {
+  public void setConnectionState(RoomConstant.ConnectionState connectionState) {
     this.mConnectionState = connectionState;
   }
 
@@ -61,5 +61,13 @@ public class RoomInfo {
 
   public void setFaceDetection(boolean faceDetection) {
     this.mFaceDetection = faceDetection;
+  }
+
+  public boolean isP2PMode() {
+    return isP2PMode;
+  }
+
+  public void setP2PMode(boolean p2PMode) {
+    isP2PMode = p2PMode;
   }
 }

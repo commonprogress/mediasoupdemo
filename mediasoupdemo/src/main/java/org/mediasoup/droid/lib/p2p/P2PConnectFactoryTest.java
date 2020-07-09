@@ -1,4 +1,4 @@
-package com.dongxl.p2p;
+package org.mediasoup.droid.lib.p2p;
 
 import android.content.Context;
 import android.os.Handler;
@@ -8,15 +8,18 @@ import android.os.Looper;
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
-import com.dongxl.p2p.utils.P2PConnectUtils;
+import org.mediasoup.droid.lib.interfaces.P2PConnectCallback;
 import com.jsy.mediasoup.utils.LogUtils;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.mediasoup.droid.lib.Async;
 import org.mediasoup.droid.lib.PeerConnectionUtils;
-import org.mediasoup.droid.lib.RoomClient;
 import org.mediasoup.droid.lib.RoomConstant;
+import org.mediasoup.droid.lib.RoomOptions;
+import org.mediasoup.droid.lib.UrlFactory;
 import org.mediasoup.droid.lib.lv.RoomStore;
+import org.mediasoup.droid.lib.model.Producers;
 import org.webrtc.AudioTrack;
 import org.webrtc.IceCandidate;
 import org.webrtc.MediaConstraints;
@@ -29,14 +32,17 @@ import org.webrtc.VideoTrack;
 import java.util.HashMap;
 import java.util.Map;
 
-public class P2PConnectFactory {
-    public static final String TAG = P2PConnectFactory.class.getSimpleName();
+public class P2PConnectFactoryTest {
+    public static final String TAG = P2PConnectFactoryTest.class.getSimpleName();
     // Android context.
     @NonNull
     private final Context mContext;
     @NonNull
-    final RoomStore mRroomStore;
+    private final RoomStore mStore;
+    private final RoomOptions mOptions;
     private final P2PConnectCallback p2PConnectCallback;
+    private final String mRoomId;
+    private final String mSelfId;
     // Closed flag.
     private volatile boolean mClosed;
     // PeerConnection util.
@@ -46,23 +52,40 @@ public class P2PConnectFactory {
     private AudioTrack mLocalAudioTrack;
     // local Video Track for cam.
     private VideoTrack mLocalVideoTrack;
-    private RoomConstant.ConnectionState mRoomState;
     private Map<String, PeerConnection> peerConnectionMap = new HashMap<>();
     // jobs worker handler.
     private Handler mWorkHandler;
     // main looper handler.
     private Handler mMainHandler;
 
-    public P2PConnectFactory(Context context, P2PConnectCallback p2PConnectCallback, RoomStore roomStore, SurfaceViewRenderer localSurface, SurfaceViewRenderer remoteSurface) {
+    public P2PConnectFactoryTest(Context context,
+                                 P2PConnectCallback p2PConnectCallback,
+                                 RoomOptions roomOption,
+                                 RoomStore roomStore,
+                                 SurfaceViewRenderer localSurface,
+                                 SurfaceViewRenderer remoteSurface,
+                                 String roomId, String selfId
+    ) {
         LogUtils.i(TAG, "supe P2PConnectFactory");
-        this.mContext = context;
-        this.mRroomStore = roomStore;
+        this.mContext = context.getApplicationContext();
+        this.mOptions = roomOption;
+        this.mStore = roomStore;
         this.remoteSurface = remoteSurface;
         this.localSurface = localSurface;
         this.p2PConnectCallback = p2PConnectCallback;
-//        this.mRroomStore.setMe(peerId, displayName, this.mOptions.getDevice());
+        this.mRoomId = roomId;
+        this.mSelfId = selfId;
+        this.mClosed = false;
+        String displayName = "displayName";
+        boolean forceH264 = false;
+        boolean forceVP9 = false;
+//连接url
+        String mProtooUrl = UrlFactory.getProtooUrl(roomId, selfId, forceH264, forceVP9);
+//设置自己信息
+        this.mStore.setMe(selfId, displayName, this.mOptions.getDevice());
         //设置房间的url
-//        this.mRroomStore.setRoomUrl(roomId, UrlFactory.getInvitationLink(roomId, forceH264, forceVP9));
+        this.mStore.setRoomUrl(roomId, UrlFactory.getInvitationLink(roomId, forceH264, forceVP9));
+        this.mStore.setP2PMode(true);
         // init worker handler.
         HandlerThread handlerThread = new HandlerThread("worker");
         handlerThread.start();
@@ -72,12 +95,24 @@ public class P2PConnectFactory {
     }
 
     @Async
-    public void initRoom(int type) {
+    public void joinRoom(int type) {
         LogUtils.i(TAG, "initRoom type:" + type);
+        mStore.setRoomState(RoomConstant.ConnectionState.CONNECTING);
+
+
+        mStore.setRoomState(RoomConstant.ConnectionState.CONNECTED);//设置状态 已经连接
+        mStore.addNotify("You are in the room!", 3000);//添加一个已经加入房间通知
+        mStore.setMediaCapabilities(true, true);
         mWorkHandler.post(
                 () -> {
-                    getLocalAudioTrack();
-                    getLocalVideoTrack(RoomConstant.VideoCapturerType.CAMERA);
+                    mOptions.setEnableAudio(true);
+                    if (mOptions.isEnableAudio()) {
+                        getLocalAudioTrack();//启动麦克风 录音
+                    }
+                    mOptions.setEnableVideo(true);
+                    if (mOptions.isEnableVideo()) {
+                        getLocalVideoTrack(RoomConstant.VideoCapturerType.CAMERA);//启用摄像头
+                    }
                     mLocalVideoTrack.addSink(localSurface);
                 });
     }
@@ -88,7 +123,7 @@ public class P2PConnectFactory {
             mLocalAudioTrack = mPeerConnectionUtils.createAudioTrack(mContext);
             mLocalAudioTrack.setEnabled(true);
             mPeerConnectionUtils.addAudioTrackMediaStream(mLocalAudioTrack);
-//            mRroomStore.addProducer(mLocalAudioTrack);
+            mStore.addP2PSelfAudioTrack(mSelfId, mLocalAudioTrack);
         }
         return mLocalAudioTrack;
     }
@@ -100,21 +135,9 @@ public class P2PConnectFactory {
             mLocalVideoTrack = mPeerConnectionUtils.createVideoTrack(mContext, capturerType);
             mLocalVideoTrack.setEnabled(true);
             mPeerConnectionUtils.addVideoTrackMediaStream(mLocalVideoTrack);
-//            mRroomStore.addProducer(mLocalVideoTrack, capturerType);
+            mStore.addP2PSelfVideoTrack(mSelfId, Producers.ProducersWrapper.TYPE_CAM, mLocalVideoTrack);
         }
         return mLocalVideoTrack;
-    }
-
-    /**
-     * 创建房间成功
-     */
-    public void onCreateRoom() {
-        LogUtils.i(TAG, "onCreateRoom mRoomState:" + mRoomState);
-        this.mRoomState = RoomConstant.ConnectionState.NEW;
-        mRoomState = RoomConstant.ConnectionState.CONNECTING;
-        mRoomState = RoomConstant.ConnectionState.CONNECTED;
-        mRroomStore.setRoomState(RoomClient.ConnectionState.CONNECTING);
-        mRroomStore.setMediaCapabilities(true, true);
     }
 
     /**
@@ -135,7 +158,7 @@ public class P2PConnectFactory {
                         @Override
                         public void onCreateSuccess(SessionDescription sessionDescription) {
                             super.onCreateSuccess(sessionDescription);
-                            LogUtils.i(P2PConnectFactory.TAG, "faqifang1 onCreateSuccess peerId:" + peerId + ",sessionDescription.type:" + sessionDescription.type + ",sessionDescription.description:" + sessionDescription.description);
+                            LogUtils.i(P2PConnectFactoryTest.TAG, "faqifang1 onCreateSuccess peerId:" + peerId + ",sessionDescription.type:" + sessionDescription.type + ",sessionDescription.description:" + sessionDescription.description);
                             peerConnection.setLocalDescription(new P2PSdpObserver("setLocalSdp:" + peerId), sessionDescription);
 //                SignalingClient.get().sendSessionDescription(sessionDescription, socketId);
 //                P2PConnectUtils.sendSessionDescription(sessionDescription, socketId);
@@ -162,53 +185,6 @@ public class P2PConnectFactory {
     }
 
     /**
-     * 发起方 步骤二：接收接收方（邀请方）Answer 创建连接
-     * 设置setRemoteDescription
-     * 自己在createPeerConnection回调中 onIceCandidate 收到IceCandidate数据  发送给接收方
-     *
-     * @param peerId 对方id
-     */
-    @Async
-    public void faqifang2(String peerId, JSONObject data) {
-        if (null == data) {
-            return;
-        }
-        mWorkHandler.post(
-                () -> {
-                    LogUtils.i(TAG, "faqifang2 peerId:" + peerId + ",data:" + data.toString());
-                    mRroomStore.addPeer(peerId, data);
-                    PeerConnection peerConnection = getOrCreatePeerConnection(peerId);
-                    peerConnection.setRemoteDescription(new P2PSdpObserver("setRemoteSdp:" + peerId),
-                            new SessionDescription(SessionDescription.Type.ANSWER, data.optString("sdp")));
-                });
-    }
-
-    /**
-     * 发起方 步骤三：收到接收方 发送的IceCandidate
-     * 添加 addIceCandidate
-     * 完成连接，等待自己createPeerConnection回调中 onAddStream 方法 添加remoteVideoTrack 到SurfaceViewRenderer
-     *
-     * @param peerId 对方id
-     */
-    @Async
-    public void faqifang3(String peerId, JSONObject data) {
-        if (null == data) {
-            return;
-        }
-        mWorkHandler.post(
-                () -> {
-                    LogUtils.i(TAG, "faqifang3 peerId:" + peerId + ",data:" + data.toString());
-                    mRroomStore.setRoomState(RoomClient.ConnectionState.CONNECTED);//设置状态 已经连接
-                    PeerConnection peerConnection = getOrCreatePeerConnection(peerId);
-                    peerConnection.addIceCandidate(new IceCandidate(
-                            data.optString("id"),
-                            data.optInt("label"),
-                            data.optString("candidate")
-                    ));
-                });
-    }
-
-    /**
      * 接收方 步骤一 接收发送方的 Offer 创建Answer
      * 接收到发送方发送的 Offer SDP 设置setRemoteDescription
      * 创建 createAnswer
@@ -225,6 +201,7 @@ public class P2PConnectFactory {
         mWorkHandler.post(
                 () -> {
                     LogUtils.i(TAG, "jieshoufang1 peerId:" + peerId + ",data:" + data.toString());
+                    addP2PConnectPeer(peerId);
                     PeerConnection peerConnection = getOrCreatePeerConnection(peerId);
                     peerConnection.setRemoteDescription(new P2PSdpObserver("setRemoteSdp:" + peerId),
                             new SessionDescription(SessionDescription.Type.OFFER, data.optString("sdp")));
@@ -232,8 +209,7 @@ public class P2PConnectFactory {
                         @Override
                         public void onCreateSuccess(SessionDescription sdp) {
                             super.onCreateSuccess(sdp);
-                            LogUtils.i(P2PConnectFactory.TAG, "jieshoufang1 onCreateSuccess peerId:" + peerId + ",sdp.type:" + sdp.type + ",sdp.description:" + sdp.description);
-                            mRroomStore.addPeer(peerId, data);
+                            LogUtils.i(P2PConnectFactoryTest.TAG, "jieshoufang1 onCreateSuccess peerId:" + peerId + ",sdp.type:" + sdp.type + ",sdp.description:" + sdp.description);
                             peerConnectionMap.get(peerId).setLocalDescription(new P2PSdpObserver("setLocalSdp:" + peerId), sdp);
 //                    SignalingClient.get().sendSessionDescription(sdp, socketId);
 //                P2PConnectUtils.sendSessionDescription(sdp,socketId);
@@ -245,6 +221,28 @@ public class P2PConnectFactory {
                     if (null != p2PConnectCallback) {
                         p2PConnectCallback.onReceiveSelfState(peerId);
                     }
+                });
+    }
+
+    /**
+     * 发起方 步骤二：接收接收方（邀请方）Answer 创建连接
+     * 设置setRemoteDescription
+     * 自己在createPeerConnection回调中 onIceCandidate 收到IceCandidate数据  发送给接收方
+     *
+     * @param peerId 对方id
+     */
+    @Async
+    public void faqifang2(String peerId, JSONObject data) {
+        if (null == data) {
+            return;
+        }
+        mWorkHandler.post(
+                () -> {
+                    LogUtils.i(TAG, "faqifang2 peerId:" + peerId + ",data:" + data.toString());
+                    addP2PConnectPeer(peerId);
+                    PeerConnection peerConnection = getOrCreatePeerConnection(peerId);
+                    peerConnection.setRemoteDescription(new P2PSdpObserver("setRemoteSdp:" + peerId),
+                            new SessionDescription(SessionDescription.Type.ANSWER, data.optString("sdp")));
                 });
     }
 
@@ -264,7 +262,32 @@ public class P2PConnectFactory {
         mWorkHandler.post(
                 () -> {
                     LogUtils.i(TAG, "jieshoufang2 peerId:" + peerId + ",data:" + data.toString());
-                    mRroomStore.setRoomState(RoomClient.ConnectionState.CONNECTED);//设置状态 已经连接
+                    mStore.setRoomState(RoomConstant.ConnectionState.CONNECTED);//设置状态 已经连接
+                    PeerConnection peerConnection = getOrCreatePeerConnection(peerId);
+                    peerConnection.addIceCandidate(new IceCandidate(
+                            data.optString("id"),
+                            data.optInt("label"),
+                            data.optString("candidate")
+                    ));
+                });
+    }
+
+    /**
+     * 发起方 步骤三：收到接收方 发送的IceCandidate
+     * 添加 addIceCandidate
+     * 完成连接，等待自己createPeerConnection回调中 onAddStream 方法 添加remoteVideoTrack 到SurfaceViewRenderer
+     *
+     * @param peerId 对方id
+     */
+    @Async
+    public void faqifang3(String peerId, JSONObject data) {
+        if (null == data) {
+            return;
+        }
+        mWorkHandler.post(
+                () -> {
+                    LogUtils.i(TAG, "faqifang3 peerId:" + peerId + ",data:" + data.toString());
+                    mStore.setRoomState(RoomConstant.ConnectionState.CONNECTED);//设置状态 已经连接
                     PeerConnection peerConnection = getOrCreatePeerConnection(peerId);
                     peerConnection.addIceCandidate(new IceCandidate(
                             data.optString("id"),
@@ -285,7 +308,7 @@ public class P2PConnectFactory {
             @Override
             public void onIceCandidate(IceCandidate iceCandidate) {
                 super.onIceCandidate(iceCandidate);
-                LogUtils.i(P2PConnectFactory.TAG, "getOrCreatePeerConnection onIceCandidate peerId:" + socketId + ",iceCandidate:" + iceCandidate.toString());
+                LogUtils.i(P2PConnectFactoryTest.TAG, "getOrCreatePeerConnection onIceCandidate peerId:" + socketId + ",iceCandidate:" + iceCandidate.toString());
 //                JSONObject payload = new JSONObject();
 //                payload.put("label", iceCandidate.sdpMLineIndex);
 //                payload.put("id", iceCandidate.sdpMid);
@@ -301,8 +324,11 @@ public class P2PConnectFactory {
             @Override
             public void onAddStream(MediaStream mediaStream) {
                 super.onAddStream(mediaStream);
-                LogUtils.i(P2PConnectFactory.TAG, "getOrCreatePeerConnection onAddStream peerId:" + socketId + ",mediaStream:" + mediaStream.toString() + ",mediaStream.preservedVideoTracks:" + mediaStream.preservedVideoTracks.size());
+                LogUtils.i(P2PConnectFactoryTest.TAG, "getOrCreatePeerConnection onAddStream peerId:" + socketId + ",mediaStream:" + mediaStream.toString() + ",mediaStream.preservedVideoTracks:" + mediaStream.preservedVideoTracks.size());
+                final AudioTrack remoteAudioTrack = mediaStream.audioTracks.get(0);
                 final VideoTrack remoteVideoTrack = mediaStream.videoTracks.get(0);
+                mStore.addP2POtherAudioTrack(socketId, remoteAudioTrack);
+                mStore.addP2POtherVideoTrack(socketId, remoteVideoTrack);
 //                mRroomStore.addConsumer(socketId, type, consumer, producerPaused);
                 mWorkHandler.post(
                         () -> {
@@ -319,6 +345,23 @@ public class P2PConnectFactory {
 
         peerConnectionMap.put(socketId, peerConnection);
         return peerConnection;
+    }
+
+    /**
+     * p2p下添加 对方信息
+     *
+     * @param peerId
+     */
+    private void addP2PConnectPeer(String peerId) {
+        try {
+            JSONObject payload = new JSONObject();
+            payload.put("id", peerId);
+            payload.put("isP2PMode", true);
+            payload.put("displayName", "dufangname");
+            mStore.addPeer(peerId, payload);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     public void resume() {
@@ -348,7 +391,6 @@ public class P2PConnectFactory {
     @Async
     public void connectClose() {
         LogUtils.i(TAG, "connectClose==mClosed:" + mClosed);
-        mRoomState = RoomConstant.ConnectionState.CLOSED;
         if (this.mClosed) {
             return;
         }
@@ -388,7 +430,7 @@ public class P2PConnectFactory {
                     mWorkHandler.getLooper().quit();
                     LogUtils.e(TAG, "close() end mClosed：" + mClosed);
                 });
-        mRroomStore.setRoomState(RoomClient.ConnectionState.CLOSED);
+        mStore.setRoomState(RoomConstant.ConnectionState.CLOSED);
     }
 
     @WorkerThread

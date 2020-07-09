@@ -23,6 +23,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mediasoup.droid.Logger;
 import org.mediasoup.droid.lib.RoomClient;
+import org.mediasoup.droid.lib.RoomConstant;
 import org.mediasoup.droid.lib.model.Notify;
 import org.mediasoup.droid.lib.model.Peer;
 import org.mediasoup.droid.lib.model.Peers;
@@ -430,7 +431,7 @@ public class MediasoupService extends LifecycleService implements RoomManagement
         mRoomProps = changeAndNotify.getRoomPropsAndChange(this, roomManagement.getRoomClient(), roomManagement.getRoomStore(), ediasProps -> {
             if (null != roomManagement) {
                 RoomProps roomProps = (RoomProps) ediasProps;
-                roomManagement.setConnectionState(null == roomProps ? RoomClient.ConnectionState.NEW : roomProps.getConnectionState().get());
+                roomManagement.setConnectionState(null == roomProps ? RoomConstant.ConnectionState.NEW : roomProps.getConnectionState().get());
             }
         });
 

@@ -13,7 +13,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.dongxl.p2p.utils.DisplayUtils;
+import com.jsy.mediasoup.utils.DisplayUtils;
 import com.jsy.mediasoup.R;
 import com.jsy.mediasoup.utils.ClipboardCopy;
 import com.jsy.mediasoup.utils.LogUtils;

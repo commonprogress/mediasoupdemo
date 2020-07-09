@@ -5,6 +5,8 @@ import androidx.annotation.NonNull;
 
 import org.json.JSONArray;
 import org.mediasoup.droid.Producer;
+import org.webrtc.AudioTrack;
+import org.webrtc.VideoTrack;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,7 +20,7 @@ public class Producers {
 
     public static final String TYPE_CAM = "cam";
     public static final String TYPE_SHARE = "share";
-
+    private P2PTrack mP2PTrack;
     private Producer mProducer;
     private JSONArray mScore;
     private String mType;
@@ -27,12 +29,24 @@ public class Producers {
       this.mProducer = producer;
     }
 
+    ProducersWrapper(P2PTrack p2PTrack) {
+      this.mP2PTrack = p2PTrack;
+    }
+
     public Producer getProducer() {
       return mProducer;
     }
 
+    public void setProducer(Producer producer) {
+      this.mProducer = producer;
+    }
+
     public JSONArray getScore() {
       return mScore;
+    }
+
+    public void setScore(JSONArray score) {
+      this.mScore = score;
     }
 
     public String getType() {
@@ -41,6 +55,14 @@ public class Producers {
 
     public void setType(String type) {
       mType = type;
+    }
+
+    public P2PTrack getP2PTrack() {
+      return mP2PTrack;
+    }
+
+    public void setP2PTrack(P2PTrack p2PTrack) {
+      this.mP2PTrack = p2PTrack;
     }
   }
 
@@ -52,6 +74,30 @@ public class Producers {
 
   public void addProducer(Producer producer) {
     mProducers.put(producer.getId(), new ProducersWrapper(producer));
+  }
+
+  public void addP2PTrack(P2PTrack p2PTrack) {
+    mProducers.put(p2PTrack.getPeerId(), new ProducersWrapper(p2PTrack));
+  }
+
+  public void addP2PAudioTrack(String peerId, AudioTrack audioTrack) {
+    ProducersWrapper wrapper = mProducers.get(peerId);
+    if (wrapper == null || null == wrapper.mP2PTrack) {
+      addP2PTrack(new P2PTrack(peerId));
+    }
+    P2PTrack p2PTrack = wrapper.mP2PTrack;
+    p2PTrack.setAudioTrack(audioTrack);
+    wrapper.setP2PTrack(p2PTrack);
+  }
+
+  public void addP2PVideoTrack(String peerId, VideoTrack videoTrack) {
+    ProducersWrapper wrapper = mProducers.get(peerId);
+    if (wrapper == null || null == wrapper.mP2PTrack) {
+      addP2PTrack(new P2PTrack(peerId));
+    }
+    P2PTrack p2PTrack = wrapper.mP2PTrack;
+    p2PTrack.setVideoTrack(videoTrack);
+    wrapper.setP2PTrack(p2PTrack);
   }
 
   public void removeProducer(String producerId) {
@@ -102,7 +148,16 @@ public class Producers {
         return wrapper;
       }
     }
+    return null;
+  }
 
+  public ProducersWrapper getP2PTrack() {
+    for (ProducersWrapper wrapper : mProducers.values()) {
+      if (wrapper.mP2PTrack == null) {
+        continue;
+      }
+      return wrapper;
+    }
     return null;
   }
 

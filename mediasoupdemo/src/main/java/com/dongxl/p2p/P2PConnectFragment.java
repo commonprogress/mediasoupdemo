@@ -17,7 +17,10 @@ import com.jsy.mediasoup.R;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mediasoup.droid.lib.PeerConnectionUtils;
+import org.mediasoup.droid.lib.RoomOptions;
+import org.mediasoup.droid.lib.interfaces.P2PConnectCallback;
 import org.mediasoup.droid.lib.lv.RoomStore;
+import org.mediasoup.droid.lib.p2p.P2PConnectFactoryTest;
 import org.webrtc.RendererCommon;
 import org.webrtc.SurfaceViewRenderer;
 
@@ -50,12 +53,15 @@ public class P2PConnectFragment extends Fragment implements P2PConnectCallback {
         return fragment;
     }
 
+    private RoomOptions mOptions;//房间的配置信息
     private P2PConnectInterface p2pInterface;
     private TextView zijiText;
     private SurfaceViewRenderer localSurface, remoteSurface;
-    private P2PConnectFactory p2PConnectFactory;
+    private P2PConnectFactoryTest p2PConnectFactory;
     private boolean isFaqifang;//是否发起方
     private String faqifangPeerId, jieshoufangPeerId;
+    private String mRoomId = "dongxl";
+    private String mSelfId = "dongxl1";
 
     @Override
     public void onAttach(Context context) {
@@ -105,11 +111,9 @@ public class P2PConnectFragment extends Fragment implements P2PConnectCallback {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         if (null == p2PConnectFactory) {
-            p2PConnectFactory = new P2PConnectFactory(getActivity(), this, new RoomStore(), localSurface,
-                    remoteSurface);
+            createInitRoom();
         }
-        p2PConnectFactory.initRoom(1);
-        p2PConnectFactory.onCreateRoom();
+        p2PConnectFactory.joinRoom(1);
 //        if (isFaqifang) {
 ////1 发起： 创建createOffer
 //            p2PConnectFactory.faqifang1("");
@@ -123,6 +127,11 @@ public class P2PConnectFragment extends Fragment implements P2PConnectCallback {
 ////2 设置ice 建立连接
 //            p2PConnectFactory.jieshoufang2("", null);
 //        }
+    }
+
+    private void createInitRoom() {
+        p2PConnectFactory = new P2PConnectFactoryTest(getActivity(), this, new RoomOptions(), new RoomStore(), localSurface,
+                remoteSurface, mRoomId, mSelfId);
     }
 
     @Override
@@ -178,7 +187,6 @@ public class P2PConnectFragment extends Fragment implements P2PConnectCallback {
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-
                 zijiText.setText(zijiText.getText().toString() + "，发送AnswerSdp");
                 if (null != p2pInterface) {
                     try {

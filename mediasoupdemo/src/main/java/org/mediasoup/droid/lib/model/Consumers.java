@@ -2,6 +2,8 @@ package org.mediasoup.droid.lib.model;
 
 import org.json.JSONArray;
 import org.mediasoup.droid.Consumer;
+import org.webrtc.AudioTrack;
+import org.webrtc.VideoTrack;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -22,6 +24,7 @@ public class Consumers {
     private JSONArray mScore;
     private int mPreferredSpatialLayer;
     private int mPreferredTemporalLayer;
+    private P2PTrack mP2PTrack;
 
     ConsumerWrapper(String type, boolean remotelyPaused, Consumer consumer) {
       mType = type;
@@ -32,6 +35,10 @@ public class Consumers {
       mConsumer = consumer;
       mPreferredSpatialLayer = -1;
       mPreferredTemporalLayer = -1;
+    }
+
+    public ConsumerWrapper(P2PTrack p2PTrack) {
+      this.mP2PTrack = p2PTrack;
     }
 
     public String getType() {
@@ -69,6 +76,14 @@ public class Consumers {
     public int getPreferredTemporalLayer() {
       return mPreferredTemporalLayer;
     }
+
+    public P2PTrack getP2PTrack() {
+      return mP2PTrack;
+    }
+
+    public void setP2PTrack(P2PTrack p2PTrack) {
+      this.mP2PTrack = p2PTrack;
+    }
   }
 
   private final Map<String, ConsumerWrapper> consumers;
@@ -79,6 +94,30 @@ public class Consumers {
 
   public void addConsumer(String type, Consumer consumer, boolean remotelyPaused) {
     consumers.put(consumer.getId(), new ConsumerWrapper(type, remotelyPaused, consumer));
+  }
+
+  public void addP2PTrack(P2PTrack p2PTrack) {
+    consumers.put(p2PTrack.getPeerId(), new ConsumerWrapper(p2PTrack));
+  }
+
+  public void addP2PAudioTrack(String peerId, AudioTrack audioTrack) {
+    ConsumerWrapper wrapper = consumers.get(peerId);
+    if (wrapper == null || null == wrapper.mP2PTrack) {
+      addP2PTrack(new P2PTrack(peerId));
+    }
+    P2PTrack p2PTrack = wrapper.mP2PTrack;
+    p2PTrack.setAudioTrack(audioTrack);
+    wrapper.setP2PTrack(p2PTrack);
+  }
+
+  public void addP2PVideoTrack(String peerId, VideoTrack videoTrack) {
+    ConsumerWrapper wrapper = consumers.get(peerId);
+    if (wrapper == null || null == wrapper.mP2PTrack) {
+      addP2PTrack(new P2PTrack(peerId));
+    }
+    P2PTrack p2PTrack = wrapper.mP2PTrack;
+    p2PTrack.setVideoTrack(videoTrack);
+    wrapper.setP2PTrack(p2PTrack);
   }
 
   public void removeConsumer(String consumerId) {

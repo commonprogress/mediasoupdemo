@@ -13,6 +13,7 @@ import com.jsy.mediasoup.R;
 import com.jsy.mediasoup.utils.LogUtils;
 
 import org.mediasoup.droid.lib.RoomClient;
+import org.mediasoup.droid.lib.RoomConstant;
 import org.mediasoup.droid.lib.lv.RoomStore;
 import org.mediasoup.droid.lib.model.Me;
 import org.mediasoup.droid.lib.model.RoomInfo;
@@ -21,7 +22,7 @@ public class RoomProps extends EdiasProps {
     private static final String TAG = RoomProps.class.getSimpleName();
     private final Animation mConnectingAnimation;
     private ObservableField<String> mInvitationLink;//邀请链接
-    private ObservableField<RoomClient.ConnectionState> mConnectionState;//连接状态
+    private ObservableField<RoomConstant.ConnectionState> mConnectionState;//连接状态
     private ObservableField<Boolean> mAudioOnly;//是否只有音频
     private ObservableField<Boolean> mAudioOnlyInProgress;//音视频切换中？
     private ObservableField<Boolean> mAudioMuted;//是否静音
@@ -75,7 +76,7 @@ public class RoomProps extends EdiasProps {
         return mInvitationLink;
     }
 
-    public ObservableField<RoomClient.ConnectionState> getConnectionState() {
+    public ObservableField<RoomConstant.ConnectionState> getConnectionState() {
         return mConnectionState;
     }
 
