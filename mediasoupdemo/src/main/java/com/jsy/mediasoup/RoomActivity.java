@@ -12,7 +12,6 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -58,7 +57,7 @@ public class RoomActivity extends AppCompatActivity {
     private ImageView hideVideos;
     private ImageView muteAudio;
     private ImageView restartIce;
-    private TextView speakerMute;
+    private TextView speakerEnable;
     private MeView me;
     private TextView text_reject, text_end, text_cancel, text_accept, text_name;
     private PropsChangeAndNotify changeAndNotify;
@@ -211,7 +210,7 @@ public class RoomActivity extends AppCompatActivity {
         hideVideos = findViewById(R.id.hide_videos);
         muteAudio = findViewById(R.id.mute_audio);
         restartIce = findViewById(R.id.restart_ice);
-        speakerMute = findViewById(R.id.speaker_mute);
+        speakerEnable = findViewById(R.id.speaker_mute);
         me = findViewById(R.id.me);
         text_reject = findViewById(R.id.text_reject);
         text_end = findViewById(R.id.text_end);
@@ -321,16 +320,16 @@ public class RoomActivity extends AppCompatActivity {
         restartIce.setOnClickListener(v -> roomClient.restartIce());
 
         //听筒和扬声器
-        speakerMute.setOnClickListener(
+        speakerEnable.setOnClickListener(
             v -> {
                 Me me = meProps.getMe().get();
                 if (me != null) {
                     if (me.isSpeakerMute()) {
 //关闭扬声器打开听筒
-                        roomClient.setSpeakerMute(false);
+                        roomClient.setEnableSpeaker(false);
                     } else {
 //打开扬声器 关闭听筒
-                        roomClient.setSpeakerMute(true);
+                        roomClient.setEnableSpeaker(true);
                     }
                 }
             });

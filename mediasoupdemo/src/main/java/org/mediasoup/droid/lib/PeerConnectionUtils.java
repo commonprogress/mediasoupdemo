@@ -767,6 +767,11 @@ public class PeerConnectionUtils {
     Logger.w(TAG, "dispose()");
     mThreadChecker.checkIsOnValidThread();
 
+    if(null != mMediaStream){
+       mMediaStream.dispose();
+       mMediaStream = null;
+    }
+
     releaseVideoCapturer();
 //    if (mVideoCapturer != null) {
 //      mVideoCapturer.dispose();
@@ -781,11 +786,6 @@ public class PeerConnectionUtils {
     if (mAudioSource != null) {
       mAudioSource.dispose();
       mAudioSource = null;
-    }
-
-    if(null != mMediaStream){
-        mMediaStream.dispose();
-        mMediaStream = null;
     }
 
     if (mPeerConnectionFactory != null) {

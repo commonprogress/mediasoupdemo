@@ -78,12 +78,21 @@ public class RoomStore {
 
     if (RoomConstant.ConnectionState.CLOSED.equals(state)) {
       Logger.e(TAG, "setRoomState RoomClient.ConnectionState.CLOSED");
-      peers.postValue(Peers::clear);
-      me.postValue(Me::clear);
-      producers.postValue(Producers::clear);
-      consumers.postValue(Consumers::clear);
+      clearAllConnectPeer();
     }
   }
+
+  /**
+   * 清除房间所有连接
+   */
+  public void clearAllConnectPeer(){
+    Logger.e(TAG, "setRoomState clearAllConnect");
+    peers.postValue(Peers::clear);
+    me.postValue(Me::clear);
+    producers.postValue(Producers::clear);
+    consumers.postValue(Consumers::clear);
+  }
+
 
   /**
    * 设置房间连接模式
@@ -93,10 +102,6 @@ public class RoomStore {
     roomInfo.postValue(
             roomInfo -> {
               roomInfo.setP2PMode(isP2PMode);
-            });
-    me.postValue(
-            me -> {
-              me.setP2PMode(isP2PMode);
             });
   }
 
@@ -123,6 +128,16 @@ public class RoomStore {
           me.setDisplayName(displayName);
           me.setDevice(device);
         });
+  }
+
+  public void setMe(String peerId, String displayName, DeviceInfo device, boolean isP2PMode) {
+    me.postValue(
+            me -> {
+              me.setId(peerId);
+              me.setDisplayName(displayName);
+              me.setDevice(device);
+              me.setP2PMode(isP2PMode);
+            });
   }
 
     /**

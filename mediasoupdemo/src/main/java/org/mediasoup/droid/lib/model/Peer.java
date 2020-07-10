@@ -17,6 +17,12 @@ import java.util.Set;
 @SuppressWarnings("WeakerAccess")
 public class Peer extends Info {
 
+    public static final String KEY_PEER_ID = "id";
+    public static final String KEY_PEER_CLIENTID = "clientId";
+    public static final String KEY_PEER_NAME = "displayName";
+    public static final String KEY_PEER_P2PMODE = "isP2PMode";
+    public static final String KEY_PEER_DEVICE = "device";
+
     private String mId;//PeerId 类似于userid
     private String mClientId;
     private String mDisplayName;//用户名
@@ -27,18 +33,32 @@ public class Peer extends Info {
 
     private Set<String> consumers;//消费状态集合
 
-    public Peer(@NonNull JSONObject info) {
-        mId = info.optString("id");
+    public Peer() {
         mClientId = Utils.getRandomString(16);
-        mDisplayName = info.optString("displayName");
-        isP2PMode = info.optBoolean("isP2PMode", false);
-        JSONObject deviceInfo = info.optJSONObject("device");
+        mDevice = DeviceInfo.unknownDevice();
+        consumers = Collections.synchronizedSet(new HashSet<>());
+    }
+
+    public Peer(String peerId, String peerName) {
+        mId = peerId;
+        mClientId = Utils.getRandomString(16);
+        mDisplayName = peerName;
+        mDevice = DeviceInfo.unknownDevice();
+        consumers = Collections.synchronizedSet(new HashSet<>());
+    }
+
+    public Peer(@NonNull JSONObject info) {
+        mId = info.optString(KEY_PEER_ID);
+        mClientId = Utils.getRandomString(16);
+        mDisplayName = info.optString(KEY_PEER_NAME);
+        isP2PMode = info.optBoolean(KEY_PEER_P2PMODE, false);
+        JSONObject deviceInfo = info.optJSONObject(KEY_PEER_DEVICE);
         if (deviceInfo != null) {
             mDevice =
-                new DeviceInfo()
-                    .setFlag(deviceInfo.optString("flag"))
-                    .setName(deviceInfo.optString("name"))
-                    .setVersion(deviceInfo.optString("version"));
+                    new DeviceInfo()
+                            .setFlag(deviceInfo.optString(DeviceInfo.KEY_DEVICE_FLAG))
+                            .setName(deviceInfo.optString(DeviceInfo.KEY_DEVICE_NAME))
+                            .setVersion(deviceInfo.optString(DeviceInfo.KEY_DEVICE_VERSION));
         } else {
             mDevice = DeviceInfo.unknownDevice();
         }

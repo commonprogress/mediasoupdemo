@@ -157,9 +157,9 @@ public class MediasoupLoaderUtils {
      * @param msg
      * @param curTime
      * @param msgTime
-     * @param rConvId
-     * @param userId
-     * @param clientId
+     * @param rConvId  来自的会话
+     * @param userId   发送者id
+     * @param clientId 发送者 clientid
      */
     public void receiveCallMessage(Context context,
                                    String msg,
@@ -334,6 +334,71 @@ public class MediasoupLoaderUtils {
                             }
                         }
                     }
+                } else if (callState == MediasoupConstant.CallState.P2POffer) {//,6 p2p 发起,
+                    if (!isSameConv) {
+                        closedMediasoup(MediasoupConstant.ClosedReason.DataChannel, rConvId, msgTime, userId);//发起和未响应不是同一会话
+                    } else {
+                        boolean isSameUserId = !TextUtils.isEmpty(getCurUserId()) && getCurUserId().equalsIgnoreCase(userId);
+                        if (isSameUserId) {
+                            boolean isSameClientId = !TextUtils.isEmpty(getCurClientId()) && getCurClientId().equalsIgnoreCase(clientId);
+                            if (!isSameClientId) {
+                                //接受的用户和当前设备的用户同一个 设备不同
+
+                            }
+                        } else {
+                            if (null != roomManagement) {
+                                roomManagement.onReceiveP2POffer(userId, jsonObject.optJSONObject(MediasoupConstant.key_msg_p2p));
+                            } else {
+                                if (isOneOnOneCall()) {
+                                    closedMediasoup(MediasoupConstant.ClosedReason.DataChannel, rConvId, msgTime, userId);//有一方未响应
+                                }
+                            }
+                        }
+                    }
+                } else if (callState == MediasoupConstant.CallState.P2PAnswer) {//,7 p2p 响应,
+                    if (!isSameConv) {
+                        closedMediasoup(MediasoupConstant.ClosedReason.DataChannel, rConvId, msgTime, userId);//发起和未响应不是同一会话
+                    } else {
+                        boolean isSameUserId = !TextUtils.isEmpty(getCurUserId()) && getCurUserId().equalsIgnoreCase(userId);
+                        if (isSameUserId) {
+                            boolean isSameClientId = !TextUtils.isEmpty(getCurClientId()) && getCurClientId().equalsIgnoreCase(clientId);
+                            if (!isSameClientId) {
+                                //接受的用户和当前设备的用户同一个 设备不同
+
+                            }
+                        } else {
+                            if (null != roomManagement) {
+                                roomManagement.onReceiveP2PAnswer(userId, jsonObject.optJSONObject(MediasoupConstant.key_msg_p2p));
+                            } else {
+                                if (isOneOnOneCall()) {
+                                    closedMediasoup(MediasoupConstant.ClosedReason.DataChannel, rConvId, msgTime, userId);//有一方未响应
+                                }
+                            }
+                        }
+                    }
+                } else if (callState == MediasoupConstant.CallState.P2PIce) {//,8 p2p ice
+                    if (!isSameConv) {
+                        closedMediasoup(MediasoupConstant.ClosedReason.DataChannel, rConvId, msgTime, userId);//发起和未响应不是同一会话
+                    } else {
+                        boolean isSameUserId = !TextUtils.isEmpty(getCurUserId()) && getCurUserId().equalsIgnoreCase(userId);
+                        if (isSameUserId) {
+                            boolean isSameClientId = !TextUtils.isEmpty(getCurClientId()) && getCurClientId().equalsIgnoreCase(clientId);
+                            if (!isSameClientId) {
+                                //接受的用户和当前设备的用户同一个 设备不同
+
+                            }
+                        } else {
+                            if (null != roomManagement) {
+                                roomManagement.onReceiveP2PIce(userId, jsonObject.optJSONObject(MediasoupConstant.key_msg_p2p));
+                            } else {
+                                if (isOneOnOneCall()) {
+                                    closedMediasoup(MediasoupConstant.ClosedReason.DataChannel, rConvId, msgTime, userId);//有一方未响应
+                                }
+                            }
+                        }
+                    }
+                } else {
+
                 }
             }
         } catch (JSONException e) {
@@ -648,6 +713,34 @@ public class MediasoupLoaderUtils {
                 jsonObject.put(MediasoupConstant.key_msg_convtype, MediasoupConstant.ConvType.fromTypeOrdinal(mediasoupConvType));
 //                jsonObject.put(MediasoupConstant.key_msg_shouldring, true);
             }
+            if (null != mediasoupHandler && !TextUtils.isEmpty(rConvId)) {
+                mediasoupHandler.onSend(rConvId, getCurUserId(), getCurClientId(), getIncomingUserId(), getIncomingClientId(), jsonObject.toString(), true);
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+            closedMediasoup(MediasoupConstant.ClosedReason.IOError, rConvId, incomingMsgTime, getIncomingUserId());//发送消息出现异常
+        }
+    }
+
+    /**
+     * 发送secret p2p 信令
+     *
+     * @param callState 6发起sdp，7 响应sdp，8 ice
+     */
+    public void sendMediasoupMsg(MediasoupConstant.CallState callState, String rConvId, JSONObject dataJson) {
+        LogUtils.i(TAG, "startJoinMediasoup: callState.name:" + callState.name() + ",dataJson:" + dataJson + ", hashCode:" + this.hashCode());
+        if (!isInitAndCreate() || null == dataJson) {
+            return;
+        }
+        try {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put(MediasoupConstant.key_msg_callstate, MediasoupConstant.CallState.fromTypeOrdinal(callState));
+            if (callState == MediasoupConstant.CallState.Started) {
+                jsonObject.put(MediasoupConstant.key_msg_calltype, MediasoupConstant.CallType.fromTypeOrdinal(mediasoupCallType));
+                jsonObject.put(MediasoupConstant.key_msg_convtype, MediasoupConstant.ConvType.fromTypeOrdinal(mediasoupConvType));
+//                jsonObject.put(MediasoupConstant.key_msg_shouldring, true);
+            }
+            jsonObject.put(MediasoupConstant.key_msg_p2p, dataJson);
             if (null != mediasoupHandler && !TextUtils.isEmpty(rConvId)) {
                 mediasoupHandler.onSend(rConvId, getCurUserId(), getCurClientId(), getIncomingUserId(), getIncomingClientId(), jsonObject.toString(), true);
             }

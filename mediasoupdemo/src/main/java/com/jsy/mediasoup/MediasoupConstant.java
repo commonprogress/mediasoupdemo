@@ -22,6 +22,7 @@ public class MediasoupConstant {
     public static final String key_msg_calltype = "call_type";
     public static final String key_msg_convtype = "conv_type";
     public static final String key_msg_shouldring = "should_ring";
+    public static final String key_msg_p2p = "p2p_webrtc";
 
     public static final int CAPTURE_PERMISSION_REQUEST_CODE = 0x0021;
     public static Intent mediaProjectionPermissionResultData;
@@ -68,10 +69,13 @@ public class MediasoupConstant {
      * 2拒绝，
      * 3结束，
      * 4取消 ,
-     * 5 未响应
+     * 5 未响应,
+     * 6  p2p 发起,
+     * 7 p2p 响应,
+     * 8 p2p ice
      */
     public enum CallState {
-        Started, Accepted, Rejected, Ended, Canceled, Missed;
+        Started, Accepted, Rejected, Ended, Canceled, Missed, P2POffer, P2PAnswer, P2PIce;
 
         /**
          * 根据类型的ordinal，返回类型的枚举实例。

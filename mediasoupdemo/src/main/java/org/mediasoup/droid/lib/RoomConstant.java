@@ -161,4 +161,11 @@ public class RoomConstant {
             return null == state ? 0 : state.getIndex();
         }
     }
+
+    public enum P2POtherState {
+        VIDEO_RESUME,//视频播放
+        VIDEO_PAUSE,//视频暂停
+        AUDIO_RESUME,//音频播放
+        AUDIO_PAUSE,//音频暂停
+    }
 }

@@ -10,6 +10,7 @@ import com.jsy.mediasoup.interfaces.RoomManagementCallback;
 import com.jsy.mediasoup.vm.RoomProps;
 import com.jsy.mediasoup.utils.LogUtils;
 
+import org.json.JSONObject;
 import org.mediasoup.droid.lib.PeerConnectionUtils;
 import org.mediasoup.droid.lib.RoomClient;
 import org.mediasoup.droid.lib.RoomConstant;
@@ -28,7 +29,7 @@ public class RoomManagement implements MediasoupConnectCallback {
     private String mRoomId, mPeerId, mClientId, mDisplayName;
     //视频编码
     private boolean mForceH264, mForceVP9;
-    private boolean mP2PMode;
+    private boolean isP2PMode;
     private RoomConstant.ConnectionState connectionState = RoomConstant.ConnectionState.NEW;
     private RoomOptions mOptions;//房间的配置信息
     private RoomStore mRoomStore;
@@ -173,7 +174,7 @@ public class RoomManagement implements MediasoupConnectCallback {
 //        mDisplayName = preferences.getString("displayName", "");
         mForceH264 = preferences.getBoolean("forceH264", false);
         mForceVP9 = preferences.getBoolean("forceVP9", false);
-        mP2PMode = MediasoupLoaderUtils.getInstance().isOneOnOneCall();
+        isP2PMode = MediasoupLoaderUtils.getInstance().isOneOnOneCall();
         mRoomId = MediasoupLoaderUtils.getInstance().getCurRConvId();
         mPeerId = MediasoupLoaderUtils.getInstance().getCurUserId();
         mDisplayName = MediasoupLoaderUtils.getInstance().getDisplayName();
@@ -197,9 +198,12 @@ public class RoomManagement implements MediasoupConnectCallback {
 //        mOptions.setConsume(preferences.getBoolean("consume", true));//是否立即连接，显示对方音视频等？
         mOptions.setForceTcp(preferences.getBoolean("forceTcp", false));//是否强制tcp 否则rtc
         mOptions.setForceTcp(false);
+
 //        mRoomId = "dongxl";
         mForceH264 = true;
         mForceVP9 = true;
+        isP2PMode = false;
+
         updateRoomOptions();
 
         // Device config. 获取上传保存的摄像头信息 默认前置摄像头
@@ -211,7 +215,7 @@ public class RoomManagement implements MediasoupConnectCallback {
         //初始化房间
         mRoomClient =
                 new RoomClient(
-                        mContext, mRoomStore, mP2PMode, mRoomId, mPeerId, mClientId, mDisplayName, mForceH264, mForceVP9, mOptions, this);
+                        mContext, mRoomStore, isP2PMode, mRoomId, mPeerId, mClientId, mDisplayName, mForceH264, mForceVP9, mOptions, this);
         boolean isReady = MediasoupLoaderUtils.getInstance().setRoomClientStoreOptions(mRoomClient, mRoomStore, mOptions);
         if (null != managementCallback) {
             managementCallback.onMediasoupReady(isReady);
@@ -330,25 +334,6 @@ public class RoomManagement implements MediasoupConnectCallback {
     }
 
     @Override
-    public void onJoinSuc() {
-        if (null != managementCallback) {
-            managementCallback.onJoinSuc();
-        }
-        if (MediasoupLoaderUtils.getInstance().isReceiveCall()) {
-            establishedJoinMediasoup();
-        }
-    }
-
-    @Override
-    public void onJoinFail() {
-        isOtherJoin = false;
-        if (null != managementCallback) {
-            managementCallback.onJoinFail();
-        }
-        MediasoupLoaderUtils.getInstance().closedMediasoup(MediasoupConstant.ClosedReason.Error);//加入房间失败
-    }
-
-    @Override
     public boolean isConnecting() {
         return isRoomConnecting();
     }
@@ -369,6 +354,50 @@ public class RoomManagement implements MediasoupConnectCallback {
         return false;
     }
 
+    @Override
+    public String getConnectPeerId() {
+        return MediasoupLoaderUtils.getInstance().getIncomingUserId();
+    }
+
+    @Override
+    public String getConnectPeerName() {
+        return MediasoupLoaderUtils.getInstance().getIncomingDisplayName();
+    }
+
+    @Override
+    public void sendOfferSdp(String peerId, JSONObject sdpJson) {
+        MediasoupLoaderUtils.getInstance().sendMediasoupMsg(MediasoupConstant.CallState.P2POffer, getRoomId(), sdpJson);
+    }
+
+    @Override
+    public void sendAnswerSdp(String peerId, JSONObject sdpJson) {
+        MediasoupLoaderUtils.getInstance().sendMediasoupMsg(MediasoupConstant.CallState.P2PAnswer, getRoomId(), sdpJson);
+    }
+
+    @Override
+    public void sendIceCandidate(String peerId, JSONObject iceJson) {
+        MediasoupLoaderUtils.getInstance().sendMediasoupMsg(MediasoupConstant.CallState.P2PIce, getRoomId(), iceJson);
+    }
+
+    @Override
+    public void onJoinSuc() {
+        if (null != managementCallback) {
+            managementCallback.onJoinSuc();
+        }
+        if (MediasoupLoaderUtils.getInstance().isReceiveCall()) {
+            establishedJoinMediasoup();
+        }
+    }
+
+    @Override
+    public void onJoinFail() {
+        isOtherJoin = false;
+        if (null != managementCallback) {
+            managementCallback.onJoinFail();
+        }
+        MediasoupLoaderUtils.getInstance().closedMediasoup(MediasoupConstant.ClosedReason.Error);//加入房间失败
+    }
+
     public RoomProps getRoomProps() {
         if (null != managementCallback) {
             return managementCallback.getRoomProps();
@@ -383,6 +412,27 @@ public class RoomManagement implements MediasoupConnectCallback {
     public List<Peer> getCurRoomPeerList() {
         Peers peers = getCurRoomPeers();
         return null == peers ? null : peers.getAllPeers();
+    }
+
+    public void onReceiveP2POffer(String peerId, JSONObject jsonData) {
+        if (null == mRoomClient) {
+            return;
+        }
+        mRoomClient.createP2PAnswerSdp(peerId, jsonData);
+    }
+
+    public void onReceiveP2PAnswer(String peerId, JSONObject jsonData) {
+        if (null == mRoomClient) {
+            return;
+        }
+        mRoomClient.setP2PAnswerSdp(peerId, jsonData);
+    }
+
+    public void onReceiveP2PIce(String peerId, JSONObject jsonData) {
+        if (null == mRoomClient) {
+            return;
+        }
+        mRoomClient.addP2PIceCandidate(peerId, jsonData);
     }
 
     /**
@@ -683,11 +733,11 @@ public class RoomManagement implements MediasoupConnectCallback {
      *
      * @param speaker
      */
-    public void setSpeakerMute(boolean speaker) {
+    public void setEnableSpeaker(boolean speaker) {
         if (null == mRoomClient) {
             return;
         }
-        mRoomClient.setSpeakerMute(speaker);
+        mRoomClient.setEnableSpeaker(speaker);
     }
 
     /**

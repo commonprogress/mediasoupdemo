@@ -11,6 +11,9 @@ import static org.mediasoup.droid.lib.JsonUtils.jsonPut;
  */
 @SuppressWarnings("WeakerAccess")
 public class DeviceInfo {
+  public static final String KEY_DEVICE_FLAG = "flag";
+  public static final String KEY_DEVICE_NAME = "name";
+  public static final String KEY_DEVICE_VERSION = "version";
 
   private String mFlag;
   private String mName;
@@ -56,9 +59,9 @@ public class DeviceInfo {
 
   public JSONObject toJSONObject() {
     JSONObject deviceInfo = new JSONObject();
-    jsonPut(deviceInfo, "flag", getFlag());
-    jsonPut(deviceInfo, "name", getName());
-    jsonPut(deviceInfo, "version", getVersion());
+    jsonPut(deviceInfo, KEY_DEVICE_FLAG, getFlag());
+    jsonPut(deviceInfo, KEY_DEVICE_NAME, getName());
+    jsonPut(deviceInfo, KEY_DEVICE_VERSION, getVersion());
     return deviceInfo;
   }
 }

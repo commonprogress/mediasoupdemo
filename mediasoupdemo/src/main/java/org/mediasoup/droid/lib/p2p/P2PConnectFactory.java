@@ -13,6 +13,7 @@ import org.mediasoup.droid.lib.RoomConstant;
 import org.mediasoup.droid.lib.RoomOptions;
 import org.mediasoup.droid.lib.interfaces.MediasoupConnectCallback;
 import org.mediasoup.droid.lib.lv.RoomStore;
+import org.mediasoup.droid.lib.model.Peer;
 import org.mediasoup.droid.lib.model.Producers;
 import org.webrtc.AudioTrack;
 import org.webrtc.IceCandidate;
@@ -28,6 +29,16 @@ import java.util.Map;
 
 public class P2PConnectFactory {
     public static final String TAG = P2PConnectFactory.class.getSimpleName();
+    public static final String TAG_OFFER_SDP = "createOfferSdp:";
+    public static final String TAG_ANSWER_SDP = "createAnswerSdp:";
+    public static final String TAG_LOCAL_SDP = "setLocalSdp:";
+    public static final String TAG_REMOTE_SDP = "setRemoteSdp:";
+    public static final String KEY_SDP_CONTENT = "sdp";
+    public static final String KEY_SDP_TYPE = "type";
+    public static final String KEY_ICE_ID = "id";//IceCandidate. sdpMid
+    public static final String KEY_ICE_LABEL = "label";//IceCandidate .sdpMLineIndex
+    public static final String KEY_ICE_CANDIDATE = "candidate";//IceCandidate sdp
+
     // Android context.
     @NonNull
     private final Context mContext;
@@ -36,18 +47,18 @@ public class P2PConnectFactory {
     private final RoomOptions mOptions;
     private final String mRoomId;
     private final String mSelfId;
-    private final String mDisplayName;
+    private final String mSelfName;
     private final String mClientId;
-    private final boolean mP2PMode;
-    private PeerConnectionUtils mPeerConnectionUtils;
+    private final boolean isP2PMode;
     private AudioTrack mLocalAudioTrack;
     private VideoTrack mLocalVideoTrack;
     private Map<String, PeerConnection> peerConnectionMap = new HashMap<>();
+    private PeerConnectionUtils mPeerConnectionUtils;
     private final MediasoupConnectCallback connectCallback;
     private final ThreadUtils.ThreadChecker mThreadChecker;
 
     public P2PConnectFactory(Context context, RoomStore roomStore,
-                             boolean p2PMode, String roomId, String peerId,
+                             boolean isP2PMode, String roomId, String peerId,
                              String clientId, String displayName,
                              boolean forceVP9, boolean forceH264,
                              RoomOptions options,
@@ -58,23 +69,19 @@ public class P2PConnectFactory {
         this.mOptions = options;
         this.mStore = roomStore;
         this.connectCallback = connectCallback;
-        this.mP2PMode = p2PMode;
+        this.isP2PMode = isP2PMode;
         this.mRoomId = roomId;
         this.mSelfId = peerId;
         this.mClientId = clientId;
-        this.mDisplayName = displayName;
+        this.mSelfName = displayName;
         this.mPeerConnectionUtils = peerConnectionUtils;
         mThreadChecker = new ThreadUtils.ThreadChecker();
     }
 
-    public void joinRoom(int type) {
-        LogUtils.i(TAG, "initRoom type:" + type);
+    public void joinImpl() {
+        LogUtils.i(TAG, "initRoom:");
         mThreadChecker.checkIsOnValidThread();
-        mStore.setRoomState(RoomConstant.ConnectionState.CONNECTING);
 
-
-        mStore.setRoomState(RoomConstant.ConnectionState.CONNECTED);//设置状态 已经连接
-        mStore.addNotify("You are in the room!", 3000);//添加一个已经加入房间通知
         mStore.setMediaCapabilities(true, true);
         if (mOptions.isEnableAudio()) {
             getLocalAudioTrack();//启动麦克风 录音
@@ -111,26 +118,25 @@ public class P2PConnectFactory {
      * 设置 setLocalDescription
      * 发送 offer sdp 给接收方id  进入 @see #jieshoufang1
      *
-     * @param peerId 对方id
+     * @param peer 对方用户信息
      */
-    public void faqifang1(String peerId) {
+    public void createP2POfferSdp(Peer peer) {
         mThreadChecker.checkIsOnValidThread();
-        LogUtils.i(TAG, "faqifang1 peerId:" + peerId);
+        String peerId = null == peer ? "" : peer.getId();
+        String peerName = null == peer ? "" : peer.getDisplayName();
+        LogUtils.i(TAG, "faqifang1 peerId:" + peer.getId());
         PeerConnection peerConnection = getOrCreatePeerConnection(peerId);
-        peerConnection.createOffer(new P2PSdpObserver("createOfferSdp:" + peerId) {
+        peerConnection.createOffer(new P2PSdpObserver(TAG_OFFER_SDP + peerId) {
             @Override
             public void onCreateSuccess(SessionDescription sessionDescription) {
                 super.onCreateSuccess(sessionDescription);
                 LogUtils.i(P2PConnectFactory.TAG, "faqifang1 onCreateSuccess peerId:" + peerId + ",sessionDescription.type:" + sessionDescription.type + ",sessionDescription.description:" + sessionDescription.description);
-                peerConnection.setLocalDescription(new P2PSdpObserver("setLocalSdp:" + peerId), sessionDescription);
-//                if (null != connectCallback) {
-//                    connectCallback.sendOfferSdpToReceive(peerId, sessionDescription.type.canonicalForm(), sessionDescription.description);
-//                }
+                peerConnection.setLocalDescription(new P2PSdpObserver(TAG_LOCAL_SDP + peerId), sessionDescription);
+                if (null != connectCallback) {
+                    connectCallback.sendOfferSdp(peerId, getSDPJSONObject(sessionDescription));
+                }
             }
         }, new MediaConstraints());
-//        if (null != connectCallback) {
-//            connectCallback.onSendSelfState(peerId);
-//        }
     }
 
     /**
@@ -140,95 +146,76 @@ public class P2PConnectFactory {
      * 设置 setLocalDescription
      * 发送 answer sdp 给发送方(邀请方)  进入 @see #faqifang2
      *
-     * @param peerId 对方id
+     * @param peer 对方用户信息
      */
-    public void jieshoufang1(String peerId, JSONObject data) {
+    public void createP2PAnswerSdp(Peer peer, JSONObject data) {
         mThreadChecker.checkIsOnValidThread();
         if (null == data) {
             return;
         }
+        String peerId = null == peer ? "" : peer.getId();
+        String peerName = null == peer ? "" : peer.getDisplayName();
         LogUtils.i(TAG, "jieshoufang1 peerId:" + peerId + ",data:" + data.toString());
-        addP2PConnectPeer(peerId);
+        addP2PConnectPeer(peer);
         PeerConnection peerConnection = getOrCreatePeerConnection(peerId);
-        peerConnection.setRemoteDescription(new P2PSdpObserver("setRemoteSdp:" + peerId),
-                new SessionDescription(SessionDescription.Type.OFFER, data.optString("sdp")));
-        peerConnection.createAnswer(new P2PSdpObserver("localAnswerSdp") {
+        peerConnection.setRemoteDescription(new P2PSdpObserver(TAG_REMOTE_SDP + peerId),
+                new SessionDescription(SessionDescription.Type.OFFER, data.optString(KEY_SDP_CONTENT)));
+        peerConnection.createAnswer(new P2PSdpObserver(TAG_ANSWER_SDP + peerId) {
             @Override
             public void onCreateSuccess(SessionDescription sdp) {
                 super.onCreateSuccess(sdp);
                 LogUtils.i(P2PConnectFactory.TAG, "jieshoufang1 onCreateSuccess peerId:" + peerId + ",sdp.type:" + sdp.type + ",sdp.description:" + sdp.description);
-                peerConnectionMap.get(peerId).setLocalDescription(new P2PSdpObserver("setLocalSdp:" + peerId), sdp);
-//                if (null != connectCallback) {
-//                    connectCallback.sendAnswerSdpToSend(peerId, sdp.type.canonicalForm(), sdp.description);
-//                }
+                peerConnectionMap.get(peerId).setLocalDescription(new P2PSdpObserver(TAG_LOCAL_SDP + peerId), sdp);
+                if (null != connectCallback) {
+                    connectCallback.sendAnswerSdp(peerId, getSDPJSONObject(sdp));
+                }
             }
         }, new MediaConstraints());
-//        if (null != connectCallback) {
-//            connectCallback.onReceiveSelfState(peerId);
-//        }
     }
 
     /**
      * 发起方 步骤二：接收接收方（邀请方）Answer 创建连接
      * 设置setRemoteDescription
-     * 自己在createPeerConnection回调中 onIceCandidate 收到IceCandidate数据  发送给接收方
      *
-     * @param peerId 对方id
+     * @param peer 对方用户信息
      */
-    public void faqifang2(String peerId, JSONObject data) {
+    public void setP2PAnswerSdp(Peer peer, JSONObject data) {
         mThreadChecker.checkIsOnValidThread();
         if (null == data) {
             return;
         }
+        String peerId = null == peer ? "" : peer.getId();
+        String peerName = null == peer ? "" : peer.getDisplayName();
         LogUtils.i(TAG, "faqifang2 peerId:" + peerId + ",data:" + data.toString());
-        addP2PConnectPeer(peerId);
+        addP2PConnectPeer(peer);
         PeerConnection peerConnection = getOrCreatePeerConnection(peerId);
-        peerConnection.setRemoteDescription(new P2PSdpObserver("setRemoteSdp:" + peerId),
-                new SessionDescription(SessionDescription.Type.ANSWER, data.optString("sdp")));
+        peerConnection.setRemoteDescription(new P2PSdpObserver(TAG_REMOTE_SDP + peerId),
+                new SessionDescription(SessionDescription.Type.ANSWER, data.optString(KEY_SDP_CONTENT)));
     }
 
     /**
-     * 接收方 步骤二 收到发送方 发送的IceCandidate
+     * ice 设置
+     * 接收到对方发送的IceCandidate
      * 添加addIceCandidate
-     * 自己createPeerConnection回调中 onIceCandidate 收到IceCandidate数据  发送给发送方(邀请方)
-     * 完成连接，等待自己createPeerConnection回调中 onAddStream 方法 添加remoteVideoTrack 到SurfaceViewRenderer
+     * 自己createPeerConnection回调中 onIceCandidate 收到IceCandidate数据  发送给对方
      *
-     * @param peerId 对方id
+     * @param peer 对方用户信息
      */
-    public void jieshoufang2(String peerId, JSONObject data) {
+    public void addP2PIceCandidate(Peer peer, JSONObject data) {
         mThreadChecker.checkIsOnValidThread();
         if (null == data) {
             return;
         }
+        String peerId = null == peer ? "" : peer.getId();
+        String peerName = null == peer ? "" : peer.getDisplayName();
         LogUtils.i(TAG, "jieshoufang2 peerId:" + peerId + ",data:" + data.toString());
         mStore.setRoomState(RoomConstant.ConnectionState.CONNECTED);//设置状态 已经连接
+        mStore.addNotify("You are in the room!", 3000);//添加一个已经加入房间通知
         PeerConnection peerConnection = getOrCreatePeerConnection(peerId);
         peerConnection.addIceCandidate(new IceCandidate(
-                data.optString("id"),
-                data.optInt("label"),
-                data.optString("candidate")
-        ));
-    }
-
-    /**
-     * 发起方 步骤三：收到接收方 发送的IceCandidate
-     * 添加 addIceCandidate
-     * 完成连接，等待自己createPeerConnection回调中 onAddStream 方法 添加remoteVideoTrack 到SurfaceViewRenderer
-     *
-     * @param peerId 对方id
-     */
-    public void faqifang3(String peerId, JSONObject data) {
-        mThreadChecker.checkIsOnValidThread();
-        if (null == data) {
-            return;
-        }
-        LogUtils.i(TAG, "faqifang3 peerId:" + peerId + ",data:" + data.toString());
-        mStore.setRoomState(RoomConstant.ConnectionState.CONNECTED);//设置状态 已经连接
-        PeerConnection peerConnection = getOrCreatePeerConnection(peerId);
-        peerConnection.addIceCandidate(new IceCandidate(
-                data.optString("id"),
-                data.optInt("label"),
-                data.optString("candidate")
+                data.optString(KEY_ICE_ID),
+                data.optInt(KEY_ICE_LABEL),
+                data.optString(KEY_ICE_CANDIDATE)
         ));
     }
 
@@ -240,15 +227,24 @@ public class P2PConnectFactory {
             return peerConnection;
         }
         peerConnection = mPeerConnectionUtils.getPeerConnectionFactory().createPeerConnection(P2PConnectUtils.getConnectIceServers(), new P2PConnectionObserver(peerId) {
+
+            /**
+             * 等待自己createPeerConnection回调中 onIceCandidate 收到IceCandidate数据  发送给对方
+             * @param iceCandidate
+             */
             @Override
             public void onIceCandidate(IceCandidate iceCandidate) {
                 super.onIceCandidate(iceCandidate);
                 LogUtils.i(P2PConnectFactory.TAG, "getOrCreatePeerConnection onIceCandidate peerId:" + peerId + ",iceCandidate:" + iceCandidate.toString());
-//                if (null != connectCallback) {
-//                    connectCallback.sendIceCandidateOtherSide(peerId, iceCandidate.sdpMid, iceCandidate.sdpMLineIndex, iceCandidate.sdp, iceCandidate.serverUrl, iceCandidate.adapterType.bitMask);
-//                }
+                if (null != connectCallback) {
+                    connectCallback.sendIceCandidate(peerId, getIceJSONObject(iceCandidate));
+                }
             }
 
+            /**
+             * 完成连接，等待自己createPeerConnection回调中 onAddStream 方法 添加remoteVideoTrack 到SurfaceViewRenderer
+             * @param mediaStream
+             */
             @Override
             public void onAddStream(MediaStream mediaStream) {
                 super.onAddStream(mediaStream);
@@ -257,9 +253,9 @@ public class P2PConnectFactory {
                 final VideoTrack remoteVideoTrack = mediaStream.videoTracks.get(0);
                 mStore.addP2POtherAudioTrack(peerId, remoteAudioTrack);
                 mStore.addP2POtherVideoTrack(peerId, remoteVideoTrack);
-//                if (null != connectCallback) {
-//                    connectCallback.onP2PConnectSuc(peerId);
-//                }
+                if (null != connectCallback) {
+                    connectCallback.onJoinSuc();
+                }
             }
         });
         peerConnection.addStream(mPeerConnectionUtils.getMediaStream());
@@ -267,18 +263,52 @@ public class P2PConnectFactory {
         return peerConnection;
     }
 
+    private JSONObject getSDPJSONObject(SessionDescription sdp) {
+        if (null == sdp) {
+            return null;
+        }
+        try {
+            JSONObject payload = new JSONObject();
+            payload.put(KEY_SDP_CONTENT, sdp.description);
+            payload.put(KEY_SDP_TYPE, sdp.type.canonicalForm());
+            return payload;
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private JSONObject getIceJSONObject(IceCandidate iceCandidate) {
+        if (null == iceCandidate) {
+            return null;
+        }
+        try {
+            JSONObject payload = new JSONObject();
+            payload.put(KEY_ICE_ID, iceCandidate.sdpMid);
+            payload.put(KEY_ICE_LABEL, iceCandidate.sdpMLineIndex);
+            payload.put(KEY_ICE_CANDIDATE, iceCandidate.sdp);
+            return payload;
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     /**
      * p2p下添加 对方信息
      *
-     * @param peerId
+     * @param peer
      */
-    private void addP2PConnectPeer(String peerId) {
+    private void addP2PConnectPeer(Peer peer) {
         mThreadChecker.checkIsOnValidThread();
+        String peerId = null == peer ? "" : peer.getId();
+        String peerName = null == peer ? "" : peer.getDisplayName();
+        LogUtils.i(TAG, "addP2PConnectPeer===peerId:" + peerId);
         try {
             JSONObject payload = new JSONObject();
-            payload.put("id", peerId);
-            payload.put("isP2PMode", mP2PMode);
-            payload.put("displayName", "dufangname");
+            payload.put(Peer.KEY_PEER_ID, peerId);
+            payload.put(Peer.KEY_PEER_NAME, peerName);
+            payload.put(Peer.KEY_PEER_P2PMODE, isP2PMode);
             mStore.addPeer(peerId, payload);
         } catch (JSONException e) {
             e.printStackTrace();
@@ -314,9 +344,7 @@ public class P2PConnectFactory {
     public void connectClose() {
         mThreadChecker.checkIsOnValidThread();
         LogUtils.i(TAG, "connectClose==mClosed:");
-        // dispose all transport and device.
-        disposeTransportDevice();
-        LogUtils.e(TAG, "close() mid mClosed：");
+
         // dispose audio track.
         if (mLocalAudioTrack != null) {
             mLocalAudioTrack.setEnabled(false);
@@ -330,19 +358,7 @@ public class P2PConnectFactory {
             mLocalVideoTrack.dispose();
             mLocalVideoTrack = null;
         }
-
-        // dispose peerConnection.
-        if (null != mPeerConnectionUtils) {
-            mPeerConnectionUtils.dispose();
-        }
-
         LogUtils.e(TAG, "close() end mClosed：");
-        mStore.setRoomState(RoomConstant.ConnectionState.CLOSED);
-    }
-
-    private void disposeTransportDevice() {
-        mThreadChecker.checkIsOnValidThread();
-        LogUtils.e(TAG, "disposeTransportDevice()");
     }
 
     public void destroy() {
@@ -356,5 +372,96 @@ public class P2PConnectFactory {
             }
         }
         peerConnectionMap.clear();
+    }
+
+    /**
+     * 禁止使用麦克风 录音
+     */
+    public void disableMicImpl() {
+        mThreadChecker.checkIsOnValidThread();
+        LogUtils.e(TAG, "disposeTransportDevice()");
+        for (Map.Entry<String, PeerConnection> entry : peerConnectionMap.entrySet()) {
+            PeerConnection peerConnection = entry.getValue();
+            if (null != peerConnection) {
+                peerConnection.stopRtcEventLog();
+            }
+        }
+    }
+
+    /**
+     * 启用麦克风
+     */
+    public void enableMicImpl() {
+        mThreadChecker.checkIsOnValidThread();
+        LogUtils.e(TAG, "disposeTransportDevice()");
+    }
+
+    /**
+     * 静音麦克风
+     */
+    public void muteMicImpl() {
+        mThreadChecker.checkIsOnValidThread();
+        LogUtils.e(TAG, "disposeTransportDevice()");
+    }
+
+    /**
+     * 取消静音麦克风
+     */
+    public void unmuteMicImpl() {
+        mThreadChecker.checkIsOnValidThread();
+        LogUtils.e(TAG, "disposeTransportDevice()");
+    }
+
+
+    /**
+     * 启用摄像头
+     */
+    public void enableCamImpl() {
+        mThreadChecker.checkIsOnValidThread();
+        LogUtils.e(TAG, "disposeTransportDevice()");
+    }
+
+    /**
+     * 禁用摄像头
+     */
+    public void disableCamImpl() {
+        mThreadChecker.checkIsOnValidThread();
+        LogUtils.e(TAG, "disposeTransportDevice()");
+    }
+
+    /**
+     * 启用屏幕共享（功能暂未实现）测试版
+     */
+    public void enableShareImpl() {
+        mThreadChecker.checkIsOnValidThread();
+        LogUtils.e(TAG, "disposeTransportDevice()");
+    }
+
+    /**
+     * disableShareImpl
+     *
+     * @param isContinue
+     */
+    public void disableShareImpl(boolean isContinue) {
+        mThreadChecker.checkIsOnValidThread();
+        LogUtils.e(TAG, "disposeTransportDevice() isContinue:" + isContinue);
+    }
+
+    /**
+     * 设置p2p连接 对方状态
+     *
+     * @param otherState
+     */
+    public void setP2POtherState(RoomConstant.P2POtherState otherState) {
+        LogUtils.i(TAG, "setP2POtherState===otherState:" + otherState);
+        mThreadChecker.checkIsOnValidThread();
+    }
+
+    /**
+     * 重新启动ice
+     */
+    public void restartP2PIce() {
+        mThreadChecker.checkIsOnValidThread();
+        LogUtils.i(TAG, "restartP2PIce===");
     }
 }

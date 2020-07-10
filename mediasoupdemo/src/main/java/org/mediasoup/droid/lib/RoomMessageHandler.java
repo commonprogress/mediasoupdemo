@@ -9,6 +9,7 @@ import org.json.JSONObject;
 import org.mediasoup.droid.Consumer;
 import org.mediasoup.droid.Logger;
 import org.mediasoup.droid.lib.lv.RoomStore;
+import org.mediasoup.droid.lib.model.Peer;
 import org.protoojs.droid.Message;
 
 import java.util.Map;
@@ -60,8 +61,8 @@ class RoomMessageHandler {
         }
       case "newPeer":
         {
-          String id = data.optString("id");
-          String displayName = data.optString("displayName");
+          String id = data.optString(Peer.KEY_PEER_ID);
+          String displayName = data.optString(Peer.KEY_PEER_NAME);
           mStore.addPeer(id, data);
           mStore.addNotify(displayName + " has joined the room");
           break;
@@ -75,7 +76,7 @@ class RoomMessageHandler {
       case "peerDisplayNameChanged":
         {
           String peerId = data.optString("peerId");
-          String displayName = data.optString("displayName");
+          String displayName = data.optString(Peer.KEY_PEER_NAME);
           String oldDisplayName = data.optString("oldDisplayName");
           mStore.setPeerDisplayName(peerId, displayName);
           mStore.addNotify(oldDisplayName + " is now " + displayName);
