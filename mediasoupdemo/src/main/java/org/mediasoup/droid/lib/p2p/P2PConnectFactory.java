@@ -79,7 +79,7 @@ public class P2PConnectFactory {
     }
 
     public void joinImpl() {
-        LogUtils.i(TAG, "initRoom:");
+        LogUtils.i(TAG, "joinImpl:");
         mThreadChecker.checkIsOnValidThread();
 
         mStore.setMediaCapabilities(true, true);
@@ -124,13 +124,13 @@ public class P2PConnectFactory {
         mThreadChecker.checkIsOnValidThread();
         String peerId = null == peer ? "" : peer.getId();
         String peerName = null == peer ? "" : peer.getDisplayName();
-        LogUtils.i(TAG, "faqifang1 peerId:" + peer.getId());
+        LogUtils.i(TAG, "createP2POfferSdp peerId:" + peer.getId());
         PeerConnection peerConnection = getOrCreatePeerConnection(peerId);
         peerConnection.createOffer(new P2PSdpObserver(TAG_OFFER_SDP + peerId) {
             @Override
             public void onCreateSuccess(SessionDescription sessionDescription) {
                 super.onCreateSuccess(sessionDescription);
-                LogUtils.i(P2PConnectFactory.TAG, "faqifang1 onCreateSuccess peerId:" + peerId + ",sessionDescription.type:" + sessionDescription.type + ",sessionDescription.description:" + sessionDescription.description);
+                LogUtils.i(P2PConnectFactory.TAG, "createP2POfferSdp onCreateSuccess peerId:" + peerId + ",sessionDescription.type:" + sessionDescription.type + ",sessionDescription.description:" + sessionDescription.description);
                 peerConnection.setLocalDescription(new P2PSdpObserver(TAG_LOCAL_SDP + peerId), sessionDescription);
                 if (null != connectCallback) {
                     connectCallback.sendOfferSdp(peerId, getSDPJSONObject(sessionDescription));
@@ -155,7 +155,7 @@ public class P2PConnectFactory {
         }
         String peerId = null == peer ? "" : peer.getId();
         String peerName = null == peer ? "" : peer.getDisplayName();
-        LogUtils.i(TAG, "jieshoufang1 peerId:" + peerId + ",data:" + data.toString());
+        LogUtils.i(TAG, "createP2PAnswerSdp peerId:" + peerId + ",data:" + data.toString());
         addP2PConnectPeer(peer);
         PeerConnection peerConnection = getOrCreatePeerConnection(peerId);
         peerConnection.setRemoteDescription(new P2PSdpObserver(TAG_REMOTE_SDP + peerId),
@@ -164,7 +164,7 @@ public class P2PConnectFactory {
             @Override
             public void onCreateSuccess(SessionDescription sdp) {
                 super.onCreateSuccess(sdp);
-                LogUtils.i(P2PConnectFactory.TAG, "jieshoufang1 onCreateSuccess peerId:" + peerId + ",sdp.type:" + sdp.type + ",sdp.description:" + sdp.description);
+                LogUtils.i(P2PConnectFactory.TAG, "createP2PAnswerSdp onCreateSuccess peerId:" + peerId + ",sdp.type:" + sdp.type + ",sdp.description:" + sdp.description);
                 peerConnectionMap.get(peerId).setLocalDescription(new P2PSdpObserver(TAG_LOCAL_SDP + peerId), sdp);
                 if (null != connectCallback) {
                     connectCallback.sendAnswerSdp(peerId, getSDPJSONObject(sdp));
@@ -186,7 +186,7 @@ public class P2PConnectFactory {
         }
         String peerId = null == peer ? "" : peer.getId();
         String peerName = null == peer ? "" : peer.getDisplayName();
-        LogUtils.i(TAG, "faqifang2 peerId:" + peerId + ",data:" + data.toString());
+        LogUtils.i(TAG, "setP2PAnswerSdp peerId:" + peerId + ",data:" + data.toString());
         addP2PConnectPeer(peer);
         PeerConnection peerConnection = getOrCreatePeerConnection(peerId);
         peerConnection.setRemoteDescription(new P2PSdpObserver(TAG_REMOTE_SDP + peerId),
@@ -208,7 +208,7 @@ public class P2PConnectFactory {
         }
         String peerId = null == peer ? "" : peer.getId();
         String peerName = null == peer ? "" : peer.getDisplayName();
-        LogUtils.i(TAG, "jieshoufang2 peerId:" + peerId + ",data:" + data.toString());
+        LogUtils.i(TAG, "addP2PIceCandidate peerId:" + peerId + ",data:" + data.toString());
         mStore.setRoomState(RoomConstant.ConnectionState.CONNECTED);//设置状态 已经连接
         mStore.addNotify("You are in the room!", 3000);//添加一个已经加入房间通知
         PeerConnection peerConnection = getOrCreatePeerConnection(peerId);
@@ -219,6 +219,12 @@ public class P2PConnectFactory {
         ));
     }
 
+    /**
+     * 获取 PeerConnection
+     *
+     * @param peerId
+     * @return
+     */
     private synchronized PeerConnection getOrCreatePeerConnection(String peerId) {
         mThreadChecker.checkIsOnValidThread();
         LogUtils.i(TAG, "getOrCreatePeerConnection peerId:" + peerId);
@@ -326,6 +332,22 @@ public class P2PConnectFactory {
     }
 
     /**
+     * 释放mLocalAudioTrack
+     */
+    private void releaseAudioTrack() {
+        mThreadChecker.checkIsOnValidThread();
+        LogUtils.i(TAG, "releaseVideoTrack===");
+        if (mLocalAudioTrack != null) {
+            mLocalAudioTrack.setEnabled(false);
+            mLocalAudioTrack.dispose();
+            mLocalAudioTrack = null;
+        }
+        if (null != mPeerConnectionUtils) {
+            mPeerConnectionUtils.releaseAudioSource();
+        }
+    }
+
+    /**
      * 释放mLocalVideoTrack
      */
     private void releaseVideoTrack() {
@@ -380,12 +402,7 @@ public class P2PConnectFactory {
     public void disableMicImpl() {
         mThreadChecker.checkIsOnValidThread();
         LogUtils.e(TAG, "disposeTransportDevice()");
-        for (Map.Entry<String, PeerConnection> entry : peerConnectionMap.entrySet()) {
-            PeerConnection peerConnection = entry.getValue();
-            if (null != peerConnection) {
-                peerConnection.stopRtcEventLog();
-            }
-        }
+        releaseAudioTrack();
     }
 
     /**
@@ -394,6 +411,7 @@ public class P2PConnectFactory {
     public void enableMicImpl() {
         mThreadChecker.checkIsOnValidThread();
         LogUtils.e(TAG, "disposeTransportDevice()");
+        getLocalAudioTrack();
     }
 
     /**
@@ -402,6 +420,12 @@ public class P2PConnectFactory {
     public void muteMicImpl() {
         mThreadChecker.checkIsOnValidThread();
         LogUtils.e(TAG, "disposeTransportDevice()");
+        for (Map.Entry<String, PeerConnection> entry : peerConnectionMap.entrySet()) {
+            PeerConnection peerConnection = entry.getValue();
+            if (null != peerConnection) {
+                peerConnection.setAudioRecording(false);
+            }
+        }
     }
 
     /**
@@ -410,6 +434,12 @@ public class P2PConnectFactory {
     public void unmuteMicImpl() {
         mThreadChecker.checkIsOnValidThread();
         LogUtils.e(TAG, "disposeTransportDevice()");
+        for (Map.Entry<String, PeerConnection> entry : peerConnectionMap.entrySet()) {
+            PeerConnection peerConnection = entry.getValue();
+            if (null != peerConnection) {
+                peerConnection.setAudioRecording(true);
+            }
+        }
     }
 
 
@@ -419,6 +449,7 @@ public class P2PConnectFactory {
     public void enableCamImpl() {
         mThreadChecker.checkIsOnValidThread();
         LogUtils.e(TAG, "disposeTransportDevice()");
+        getLocalVideoTrack(RoomConstant.VideoCapturerType.CAMERA);
     }
 
     /**
@@ -427,6 +458,11 @@ public class P2PConnectFactory {
     public void disableCamImpl() {
         mThreadChecker.checkIsOnValidThread();
         LogUtils.e(TAG, "disposeTransportDevice()");
+        RoomConstant.VideoCapturerType capturerType = null != mPeerConnectionUtils ? mPeerConnectionUtils.getCurrentVideoCapturer() : null;
+        if (capturerType != RoomConstant.VideoCapturerType.CAMERA) {
+            return;
+        }
+        releaseVideoTrack();
     }
 
     /**
@@ -435,6 +471,17 @@ public class P2PConnectFactory {
     public void enableShareImpl() {
         mThreadChecker.checkIsOnValidThread();
         LogUtils.e(TAG, "disposeTransportDevice()");
+        if (null != mLocalVideoTrack) {
+            RoomConstant.VideoCapturerType capturerType = mPeerConnectionUtils.getCurrentVideoCapturer();
+            if (capturerType == RoomConstant.VideoCapturerType.CAMERA) {
+                disableCamImpl();
+            } else if (capturerType == RoomConstant.VideoCapturerType.FILE) {
+
+            } else {
+                return;
+            }
+        }
+        getLocalVideoTrack(RoomConstant.VideoCapturerType.SCREEN);
     }
 
     /**
@@ -445,6 +492,16 @@ public class P2PConnectFactory {
     public void disableShareImpl(boolean isContinue) {
         mThreadChecker.checkIsOnValidThread();
         LogUtils.e(TAG, "disposeTransportDevice() isContinue:" + isContinue);
+        RoomConstant.VideoCapturerType capturerType = null != mPeerConnectionUtils ? mPeerConnectionUtils.getCurrentVideoCapturer() : null;
+        if (capturerType != RoomConstant.VideoCapturerType.SCREEN) {
+            return;
+        }
+        releaseVideoTrack();
+
+        //关闭屏幕共享后如果之前是摄像头模式 ，继续启用摄像头
+        if (isContinue && mOptions.isEnableVideo()) {
+            enableCamImpl();//启用摄像头
+        }
     }
 
     /**
@@ -455,6 +512,23 @@ public class P2PConnectFactory {
     public void setP2POtherState(RoomConstant.P2POtherState otherState) {
         LogUtils.i(TAG, "setP2POtherState===otherState:" + otherState);
         mThreadChecker.checkIsOnValidThread();
+        for (Map.Entry<String, PeerConnection> entry : peerConnectionMap.entrySet()) {
+            PeerConnection peerConnection = entry.getValue();
+            if (null != peerConnection) {
+                switch (otherState) {
+                    case VIDEO_RESUME:
+                        break;
+                    case VIDEO_PAUSE:
+                        break;
+                    case AUDIO_RESUME:
+                        peerConnection.setAudioPlayout(true);
+                        break;
+                    case AUDIO_PAUSE:
+                        peerConnection.setAudioPlayout(false);
+                        break;
+                }
+            }
+        }
     }
 
     /**

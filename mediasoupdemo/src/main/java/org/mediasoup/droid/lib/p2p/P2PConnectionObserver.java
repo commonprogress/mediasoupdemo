@@ -14,11 +14,11 @@ public class P2PConnectionObserver implements PeerConnection.Observer {
     private String tag;
 
     public P2PConnectionObserver() {
-        this("");
+        this(TAG);
     }
 
     public P2PConnectionObserver(String tag) {
-        this.tag = "dongxl:" + tag;
+        this.tag = tag;
     }
 
     @Override

@@ -10,11 +10,11 @@ public class P2PSdpObserver implements SdpObserver {
     private String tag;
 
     public P2PSdpObserver() {
-        this("");
+        this(TAG);
     }
 
     public P2PSdpObserver(String tag) {
-        this.tag = "dongxl:" + tag;
+        this.tag = tag;
     }
 
     @Override

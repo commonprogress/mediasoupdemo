@@ -660,6 +660,18 @@ public class PeerConnectionUtils {
     }
 
     /**
+     * 停止释放AudioSource相关
+     */
+    public void releaseAudioSource() {
+        Logger.d(TAG, "releaseVideoCapturer()");
+        mThreadChecker.checkIsOnValidThread();
+        if (mAudioSource != null) {
+            mAudioSource.dispose();
+            mAudioSource = null;
+        }
+    }
+
+    /**
      * 停止释放VideoSource相关
      */
     public void releaseVideoCapturer() {
