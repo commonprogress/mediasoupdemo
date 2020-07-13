@@ -93,7 +93,6 @@ public class RoomStore {
     consumers.postValue(Consumers::clear);
   }
 
-
   /**
    * 设置房间连接模式
    * @param isP2PMode
@@ -201,8 +200,8 @@ public class RoomStore {
      * 设置听筒和扬声器切换
      * @param enabled
      */
-  public void setSpeakerMuteState(boolean enabled) {
-    me.postValue(me -> me.setSpeakerMute(enabled));
+  public void setEnableSpeaker(boolean enabled) {
+    me.postValue(me -> me.setEnableSpeaker(enabled));
   }
 
   /**

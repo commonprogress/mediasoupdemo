@@ -16,6 +16,7 @@ import org.mediasoup.droid.lib.RoomConstant;
 import org.mediasoup.droid.lib.lv.RoomStore;
 import org.mediasoup.droid.lib.model.Me;
 import org.mediasoup.droid.lib.model.P2PTrack;
+import org.mediasoup.droid.lib.model.Peer;
 import org.mediasoup.droid.lib.model.Producers;
 import org.webrtc.AudioTrack;
 import org.webrtc.VideoTrack;
@@ -57,12 +58,13 @@ public class MeProps extends PeerViewProps {
                 new Observable.OnPropertyChangedCallback() {
                     @Override
                     public void onPropertyChanged(Observable sender, int propertyId) {
-                        boolean isConnecting = null == mRoomClient ? true : mRoomClient.isConnecting();
-                        if (!isConnecting) {
-                            LogUtils.e(TAG, "MeProps, onPropertyChanged isConnecting=false");
-                        }
                         Me me = mStateComposer.mMe;
-                        if (me.isP2PMode()) {
+                        boolean isP2PMode = null != me && me.isP2PMode();
+                        boolean isConnecting = null == mRoomClient ? true : mRoomClient.isConnecting();
+                        if (!isConnecting && !isP2PMode) {
+                            LogUtils.e(TAG, "MeProps, onPropertyChanged isConnecting=false isP2PMode=false");
+                        }
+                        if (isP2PMode) {
                             Producers.ProducersWrapper wrapper = mStateComposer.mP2PTrack;
                             P2PTrack p2PTrack = !isConnecting ? null : (wrapper != null ? wrapper.getP2PTrack() : null);
                             mAudioProducerId.set(p2PTrack != null ? p2PTrack.getPeerId() : null);
@@ -73,7 +75,7 @@ public class MeProps extends PeerViewProps {
                             DeviceState micState;
                             if (me == null || !me.isCanSendMic()) {
                                 micState = DeviceState.UNSUPPORTED;
-                            } else if (p2PTrack.getAudioTrack() == null) {
+                            } else if (p2PTrack == null) {
                                 micState = DeviceState.UNSUPPORTED;
                             } else if (p2PTrack.getAudioTrack() != null) {
                                 micState = DeviceState.ON;

@@ -1,11 +1,13 @@
 package com.jsy.mediasoup.vm;
 
 import android.app.Application;
+
 import androidx.lifecycle.LifecycleOwner;
 import androidx.databinding.BaseObservable;
 import androidx.databinding.Observable;
 import androidx.databinding.ObservableField;
 import androidx.annotation.NonNull;
+
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 
@@ -45,12 +47,13 @@ public class RoomProps extends EdiasProps {
         mStateComposer.addOnPropertyChangedCallback(new Observable.OnPropertyChangedCallback() {
             @Override
             public void onPropertyChanged(Observable sender, int propertyId) {
-                boolean isConnecting = null == mRoomClient ? true : mRoomClient.isConnecting();
-                if (!isConnecting) {
-                    LogUtils.e(TAG, "RoomProps, onPropertyChanged isConnecting=false");
-                }
                 Me me = mStateComposer.mMe;
                 RoomInfo roomInfo = mStateComposer.mRoomInfo;
+                boolean isP2PMode = null != roomInfo && roomInfo.isP2PMode();
+                boolean isConnecting = null == mRoomClient ? true : mRoomClient.isConnecting();
+                if (!isConnecting && !isP2PMode) {
+                    LogUtils.e(TAG, "RoomProps, onPropertyChanged isConnecting=false");
+                }
                 if (null != me) {
                     mAudioOnly.set(me.isAudioOnly());//设置是否仅音频
                     mAudioOnlyInProgress.set(me.isAudioOnlyInProgress());//设置是否音频？
@@ -120,16 +123,16 @@ public class RoomProps extends EdiasProps {
         RoomStore roomStore = getRoomStore();
         roomStore.getRoomInfo().observe(owner, this::receiveState);
         roomStore
-            .getMe()
-            .observe(
-                owner,
-                me -> {
-                    //设置自己状态
-                    mAudioOnly.set(me.isAudioOnly());//设置是否仅音频
-                    mAudioOnlyInProgress.set(me.isAudioOnlyInProgress());//设置是否音频？
-                    mAudioMuted.set(me.isAudioMuted());//设置是否静音
-                    mRestartIceInProgress.set(me.isRestartIceInProgress());//设置是否重制ice 中
-                });
+                .getMe()
+                .observe(
+                        owner,
+                        me -> {
+                            //设置自己状态
+                            mAudioOnly.set(me.isAudioOnly());//设置是否仅音频
+                            mAudioOnlyInProgress.set(me.isAudioOnlyInProgress());//设置是否音频？
+                            mAudioMuted.set(me.isAudioMuted());//设置是否静音
+                            mRestartIceInProgress.set(me.isRestartIceInProgress());//设置是否重制ice 中
+                        });
         mStateComposer.connect(owner, getRoomStore());
     }
 
@@ -139,21 +142,21 @@ public class RoomProps extends EdiasProps {
 
         void connect(LifecycleOwner owner, RoomStore store) {
             store
-                .getRoomInfo()
-                .observe(owner,
-                    (info) -> {
-                        mRoomInfo = info;
-                        notifyChange();
-                    }
-                );
+                    .getRoomInfo()
+                    .observe(owner,
+                            (info) -> {
+                                mRoomInfo = info;
+                                notifyChange();
+                            }
+                    );
             store
-                .getMe()
-                .observe(owner,
-                    (me) -> {
-                        mMe = me;
-                        notifyChange();
-                    }
-                );
+                    .getMe()
+                    .observe(owner,
+                            (me) -> {
+                                mMe = me;
+                                notifyChange();
+                            }
+                    );
         }
     }
 }

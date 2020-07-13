@@ -45,13 +45,14 @@ public class PeerProps extends PeerViewProps {
                 new Observable.OnPropertyChangedCallback() {
                     @Override
                     public void onPropertyChanged(Observable sender, int propertyId) {
-                        boolean isConnecting = null == mRoomClient ? true : mRoomClient.isConnecting();
-                        if (!isConnecting) {
-                            LogUtils.e(TAG, "PeerProps, onPropertyChanged isConnecting=false");
-                        }
                         Peer peer = mStateComposer.mPeer;
                         mPeer.set(peer);
-                        if (peer.isP2PMode()) {
+                        boolean isP2PMode = null != peer && peer.isP2PMode();
+                        boolean isConnecting = null == mRoomClient ? true : mRoomClient.isConnecting();
+                        if (!isConnecting && !isP2PMode) {
+                            LogUtils.e(TAG, "PeerProps, onPropertyChanged isConnecting=false ,isP2PMode=false");
+                        }
+                        if (isP2PMode) {
                             Consumers.ConsumerWrapper wrapper = mStateComposer.getP2PTrack();
                             P2PTrack p2PTrack = !isConnecting ? null : (wrapper != null ? wrapper.getP2PTrack() : null);
 
@@ -205,7 +206,7 @@ public class PeerProps extends PeerViewProps {
             return null;
         }
 
-        public Consumers.ConsumerWrapper getP2PTrack() {
+        synchronized Consumers.ConsumerWrapper getP2PTrack() {
             final Consumers consumers = mConsumers;
             final Peer peer = mPeer;
             if (peer == null || consumers == null) {

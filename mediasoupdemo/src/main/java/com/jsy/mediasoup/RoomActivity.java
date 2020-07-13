@@ -324,7 +324,7 @@ public class RoomActivity extends AppCompatActivity {
             v -> {
                 Me me = meProps.getMe().get();
                 if (me != null) {
-                    if (me.isSpeakerMute()) {
+                    if (me.getEnableSpeaker()) {
 //关闭扬声器打开听筒
                         roomClient.setEnableSpeaker(false);
                     } else {

@@ -85,9 +85,10 @@ public class Producers {
     if (wrapper == null || null == wrapper.mP2PTrack) {
       addP2PTrack(new P2PTrack(peerId));
     }
-    P2PTrack p2PTrack = wrapper.mP2PTrack;
+    ProducersWrapper wrapper1 = mProducers.get(peerId);
+    P2PTrack p2PTrack = wrapper1.mP2PTrack;
     p2PTrack.setAudioTrack(audioTrack);
-    wrapper.setP2PTrack(p2PTrack);
+    wrapper1.setP2PTrack(p2PTrack);
   }
 
   public void addP2PVideoTrack(String peerId, VideoTrack videoTrack) {
@@ -95,9 +96,10 @@ public class Producers {
     if (wrapper == null || null == wrapper.mP2PTrack) {
       addP2PTrack(new P2PTrack(peerId));
     }
-    P2PTrack p2PTrack = wrapper.mP2PTrack;
+    ProducersWrapper wrapper1 = mProducers.get(peerId);
+    P2PTrack p2PTrack = wrapper1.mP2PTrack;
     p2PTrack.setVideoTrack(videoTrack);
-    wrapper.setP2PTrack(p2PTrack);
+    wrapper1.setP2PTrack(p2PTrack);
   }
 
   public void removeProducer(String producerId) {

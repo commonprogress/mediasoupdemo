@@ -663,7 +663,7 @@ public class PeerConnectionUtils {
      * 停止释放AudioSource相关
      */
     public void releaseAudioSource() {
-        Logger.d(TAG, "releaseVideoCapturer()");
+        Logger.d(TAG, "releaseAudioSource()");
         mThreadChecker.checkIsOnValidThread();
         if (mAudioSource != null) {
             mAudioSource.dispose();
@@ -779,12 +779,13 @@ public class PeerConnectionUtils {
     Logger.w(TAG, "dispose()");
     mThreadChecker.checkIsOnValidThread();
 
-    if(null != mMediaStream){
-       mMediaStream.dispose();
-       mMediaStream = null;
-    }
+//    if(null != mMediaStream){
+//       mMediaStream.dispose();
+//       mMediaStream = null;
+//    }
 
     releaseVideoCapturer();
+    releaseAudioSource();
 //    if (mVideoCapturer != null) {
 //      mVideoCapturer.dispose();
 //      mVideoCapturer = null;
@@ -795,10 +796,10 @@ public class PeerConnectionUtils {
 //      mVideoSource = null;
 //    }
 //
-    if (mAudioSource != null) {
-      mAudioSource.dispose();
-      mAudioSource = null;
-    }
+//    if (mAudioSource != null) {
+//      mAudioSource.dispose();
+//      mAudioSource = null;
+//    }
 
     if (mPeerConnectionFactory != null) {
       mPeerConnectionFactory.dispose();

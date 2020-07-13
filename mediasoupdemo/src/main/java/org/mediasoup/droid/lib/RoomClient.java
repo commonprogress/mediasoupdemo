@@ -555,12 +555,12 @@ public class RoomClient extends RoomMessageHandler {
                             logError("restartIce() | failed:", e);
                             mStore.addNotify("error", "ICE restart failed: " + e.getMessage());
                         }
-                        mStore.setRestartIceInProgress(false);
                     } else {
                         if (null != mP2PConnectFactory) {
                             mP2PConnectFactory.restartP2PIce();
                         }
                     }
+                    mStore.setRestartIceInProgress(false);
                 });
     }
 
@@ -589,20 +589,21 @@ public class RoomClient extends RoomMessageHandler {
         if (!isConnecting()) {
             return;
         }
-        if (!isP2PMode) {
-            mWorkHandler.post(
-                    () -> {
-                        try {
-                            mProtoo.syncRequest(
-                                    "requestConsumerKeyFrame", req -> jsonPut(req, "consumerId", "consumerId"));
-                            mStore.addNotify("Keyframe requested for video consumer");
-                        } catch (ProtooException e) {
-                            e.printStackTrace();
-                            logError("restartIce() | failed:", e);
-                            mStore.addNotify("error", "ICE restart failed: " + e.getMessage());
-                        }
-                    });
+        if (isP2PMode) {
+            return;
         }
+        mWorkHandler.post(
+                () -> {
+                    try {
+                        mProtoo.syncRequest(
+                                "requestConsumerKeyFrame", req -> jsonPut(req, "consumerId", "consumerId"));
+                        mStore.addNotify("Keyframe requested for video consumer");
+                    } catch (ProtooException e) {
+                        e.printStackTrace();
+                        logError("restartIce() | failed:", e);
+                        mStore.addNotify("error", "ICE restart failed: " + e.getMessage());
+                    }
+                });
     }
 
     @Async
@@ -1082,6 +1083,9 @@ public class RoomClient extends RoomMessageHandler {
         if (!isConnecting()) {
             return;
         }
+        if (null == mPeerConnectionUtils) {
+            return;
+        }
         if (isP2PMode) {
             if (null != mP2PConnectFactory) {
                 mP2PConnectFactory.enableMicImpl();
@@ -1089,9 +1093,6 @@ public class RoomClient extends RoomMessageHandler {
             return;
         }
         try {
-            if (null == mPeerConnectionUtils) {
-                return;
-            }
             if (mMicProducer != null) {
                 return;
             }
@@ -1797,6 +1798,21 @@ public class RoomClient extends RoomMessageHandler {
         if (null != mP2PConnectFactory) {
             mP2PConnectFactory.setP2POtherState(otherState);
         }
+        switch (otherState) {
+            case VIDEO_RESUME:
+                mStore.setAudioOnlyState(false);
+                mStore.setAudioOnlyInProgress(false);
+                break;
+            case VIDEO_PAUSE:
+                mStore.setAudioOnlyState(true);
+                mStore.setAudioOnlyInProgress(false);
+                break;
+            case AUDIO_RESUME:
+                break;
+            case AUDIO_PAUSE:
+                break;
+        }
+
     }
 
     /**

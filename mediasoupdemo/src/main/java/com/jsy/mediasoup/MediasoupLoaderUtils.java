@@ -218,7 +218,7 @@ public class MediasoupLoaderUtils {
                                 this.incomingMsgTime = msgTime;
                                 this.mediasoupCallType = MediasoupConstant.CallType.fromOrdinalType(jsonObject.optInt(MediasoupConstant.key_msg_calltype, -1));//0音频，1视频，2强制音频
                                 this.mediasoupConvType = MediasoupConstant.ConvType.fromOrdinalType(jsonObject.optInt(MediasoupConstant.key_msg_convtype, -1));//0一对一模式，1群聊模式，2会议模式
-                                this.isShouldRing = jsonObject.optBoolean(MediasoupConstant.key_msg_shouldring, true);
+                                this.isShouldRing = jsonObject.optBoolean(MediasoupConstant.key_msg_shouldring, MediasoupConstant.msg_shouldring);
                                 this.meidasoupStart = MediasoupConstant.MeidasoupState.OtherCalling;
                                 this.meidasoupTimely = meidasoupStart;
                                 incomingJoinMediasoup(rConvId, msgTime, userId, isVideoIncoming(), isShouldRing);
@@ -241,6 +241,12 @@ public class MediasoupLoaderUtils {
                                 }
                             }
                         } else {
+                            if (isOneOnOneCall()) {
+                                this.incomingUserId = userId;
+                                this.incomingClientId = clientId;
+                                this.incomingDisplayName = "";
+                                this.incomingMsgTime = msgTime;
+                            }
                             if (null != roomManagement) {
                                 roomManagement.onOtherAcceptCall();
                             } else {
@@ -424,6 +430,7 @@ public class MediasoupLoaderUtils {
         this.meidasoupTimely = meidasoupStart;
         this.mediasoupCallType = MediasoupConstant.CallType.fromOrdinalType(callType);
         this.mediasoupConvType = MediasoupConstant.ConvType.fromOrdinalType(convType);
+        this.isShouldRing = MediasoupConstant.msg_shouldring;
 //        this.curAudioCbr = audioCbr;
         mediasoupStart(context);
         return 0;

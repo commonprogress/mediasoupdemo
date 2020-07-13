@@ -28,7 +28,7 @@ public class Me extends Info {
   private boolean mAudioMuted;
   private boolean mRestartIceInProgress;
 
-  private boolean mSpeakerMute;
+  private boolean mEnableSpeaker;
   private boolean mFrontCamera = true;
 
   @Override
@@ -156,12 +156,12 @@ public class Me extends Info {
     this.mRestartIceInProgress = restartIceInProgress;
   }
 
-    public boolean isSpeakerMute() {
-        return mSpeakerMute;
+    public boolean getEnableSpeaker() {
+        return mEnableSpeaker;
     }
 
-    public void setSpeakerMute(boolean speakerMute) {
-        this.mSpeakerMute = speakerMute;
+    public void setEnableSpeaker(boolean enableSpeaker) {
+        this.mEnableSpeaker = enableSpeaker;
     }
 
     public void setFrontCamera(boolean frontCamera) {
@@ -179,7 +179,7 @@ public class Me extends Info {
     mAudioOnlyInProgress = false;
     mAudioMuted = false;
     mRestartIceInProgress = false;
-      mSpeakerMute = false;
+      mEnableSpeaker = false;
       mFrontCamera = true;
   }
 
