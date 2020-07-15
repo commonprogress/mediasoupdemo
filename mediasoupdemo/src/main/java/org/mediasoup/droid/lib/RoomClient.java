@@ -1876,7 +1876,7 @@ public class RoomClient extends RoomMessageHandler {
         mWorkHandler.post(
                 () -> {
                     Peer peer = new Peer(peerId, null == connectCallback ? "" : connectCallback.getConnectPeerName());
-                    mP2PConnectFactory.setP2PAnswerSdp(peer, jsonData);
+                    mP2PConnectFactory.setSponsorP2PAnswerSdp(peer, jsonData);
                 });
 
     }

@@ -534,6 +534,9 @@ class HardwareVideoEncoder implements VideoEncoder {
   // Visible for testing.
   protected void deliverEncodedImage() {
     outputThreadChecker.checkIsOnValidThread();
+    if(null == codec){
+      return;
+    }
     try {
       MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
       int index = codec.dequeueOutputBuffer(info, DEQUEUE_OUTPUT_BUFFER_TIMEOUT_US);
@@ -588,8 +591,10 @@ class HardwareVideoEncoder implements VideoEncoder {
         EncodedImage encodedImage = builder
                                         .setBuffer(frameBuffer,
                                             () -> {
-                                              codec.releaseOutputBuffer(index, false);
-                                              outputBuffersBusyCount.decrement();
+                                              if(null != codec) {
+                                                codec.releaseOutputBuffer(index, false);
+                                                outputBuffersBusyCount.decrement();
+                                              }
                                             })
                                         .setFrameType(frameType)
                                         .createEncodedImage();

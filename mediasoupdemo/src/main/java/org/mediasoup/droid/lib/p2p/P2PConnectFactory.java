@@ -185,7 +185,7 @@ public class P2PConnectFactory {
      *
      * @param peer 对方用户信息
      */
-    public void setP2PAnswerSdp(Peer peer, JSONObject data) {
+    public void setSponsorP2PAnswerSdp(Peer peer, JSONObject data) {
         mThreadChecker.checkIsOnValidThread();
         if (null == data) {
             return;
