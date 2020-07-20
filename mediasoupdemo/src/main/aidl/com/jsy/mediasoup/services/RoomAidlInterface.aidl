@@ -10,7 +10,15 @@ interface RoomAidlInterface {
 
     void onOtherJoin();
 
-    void onOtherLeave();
+    void setConnectionState(int ordinal);
+
+    void setNetworkMode(int index);
+
+    void onOtherUpdate(int count);
+
+    void setCallTiming(String callTiming);
+
+    void onAllLeaveRoom();
 
     boolean reqShareScreenIntentData();
 

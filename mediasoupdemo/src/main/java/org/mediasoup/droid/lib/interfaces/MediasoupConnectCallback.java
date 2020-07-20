@@ -1,8 +1,17 @@
 package org.mediasoup.droid.lib.interfaces;
 
 import org.json.JSONObject;
+import org.mediasoup.droid.lib.model.Peer;
 
 public interface MediasoupConnectCallback {
+    String getConnectHost();
+
+    int getConnectPort();
+
+    boolean isEnableAudioJoin();
+
+    boolean isEnableVideoJoin();
+
     void onConnectSuc();
 
     void onConnectFail();
@@ -17,9 +26,13 @@ public interface MediasoupConnectCallback {
 
     boolean reqShareScreenIntentData();
 
+    boolean isOtherJoin();
+
     String getConnectPeerId();
 
     String getConnectPeerName();
+
+    Peer getConnectPeer();
 
     void sendOfferSdp(String peerId, JSONObject sdpJson);
 
@@ -27,7 +40,13 @@ public interface MediasoupConnectCallback {
 
     void sendIceCandidate(String peerId, JSONObject iceJson);
 
-    void onJoinSuc();
+    void onJoinSuc(int existPeer);
 
-    void onJoinFail();
+    void onP2PJoinFail();
+
+    void onMediasoupJoinFail();
+
+    void onP2PConnectionFailed();
+
+    void onP2PReExchangeSDP(boolean isRenegotiation);
 }

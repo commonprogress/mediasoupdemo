@@ -11,14 +11,15 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.jsy.mediasoup.adapter.PeerAdapter;
 import com.jsy.mediasoup.interfaces.RoomStoreObserveCallback;
@@ -26,15 +27,14 @@ import com.jsy.mediasoup.services.MediasoupAidlInterface;
 import com.jsy.mediasoup.services.MediasoupService;
 import com.jsy.mediasoup.services.RoomAidlInterface;
 import com.jsy.mediasoup.utils.ClipboardCopy;
+import com.jsy.mediasoup.utils.LogUtils;
 import com.jsy.mediasoup.view.MeView;
 import com.jsy.mediasoup.vm.MeProps;
 import com.jsy.mediasoup.vm.RoomProps;
-import com.jsy.mediasoup.utils.LogUtils;
 import com.nabinbhandari.android.permissions.PermissionHandler;
 import com.nabinbhandari.android.permissions.Permissions;
 
 import org.mediasoup.droid.Logger;
-import org.mediasoup.droid.MediasoupClient;
 import org.mediasoup.droid.lib.RoomClient;
 import org.mediasoup.droid.lib.Utils;
 import org.mediasoup.droid.lib.lv.RoomStore;
@@ -57,7 +57,7 @@ public class RoomActivity extends AppCompatActivity {
     private ImageView hideVideos;
     private ImageView muteAudio;
     private ImageView restartIce;
-    private TextView speakerEnable;
+    private TextView speakerMute;
     private MeView me;
     private TextView text_reject, text_end, text_cancel, text_accept, text_name;
     private PropsChangeAndNotify changeAndNotify;
@@ -121,9 +121,35 @@ public class RoomActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onOtherLeave() throws RemoteException {
-            LogUtils.i(TAG, "==roomBinder mediasoup onOtherLeave==");
+        public void setConnectionState(int ordinal) throws RemoteException {
+
+        }
+
+        @Override
+        public void setNetworkMode(int index) throws RemoteException {
+
+        }
+
+        @Override
+        public void onOtherUpdate(int count) throws RemoteException {
+            LogUtils.i(TAG, "==roomBinder mediasoup onOtherUpdate==");
 //            rejectViewData();
+        }
+
+        @Override
+        public void setCallTiming(String callTiming) throws RemoteException {
+            LogUtils.i(TAG, "==roomBinder mediasoup setCallTiming==callTiming:" + callTiming);
+        }
+
+        @Override
+        public void onAllLeaveRoom() throws RemoteException {
+            LogUtils.i(TAG, "==roomBinder mediasoup onOtherLeave==");
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(RoomActivity.this, "所有人都离开了", Toast.LENGTH_SHORT).show();
+                }
+            });
         }
 
         /**
@@ -210,21 +236,28 @@ public class RoomActivity extends AppCompatActivity {
         hideVideos = findViewById(R.id.hide_videos);
         muteAudio = findViewById(R.id.mute_audio);
         restartIce = findViewById(R.id.restart_ice);
-        speakerEnable = findViewById(R.id.speaker_mute);
+        speakerMute = findViewById(R.id.speaker_mute);
         me = findViewById(R.id.me);
         text_reject = findViewById(R.id.text_reject);
         text_end = findViewById(R.id.text_end);
         text_cancel = findViewById(R.id.text_cancel);
         text_accept = findViewById(R.id.text_accept);
         text_name = findViewById(R.id.text_name);
-        // Display version number.
-        ((TextView)findViewById(R.id.version)).setText(String.valueOf(MediasoupClient.version()));
     }
 
     private void initViewData() {
         rejectViewData();
         initViewModel();
         checkPermission();
+    }
+
+    public String getCurRegister() {
+        try {
+            return null != mediasoupBinder ? mediasoupBinder.getCurRegister() : "";
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+        return "";
     }
 
     private void rejectViewData() {
@@ -241,20 +274,20 @@ public class RoomActivity extends AppCompatActivity {
                 text_end.setVisibility(View.VISIBLE);
                 text_cancel.setVisibility(View.GONE);
                 text_accept.setVisibility(View.GONE);
-                text_name.setText("已经连接——他人：" + MediasoupLoaderUtils.getInstance().getIncomingDisplayName());
+                text_name.setText("已经连接——他人：" + MediasoupLoaderUtils.getInstance().getIncomingDisplayName(getCurRegister()));
             } else {
                 if (isReceiveCall) {
                     text_reject.setVisibility(View.VISIBLE);
                     text_end.setVisibility(View.GONE);
                     text_cancel.setVisibility(View.GONE);
                     text_accept.setVisibility(View.VISIBLE);
-                    text_name.setText("等待自己接受——他人：" + MediasoupLoaderUtils.getInstance().getIncomingDisplayName());
+                    text_name.setText("等待自己接受——他人：" + MediasoupLoaderUtils.getInstance().getIncomingDisplayName(getCurRegister()));
                 } else {
                     text_reject.setVisibility(View.GONE);
                     text_end.setVisibility(View.GONE);
                     text_cancel.setVisibility(View.VISIBLE);
                     text_accept.setVisibility(View.GONE);
-                    text_name.setText("等待他人接受——自己：" + MediasoupLoaderUtils.getInstance().getIncomingDisplayName());
+                    text_name.setText("等待他人接受——自己：" + MediasoupLoaderUtils.getInstance().getIncomingDisplayName(getCurRegister()));
                 }
             }
         } catch (RemoteException e) {
@@ -268,7 +301,7 @@ public class RoomActivity extends AppCompatActivity {
             changeAndNotify = new PropsChangeAndNotify(this, this);
         }
         getViewModelStore().clear();
-        boolean isMediasoupReady = MediasoupLoaderUtils.getInstance().isMediasoupReady();
+        boolean isMediasoupReady = MediasoupLoaderUtils.getInstance().isMediasoupReady(getCurRegister());
         if (!isMediasoupReady) {
             return;
         }
@@ -320,7 +353,7 @@ public class RoomActivity extends AppCompatActivity {
         restartIce.setOnClickListener(v -> roomClient.restartIce());
 
         //听筒和扬声器
-        speakerEnable.setOnClickListener(
+        speakerMute.setOnClickListener(
             v -> {
                 Me me = meProps.getMe().get();
                 if (me != null) {
@@ -428,7 +461,7 @@ public class RoomActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         if (requestCode == REQUEST_CODE_SETTING) {
-            Logger.d(TAG, "request config done resultCode:" + resultCode + ",requestCode:" + REQUEST_CODE_SETTING);
+            Logger.d(TAG, "request config done");
             try {
                 if (null != mediasoupBinder) {
                     mediasoupBinder.onResetMediasoupRoom();
@@ -436,6 +469,7 @@ public class RoomActivity extends AppCompatActivity {
             } catch (RemoteException e) {
                 e.printStackTrace();
             }
+
             initViewData();
         } else if (requestCode == MediasoupConstant.CAPTURE_PERMISSION_REQUEST_CODE) {
             Logger.d(TAG, "request Share Screen done resultCode:" + resultCode + ",requestCode:" + MediasoupConstant.CAPTURE_PERMISSION_REQUEST_CODE);
@@ -470,7 +504,6 @@ public class RoomActivity extends AppCompatActivity {
             e.printStackTrace();
             unbindMediasoupService();
         }
-        MediasoupLoaderUtils.getInstance().stopMediasoupService(RoomActivity.this);
         if (null != changeAndNotify) {
             changeAndNotify.destroy();
             changeAndNotify = null;

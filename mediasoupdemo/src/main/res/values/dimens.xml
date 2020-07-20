@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="connect_state">24dp</dimen>
+    <dimen name="float_window_video_width">90dp</dimen>
+    <dimen name="float_window_video_height">120dp</dimen>
 </resources>

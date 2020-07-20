@@ -2,25 +2,16 @@ package com.jsy.mediasoup;
 
 import android.content.Intent;
 import android.os.Bundle;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import android.view.View;
 
-import com.dongxl.mediasoup.MediasoupMainActivity;
-import com.dongxl.p2p.P2PTestActivity;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 
 public class RoomConfigurationActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_room_configuration);
-    }
-
-    public void normalModeClick(View view) {
-        Intent intent = new Intent();
-        intent.setClass(this, MediasoupMainActivity.class);
-        startActivity(intent);
-        finish();
     }
 
     public void videoModeClick(View view) {
@@ -59,13 +50,6 @@ public class RoomConfigurationActivity extends AppCompatActivity {
         Intent intent = new Intent();
         intent.putExtra(MediasoupConstant.key_intent_roommode, MediasoupConstant.roommode_noall);
         intent.setClass(this, RoomActivity.class);
-        startActivity(intent);
-        finish();
-    }
-
-    public void p2pModeClick(View view) {
-        Intent intent = new Intent();
-        intent.setClass(this, P2PTestActivity.class);
         startActivity(intent);
         finish();
     }

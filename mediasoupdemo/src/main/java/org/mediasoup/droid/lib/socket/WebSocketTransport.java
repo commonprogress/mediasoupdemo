@@ -12,6 +12,7 @@ import org.protoojs.droid.transports.AbsWebSocketTransport;
 
 import java.security.cert.CertificateException;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
@@ -34,8 +35,9 @@ import static org.apache.http.conn.ssl.SSLSocketFactory.SSL;
 public class WebSocketTransport extends AbsWebSocketTransport {
 
   // Log tag.
-  private static final String TAG = "WebSocketTransport";
+  private static final String TAG = WebSocketTransport.class.getSimpleName();
   private static final String HEADER_PROTOCOL_VALUE = "protoo";
+//  private static final String HEADER_PROTOCOL_VALUE = "secret-media";
   // Closed flag.
   private boolean mClosed;
   // Connected flag.
@@ -277,7 +279,7 @@ public class WebSocketTransport extends AbsWebSocketTransport {
      */
     @Override
     public void onClosing(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
-      Logger.w(TAG, "onClosing() code:" + code + ",reason:" + reason);
+        Logger.w(TAG, "onClosing() code:" + code + ",reason:" + reason);
     }
 
     /**
@@ -289,20 +291,20 @@ public class WebSocketTransport extends AbsWebSocketTransport {
     @Override
     public void onFailure(
             @NotNull WebSocket webSocket, @NotNull Throwable t, @Nullable Response response) {
-      Logger.w(TAG, "onFailure() Throwable:" + t.getLocalizedMessage());
+        Logger.w(TAG, "onFailure() t:" + t.getLocalizedMessage());
       if (mClosed) {
         return;
       }
       //安排重新连接WebSocket
       if (scheduleReconnect()) {
         if (mListener != null) {
-          if (mConnected) {
-            //连接成功之后在断开 连接中断
-            mListener.onDisconnected();
-          } else {
-            //连接中直接断开 连接失败
-            mListener.onFail();
-          }
+            if (mConnected) {
+                //连接成功之后在断开 连接中断
+                mListener.onDisconnected();
+            } else {
+                //连接中直接断开 连接失败
+                mListener.onFail();
+            }
         }
       } else {
         //关闭连接
@@ -322,7 +324,7 @@ public class WebSocketTransport extends AbsWebSocketTransport {
      */
     @Override
     public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
-      Logger.d(TAG, "onMessage() text:" + text);
+        Logger.v(TAG, "onMessage() text:" + text);
       if (mClosed) {
         return;
       }
@@ -389,6 +391,7 @@ public class WebSocketTransport extends AbsWebSocketTransport {
       OkHttpClient.Builder builder =
           new OkHttpClient.Builder()
               .addInterceptor(httpLoggingInterceptor)
+              .pingInterval(30000, TimeUnit.MILLISECONDS)
               .retryOnConnectionFailure(true);
       builder.sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0]);
 

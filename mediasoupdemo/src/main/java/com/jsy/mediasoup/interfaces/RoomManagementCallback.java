@@ -1,27 +1,44 @@
 package com.jsy.mediasoup.interfaces;
 
+import com.jsy.mediasoup.vm.MeProps;
 import com.jsy.mediasoup.vm.RoomProps;
+
+import org.threeten.bp.Instant;
 
 public interface RoomManagementCallback {
     void onMediasoupReady(boolean isReady);
 
-    void onConnectSuc();
+    void onConnectSuc(boolean isJoinLast);
 
-    void onConnectFail();
+    void onConnectFail(boolean isJoinLast);
 
-    void onConnectDisconnected();
+    void onConnectDisconnected(boolean isJoinLast);
 
-    void onConnectClose();
+    void onConnectClose(boolean isJoinLast);
 
-    void onJoinSuc();
+    void onJoinSuc(int existPeer);
 
-    void onJoinFail();
+    void onP2PJoinFail();
+
+    void onMediasoupJoinFail();
 
     RoomProps getRoomProps();
 
+    MeProps getMeProps();
+
     void onSelfAcceptOrJoin();
 
+    void onDelayedCheckRoom();
+
     boolean reqShareScreenIntentData();
+
+    void onAnsweredState();
+
+    void onEstablishedState(Instant estabTime);
+
+    void onAllLeaveRoom();
+
+    void onClosedState();
 
     void onFinishServiceActivity();
 }

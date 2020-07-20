@@ -10,11 +10,14 @@ interface MediasoupAidlInterface {
     void onJoinMediasoupRoom();
     void onResetMediasoupRoom();
     void onDestroyMediasoupRoom();
+    String getCurRegister();
     boolean isBindService();
+    boolean isMediasoupReady();
     boolean isReceiveCall();
     boolean isSelfCalling();
     boolean isOneOnOneCall();
     boolean isRoomConnecting();
+    boolean isRoomConnected();
     void callSelfAccept();
     void callSelfEnd();
     void callSelfCancel();

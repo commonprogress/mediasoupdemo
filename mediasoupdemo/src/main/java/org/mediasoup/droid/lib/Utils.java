@@ -4,9 +4,10 @@ import android.app.Activity;
 import android.content.Context;
 import android.media.projection.MediaProjectionManager;
 import android.os.Build;
+import android.text.TextUtils;
+
 import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
-import android.text.TextUtils;
 
 import java.util.Random;
 
@@ -29,40 +30,40 @@ public class Utils {
 
   public static boolean isEmptyString(String str) {
     if (TextUtils.isEmpty(str)) {
-      return true;
+       return true;
     }
     return str.equals("null");
   }
 
-  /**
-   * 获取共享屏幕需要参数
-   */
-  @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-  public static boolean reqShareScreenIntentData(Activity activity, int requestCode) {
-    if (null == activity || activity.isFinishing() || activity.isDestroyed()) {
-      return false;
-    }
-    MediaProjectionManager mediaProjectionManager =
+    /**
+     * 获取共享屏幕需要参数
+     */
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    public static boolean reqShareScreenIntentData(Activity activity, int requestCode) {
+        if (null == activity || activity.isFinishing() || activity.isDestroyed()) {
+            return false;
+        }
+        MediaProjectionManager mediaProjectionManager =
             (MediaProjectionManager) activity.getApplication().getSystemService(
-                    Context.MEDIA_PROJECTION_SERVICE);
-    activity.startActivityForResult(
+                Context.MEDIA_PROJECTION_SERVICE);
+        activity.startActivityForResult(
             mediaProjectionManager.createScreenCaptureIntent(), requestCode);
-    return true;
-  }
-
-  /**
-   * 获取共享屏幕需要参数
-   */
-  @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-  public static boolean reqShareScreenIntentData(Fragment fragment, int requestCode) {
-    if (null != fragment && fragment.isAdded()) {
-      MediaProjectionManager mediaProjectionManager =
-              (MediaProjectionManager) fragment.getActivity().getApplication().getSystemService(
-                      Context.MEDIA_PROJECTION_SERVICE);
-      fragment.startActivityForResult(
-              mediaProjectionManager.createScreenCaptureIntent(), requestCode);
-      return true;
+        return true;
     }
-    return false;
-  }
+
+    /**
+     * 获取共享屏幕需要参数
+     */
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    public static boolean reqShareScreenIntentData(Fragment fragment, int requestCode) {
+        if (null != fragment && fragment.isAdded()) {
+            MediaProjectionManager mediaProjectionManager =
+                (MediaProjectionManager) fragment.getActivity().getApplication().getSystemService(
+                    Context.MEDIA_PROJECTION_SERVICE);
+            fragment.startActivityForResult(
+                mediaProjectionManager.createScreenCaptureIntent(), requestCode);
+            return true;
+        }
+        return false;
+    }
 }

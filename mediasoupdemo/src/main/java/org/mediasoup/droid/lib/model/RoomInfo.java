@@ -1,5 +1,7 @@
 package org.mediasoup.droid.lib.model;
 
+import com.jsy.mediasoup.MediasoupConstant;
+
 import org.mediasoup.droid.lib.RoomConstant;
 
 /**
@@ -10,8 +12,10 @@ public class RoomInfo {
   private String mUrl;//房间url
   private String mRoomId;//房间id
   private RoomConstant.ConnectionState mConnectionState = RoomConstant.ConnectionState.NEW;//连接状态
+  private MediasoupConstant.NetworkMode mNetworkMode = MediasoupConstant.NetworkMode.UNKNOWN;//网络状态
   private String mActiveSpeakerId;//
   private String mStatsPeerId;//
+  private String mCallTiming;//
   private boolean mFaceDetection = false;
   private boolean isP2PMode;
 
@@ -39,6 +43,14 @@ public class RoomInfo {
     this.mConnectionState = connectionState;
   }
 
+  public MediasoupConstant.NetworkMode getNetworkMode() {
+    return mNetworkMode;
+  }
+
+  public void setNetworkMode(MediasoupConstant.NetworkMode networkMode) {
+    this.mNetworkMode = networkMode;
+  }
+
   public String getActiveSpeakerId() {
     return mActiveSpeakerId;
   }
@@ -55,6 +67,14 @@ public class RoomInfo {
     this.mStatsPeerId = statsPeerId;
   }
 
+  public String getCallTiming() {
+    return mCallTiming;
+  }
+
+  public void setCallTiming(String callTiming) {
+    this.mCallTiming = callTiming;
+  }
+
   public boolean isFaceDetection() {
     return mFaceDetection;
   }
@@ -63,11 +83,11 @@ public class RoomInfo {
     this.mFaceDetection = faceDetection;
   }
 
-  public boolean isP2PMode() {
-    return isP2PMode;
-  }
+    public boolean isP2PMode() {
+        return isP2PMode;
+    }
 
-  public void setP2PMode(boolean p2PMode) {
-    isP2PMode = p2PMode;
-  }
+    public void setP2PMode(boolean p2PMode) {
+        isP2PMode = p2PMode;
+    }
 }

@@ -3,7 +3,6 @@ package org.mediasoup.droid.lib;
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mediasoup.droid.Consumer;
@@ -19,9 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * 房间消息处理
  */
 class RoomMessageHandler {
-
-  static final String TAG = "RoomClient";
-
+  private static final String TAG = RoomMessageHandler.class.getSimpleName();
   // Stored Room States.
   @NonNull
   final RoomStore mStore;
@@ -49,40 +46,46 @@ class RoomMessageHandler {
   @WorkerThread
   void handleNotification(Message.Notification notification) throws JSONException {
     JSONObject data = notification.getData();
-    Logger.d(TAG, "handleNotification notification.method " + notification.getMethod()+", data:"+data.toString());
     switch (notification.getMethod()) {
-      case "producerScore":
+      case ActionEvent.PRODUCER_SCORE:
         {
           // {"producerId":"bdc2e83e-5294-451e-a986-a29c7d591d73","score":[{"score":10,"ssrc":196184265}]}
-          String producerId = data.optString("producerId");
-          JSONArray score = data.optJSONArray("score");
-          mStore.setProducerScore(producerId, score);
+//          String producerId = data.optString("producerId");
+//          JSONArray score = data.optJSONArray("score");
+//          mStore.setProducerScore(producerId, score);
           break;
         }
-      case "newPeer":
+      case ActionEvent.NEW_PEER:
         {
-          String id = data.optString(Peer.KEY_PEER_ID);
+          String id = data.getString(Peer.KEY_PEER_ID);
           String displayName = data.optString(Peer.KEY_PEER_NAME);
           mStore.addPeer(id, data);
           mStore.addNotify(displayName + " has joined the room");
           break;
         }
-      case "peerClosed":
+      case ActionEvent.PEER_LEAVE:
+        {
+            String peerId = data.optString("peerId");
+            mStore.removePeer(peerId);
+            break;
+        }
+      case ActionEvent.PEER_CLOSED:
         {
           String peerId = data.optString("peerId");
+          mStore.updatePeerState(peerId, RoomConstant.PeerState.CLOSED);
           mStore.removePeer(peerId);
           break;
         }
-      case "peerDisplayNameChanged":
+      case ActionEvent.PEER_DISPLAYNAME_CHANGED:
         {
-          String peerId = data.optString("peerId");
+          String peerId = data.getString("peerId");
           String displayName = data.optString(Peer.KEY_PEER_NAME);
           String oldDisplayName = data.optString("oldDisplayName");
           mStore.setPeerDisplayName(peerId, displayName);
           mStore.addNotify(oldDisplayName + " is now " + displayName);
           break;
         }
-      case "consumerClosed":
+      case ActionEvent.CONSUMER_CLOSED:
         {
           String consumerId = data.optString("consumerId");
           ConsumerHolder holder = mConsumers.remove(consumerId);
@@ -94,7 +97,7 @@ class RoomMessageHandler {
           mStore.removeConsumer(holder.peerId, holder.mConsumer.getId());
           break;
         }
-      case "consumerPaused":
+      case ActionEvent.CONSUMER_PAUSED:
         {
           String consumerId = data.optString("consumerId");
           ConsumerHolder holder = mConsumers.get(consumerId);
@@ -104,7 +107,7 @@ class RoomMessageHandler {
           mStore.setConsumerPaused(holder.mConsumer.getId(), "remote");
           break;
         }
-      case "consumerResumed":
+      case ActionEvent.CONSUMER_RESUMED:
         {
           String consumerId = data.optString("consumerId");
           ConsumerHolder holder = mConsumers.get(consumerId);
@@ -114,48 +117,48 @@ class RoomMessageHandler {
           mStore.setConsumerResumed(holder.mConsumer.getId(), "remote");
           break;
         }
-      case "consumerLayersChanged":
+      case ActionEvent.CONSUMER_LAYERS_CHANGED:
         {
-          String consumerId = data.optString("consumerId");
-          int spatialLayer = data.optInt("spatialLayer");
-          int temporalLayer = data.optInt("temporalLayer");
-          ConsumerHolder holder = mConsumers.get(consumerId);
-          if (holder == null) {
-            break;
-          }
-          mStore.setConsumerCurrentLayers(consumerId, spatialLayer, temporalLayer);
+//          String consumerId = data.optString("consumerId");
+//          int spatialLayer = data.optInt("spatialLayer");
+//          int temporalLayer = data.optInt("temporalLayer");
+//          ConsumerHolder holder = mConsumers.get(consumerId);
+//          if (holder == null) {
+//            break;
+//          }
+//          mStore.setConsumerCurrentLayers(consumerId, spatialLayer, temporalLayer);
           break;
         }
-      case "consumerScore":
+      case ActionEvent.CONSUMER_SCORE:
         {
-          String consumerId = data.optString("consumerId");
-          JSONArray score = data.optJSONArray("score");
-          ConsumerHolder holder = mConsumers.get(consumerId);
-          if (holder == null) {
-            break;
-          }
-          mStore.setConsumerScore(consumerId, score);
+//          String consumerId = data.optString("consumerId");
+//          JSONArray score = data.optJSONArray("score");
+//          ConsumerHolder holder = mConsumers.get(consumerId);
+//          if (holder == null) {
+//            break;
+//          }
+//          mStore.setConsumerScore(consumerId, score);
           break;
         }
-      case "dataConsumerClosed":
+      case ActionEvent.DATA_CONSUMER_CLOSED:
         {
           // TODO(HaiyangWu); support data consumer
           // String dataConsumerId = data.optString("dataConsumerId");
           break;
         }
-      case "activeSpeaker":
+      case ActionEvent.ACTIVE_SPEAKER:
         {
-          String peerId = data.optString("peerId");
-          mStore.setRoomActiveSpeaker(peerId);
+//          String peerId = data.optString("peerId");
+//          mStore.setRoomActiveSpeaker(peerId);
           break;
         }
-      case "downlinkBwe":
-      {
-        String desired = data.optString("desiredBitrate");
-        String effectiveDesired = data.optString("effectiveDesiredBitrate");
-        String available = data.optString("availableBitrate");
-        break;
-      }
+      case ActionEvent.DOWNLINK_BWE:
+        {
+//          String desired = data.optString("desiredBitrate");
+//          String effectiveDesired = data.optString("effectiveDesiredBitrate");
+//          String available = data.optString("availableBitrate");
+          break;
+        }
       default:
         {
           Logger.e(TAG, "unknown protoo notification.method " + notification.getMethod());

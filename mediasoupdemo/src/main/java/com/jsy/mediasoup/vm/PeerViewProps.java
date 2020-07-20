@@ -1,10 +1,12 @@
 package com.jsy.mediasoup.vm;
 
 import android.app.Application;
-import androidx.databinding.ObservableField;
+
 import androidx.annotation.NonNull;
+import androidx.databinding.ObservableField;
 
 import org.json.JSONArray;
+import org.mediasoup.droid.lib.RoomConstant;
 import org.mediasoup.droid.lib.lv.RoomStore;
 import org.mediasoup.droid.lib.model.Info;
 import org.webrtc.AudioTrack;
@@ -38,6 +40,7 @@ public abstract class PeerViewProps extends EdiasProps {
     ObservableField<JSONArray> mAudioScore;
     ObservableField<JSONArray> mVideoScore;
     ObservableField<Boolean> mFaceDetection;
+    ObservableField<RoomConstant.PeerState> mPeerState;
 
     public PeerViewProps(@NonNull Application application, @NonNull RoomStore roomStore) {
         super(application, roomStore);
@@ -66,6 +69,7 @@ public abstract class PeerViewProps extends EdiasProps {
         mAudioScore = new ObservableField<>();
         mVideoScore = new ObservableField<>();
         mFaceDetection = new ObservableField<>();
+        mPeerState = new ObservableField<>();
     }
 
     public void setMe(boolean me) {
@@ -170,5 +174,9 @@ public abstract class PeerViewProps extends EdiasProps {
 
     public ObservableField<Boolean> getFaceDetection() {
         return mFaceDetection;
+    }
+
+    public ObservableField<RoomConstant.PeerState> getPeerState() {
+        return mPeerState;
     }
 }

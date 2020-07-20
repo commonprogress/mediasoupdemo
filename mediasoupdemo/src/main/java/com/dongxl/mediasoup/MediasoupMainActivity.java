@@ -10,14 +10,18 @@ import android.graphics.Color;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.RemoteException;
+
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+
 import android.os.Bundle;
+
 import androidx.cardview.widget.CardView;
 import androidx.gridlayout.widget.GridLayout;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
@@ -115,8 +119,28 @@ public class MediasoupMainActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onOtherLeave() throws RemoteException {
-            LogUtils.i(TAG, "==roomBinder mediasoup onOtherLeave==");
+        public void setConnectionState(int ordinal) throws RemoteException {
+
+        }
+
+        @Override
+        public void setNetworkMode(int index) throws RemoteException {
+
+        }
+
+        @Override
+        public void onOtherUpdate(int count) throws RemoteException {
+
+        }
+
+        @Override
+        public void setCallTiming(String callTiming) throws RemoteException {
+
+        }
+
+        @Override
+        public void onAllLeaveRoom() throws RemoteException {
+
         }
 
         /**
@@ -138,6 +162,15 @@ public class MediasoupMainActivity extends AppCompatActivity {
         }
     };
 
+    private String getCurRegister() {
+        try {
+            return null != mediasoupBinder ? mediasoupBinder.getCurRegister() : "";
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+        return "";
+    }
+
     private List<Info> curPeerUsers;
     private Map<String, View> viewMap = new HashMap<>();
 
@@ -146,7 +179,7 @@ public class MediasoupMainActivity extends AppCompatActivity {
             changeAndNotify = new PropsChangeAndNotify(this, this);
         }
         getViewModelStore().clear();
-        boolean isMediasoupReady = MediasoupLoaderUtils.getInstance().isMediasoupReady();
+        boolean isMediasoupReady = MediasoupLoaderUtils.getInstance().isMediasoupReady(getCurRegister());
         if (!isMediasoupReady || null == changeAndNotify) {
             return;
         }
@@ -156,7 +189,7 @@ public class MediasoupMainActivity extends AppCompatActivity {
             @Override
             public void onDataChanged(EdiasProps ediasProps) {
                 MeProps meProps = (MeProps) ediasProps;
-                if (MediasoupLoaderUtils.getInstance().isRoomConnecting()) {
+                if (MediasoupLoaderUtils.getInstance().isMediasoupConnecting(getCurRegister(), "")) {
                     boolean isAudioBeingSent = MeProps.DeviceState.ON.equals(meProps.getMicState().get()) ? true : false;
                     boolean isVideoBeingSent = MeProps.DeviceState.ON.equals(meProps.getCamState().get()) ? true : false;
                     List<Info> peerUsers = (null == curPeerUsers || curPeerUsers.isEmpty()) ? getMeInfo(meProps) : curPeerUsers;
@@ -177,7 +210,7 @@ public class MediasoupMainActivity extends AppCompatActivity {
         changeAndNotify.observePeersAndNotify(this, mRoomClient, mRoomStore, new RoomStoreObserveCallback() {
             @Override
             public void onObservePeers(Peers peers) {
-                if (MediasoupLoaderUtils.getInstance().isRoomConnecting()) {
+                if (MediasoupLoaderUtils.getInstance().isMediasoupConnecting(getCurRegister(), "")) {
                     List<Peer> peersList = null != peers ? peers.getAllPeers() : null;
                     int size = null == peersList ? 0 : peersList.size();
                     List<Info> peerUsers = getMeInfo(mMeProps);
@@ -216,9 +249,9 @@ public class MediasoupMainActivity extends AppCompatActivity {
 
     private View createMediasoupView(Info info, boolean isSelf) {
         if (isSelf) {
-            return new SelfMediasoupView(this, this, (Me) info, changeAndNotify).addChildView();
+            return new SelfMediasoupView(this, this, (Me) info, changeAndNotify, getCurRegister()).addChildView();
         } else {
-            return new OtherMediasoupView(this, this, (Peer) info, changeAndNotify).addChildView();
+            return new OtherMediasoupView(this, this, (Peer) info, changeAndNotify, getCurRegister()).addChildView();
         }
     }
 
@@ -239,7 +272,7 @@ public class MediasoupMainActivity extends AppCompatActivity {
                             selfInfo = (Me) info;
                         }
                     } else if (info instanceof Peer) {
-                        if (MediasoupLoaderUtils.getInstance().getPeerVideoState(info)) {
+                        if (MediasoupLoaderUtils.getInstance().getPeerVideoState(getCurRegister(), info.getId())) {
                             videoUsers.add(info);
                         }
                     }
@@ -301,7 +334,7 @@ public class MediasoupMainActivity extends AppCompatActivity {
                             videoUsers.add(info);
                         }
                     } else if (info instanceof Peer) {
-                        if (MediasoupLoaderUtils.getInstance().getPeerVideoState(info)) {
+                        if (MediasoupLoaderUtils.getInstance().getPeerVideoState(getCurRegister(), info.getId())) {
                             videoUsers.add(info);
                         }
                     }
@@ -530,9 +563,9 @@ public class MediasoupMainActivity extends AppCompatActivity {
             String userId = Utils.getRandomString(8);
             String displayName = Utils.getRandomString(8);
             String clientId = Utils.getRandomString(16);
-            MediasoupManagement.mediasoupCreate(this, userId, clientId, displayName, mediasoupHandler);
+            MediasoupManagement.mediasoupCreate(this, userId, clientId, userId, displayName, mediasoupHandler);
         }
-        MediasoupManagement.setUserChangedHandler(userChangedHandler);
+        MediasoupManagement.setUserChangedHandler(getCurRegister(), userChangedHandler);
 
         setContentView(R.layout.activity_mediasoup_main);
         connectUserView = findViewById(R.id.otheruser_recycler);
@@ -596,12 +629,17 @@ public class MediasoupMainActivity extends AppCompatActivity {
         }
 
         @Override
+        public void onEndedCall(String rConvId, long msg_time, String userId) {
+
+        }
+
+        @Override
         public void onMetricsReady(String rConvId, String metricsJson) {
 
         }
 
         @Override
-        public int onConfigRequest(boolean isRegister) {
+        public int onConfigRequest(String isRegister, String rConvId, String userId, String clientId, boolean isGroup, boolean isReady) {
             return 0;
         }
 
@@ -622,6 +660,16 @@ public class MediasoupMainActivity extends AppCompatActivity {
 
         @Override
         public void rejectEndCancelCall() {
+
+        }
+
+        @Override
+        public void startIfCallIsActive() {
+
+        }
+
+        @Override
+        public void cameraOpenState(boolean isFail) {
 
         }
     };
@@ -711,7 +759,7 @@ public class MediasoupMainActivity extends AppCompatActivity {
             roomName = Utils.getRandomString(8);
             roomNameEdit.setText(roomName);
         }
-        MediasoupManagement.mediasoupStartCall(this, roomName, 1, 1, true);
+        MediasoupManagement.mediasoupStartCall(getCurRegister(), this, roomName, 1, 1, true);
         try {
             if (null == mediasoupBinder || !mediasoupBinder.isBindService()) {
                 bindMediasoupService();
@@ -733,7 +781,7 @@ public class MediasoupMainActivity extends AppCompatActivity {
      * @param view
      */
     public void endClick(View view) {
-        MediasoupManagement.endCall(MediasoupLoaderUtils.getInstance().getCurRConvId(), 3);
+        MediasoupManagement.endCall(getCurRegister(), MediasoupLoaderUtils.getInstance().getCurRConvId(getCurRegister()), 0);
     }
 
     /**
@@ -743,7 +791,7 @@ public class MediasoupMainActivity extends AppCompatActivity {
      */
     public void muteClick(View view) {
         boolean muted = !curIsMuted;
-        MediasoupManagement.setCallMuted(muted);
+        MediasoupManagement.setCallMuted(getCurRegister(), muted);
         curIsMuted = muted;
     }
 
@@ -754,7 +802,7 @@ public class MediasoupMainActivity extends AppCompatActivity {
      */
     public void videoAndAudioClick(View view) {
         boolean isVideo = !curIsVideo;
-        MediasoupManagement.setVideoSendState(MediasoupLoaderUtils.getInstance().getCurRConvId(), 3);
+        MediasoupManagement.setVideoSendState(getCurRegister(), MediasoupLoaderUtils.getInstance().getCurRConvId(getCurRegister()), 0);
         curIsVideo = isVideo;
     }
 

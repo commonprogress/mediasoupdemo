@@ -2,7 +2,6 @@ package org.mediasoup.droid.lib.p2p;
 
 import android.media.AudioManager;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.webrtc.AudioTrack;
 import org.webrtc.IceCandidate;

@@ -77,13 +77,13 @@ public class Consumers {
       return mPreferredTemporalLayer;
     }
 
-    public P2PTrack getP2PTrack() {
-      return mP2PTrack;
-    }
+      public P2PTrack getP2PTrack() {
+          return mP2PTrack;
+      }
 
-    public void setP2PTrack(P2PTrack p2PTrack) {
-      this.mP2PTrack = p2PTrack;
-    }
+      public void setP2PTrack(P2PTrack p2PTrack) {
+          this.mP2PTrack = p2PTrack;
+      }
   }
 
   private final Map<String, ConsumerWrapper> consumers;
@@ -96,31 +96,31 @@ public class Consumers {
     consumers.put(consumer.getId(), new ConsumerWrapper(type, remotelyPaused, consumer));
   }
 
-  public void addP2PTrack(P2PTrack p2PTrack) {
-    consumers.put(p2PTrack.getPeerId(), new ConsumerWrapper(p2PTrack));
-  }
-
-  public void addP2PAudioTrack(String peerId, AudioTrack audioTrack) {
-    ConsumerWrapper wrapper = consumers.get(peerId);
-    if (wrapper == null || null == wrapper.mP2PTrack) {
-      addP2PTrack(new P2PTrack(peerId));
+    public void addP2PTrack(P2PTrack p2PTrack) {
+        consumers.put(p2PTrack.getPeerId(), new ConsumerWrapper(p2PTrack));
     }
-    ConsumerWrapper wrapper1 = consumers.get(peerId);
-    P2PTrack p2PTrack = wrapper1.mP2PTrack;
-    p2PTrack.setAudioTrack(audioTrack);
-    wrapper1.setP2PTrack(p2PTrack);
-  }
 
-  public void addP2PVideoTrack(String peerId, VideoTrack videoTrack) {
-    ConsumerWrapper wrapper = consumers.get(peerId);
-    if (wrapper == null || null == wrapper.mP2PTrack) {
-      addP2PTrack(new P2PTrack(peerId));
+    public void addP2PAudioTrack(String peerId, AudioTrack audioTrack) {
+        ConsumerWrapper wrapper = consumers.get(peerId);
+        if (wrapper == null || null == wrapper.mP2PTrack) {
+            addP2PTrack(new P2PTrack(peerId));
+        }
+        ConsumerWrapper wrapper1 = consumers.get(peerId);
+        P2PTrack p2PTrack = wrapper1.mP2PTrack;
+        p2PTrack.setAudioTrack(audioTrack);
+        wrapper1.setP2PTrack(p2PTrack);
     }
-    ConsumerWrapper wrapper1 = consumers.get(peerId);
-    P2PTrack p2PTrack = wrapper1.mP2PTrack;
-    p2PTrack.setVideoTrack(videoTrack);
-    wrapper1.setP2PTrack(p2PTrack);
-  }
+
+    public void addP2PVideoTrack(String peerId, VideoTrack videoTrack) {
+        ConsumerWrapper wrapper = consumers.get(peerId);
+        if (wrapper == null || null == wrapper.mP2PTrack) {
+            addP2PTrack(new P2PTrack(peerId));
+        }
+        ConsumerWrapper wrapper1 = consumers.get(peerId);
+        P2PTrack p2PTrack = wrapper1.mP2PTrack;
+        p2PTrack.setVideoTrack(videoTrack);
+        wrapper1.setP2PTrack(p2PTrack);
+    }
 
   public void removeConsumer(String consumerId) {
     consumers.remove(consumerId);
@@ -174,6 +174,7 @@ public class Consumers {
     if (wrapper == null) {
       return;
     }
+
     wrapper.mScore = score;
   }
 

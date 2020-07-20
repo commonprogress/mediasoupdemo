@@ -1,13 +1,13 @@
 package com.jsy.mediasoup.view;
 
 import android.content.Context;
-import android.os.Build;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.FrameLayout;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.jsy.mediasoup.utils.LogUtils;
 
 public abstract class BaseFrameLayout extends FrameLayout {
@@ -52,7 +52,6 @@ public abstract class BaseFrameLayout extends FrameLayout {
         init(context);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public BaseFrameLayout(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
         init(context);
@@ -73,7 +72,7 @@ public abstract class BaseFrameLayout extends FrameLayout {
 
     protected abstract void loadViewData(boolean isAgain);
 
-    protected abstract void releaseViewData();
+    public abstract void releaseViewData();
 
     @Override
     protected void onDetachedFromWindow() {

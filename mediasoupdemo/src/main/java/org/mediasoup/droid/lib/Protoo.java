@@ -1,5 +1,6 @@
 package org.mediasoup.droid.lib;
 
+
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
@@ -15,15 +16,15 @@ import io.reactivex.Observable;
  * 连接WebSocket 和请求返回相关
  */
 @SuppressWarnings({"unused", "WeakerAccess"})
-public class Protoo extends Peer {
+public class Protoo extends org.protoojs.droid.Peer {
 
-  private static final String TAG = "Protoo";
+  private static final String TAG = Protoo.class.getSimpleName();
 
   interface RequestGenerator {
     void request(JSONObject req);
   }
 
-  public Protoo(@NonNull WebSocketTransport transport, @NonNull Listener listener) {
+  public Protoo(@NonNull WebSocketTransport transport, @NonNull Peer.Listener listener) {
     super(transport, listener);//初始化Protoo ， 相关监听 并连接WebSocket
   }
 
@@ -44,7 +45,7 @@ public class Protoo extends Peer {
    * @return
    */
   private Observable<String> request(String method, @NonNull JSONObject data) {
-    Logger.d(TAG, "request(), method: " + method);
+    Logger.d(TAG, "request(), method: " + method + ", data:" + (null != data ? data.toString() : "null"));
     return Observable.create(
         emitter ->
             request(
@@ -53,6 +54,7 @@ public class Protoo extends Peer {
                 new ClientRequestHandler() {
                   @Override
                   public void resolve(String data) {
+                      Logger.d(TAG, "request(), resolve method: " + method + ", data: " + data);
                     if (!emitter.isDisposed()) {
                       emitter.onNext(data);
                     }
@@ -60,6 +62,7 @@ public class Protoo extends Peer {
 
                   @Override
                   public void reject(long error, String errorReason) {
+                    Logger.e(TAG, "request(), reject method: " + method + ", error:" + error + ",errorReason:"+errorReason);
                     if (!emitter.isDisposed()) {
                       emitter.onError(new ProtooException(error, errorReason));
                     }
@@ -102,11 +105,10 @@ public class Protoo extends Peer {
    */
   @WorkerThread
   private String syncRequest(String method, @NonNull JSONObject data) throws ProtooException {
-    Logger.d(TAG, "syncRequest(), method: " + method);
-
     try {
       return request(method, data).blockingFirst();
     } catch (Throwable throwable) {
+      Logger.e(TAG, "syncRequest(),fail method: " + method + ", throwable:" + throwable.getMessage());
       throw new ProtooException(-1, throwable.getMessage());
     }
   }

@@ -1,9 +1,10 @@
 package com.jsy.mediasoup.adapter;
 
-import androidx.lifecycle.LifecycleOwner;
-import android.content.Context;
 import androidx.annotation.NonNull;
+import androidx.lifecycle.LifecycleOwner;
 import androidx.recyclerview.widget.RecyclerView;
+
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;

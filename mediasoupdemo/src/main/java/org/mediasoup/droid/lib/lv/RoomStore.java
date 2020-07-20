@@ -1,15 +1,17 @@
 package org.mediasoup.droid.lib.lv;
 
 import androidx.lifecycle.MutableLiveData;
-import android.text.TextUtils;
+
+import com.jsy.mediasoup.MediasoupConstant;
+import com.jsy.mediasoup.utils.LogUtils;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.mediasoup.droid.Consumer;
 import org.mediasoup.droid.Logger;
 import org.mediasoup.droid.Producer;
-import org.mediasoup.droid.lib.RoomClient;
 import org.mediasoup.droid.lib.RoomConstant;
+import org.mediasoup.droid.lib.Utils;
 import org.mediasoup.droid.lib.model.Consumers;
 import org.mediasoup.droid.lib.model.DeviceInfo;
 import org.mediasoup.droid.lib.model.Me;
@@ -28,401 +30,526 @@ import org.webrtc.VideoTrack;
 @SuppressWarnings("unused")
 public class RoomStore {
 
-  private static final String TAG = "RoomStore";
+    private static final String TAG = RoomStore.class.getSimpleName();
 
-  // room
-  // mediasoup-demo/app/lib/redux/reducers/room.js
-  private SupplierMutableLiveData<RoomInfo> roomInfo = new SupplierMutableLiveData<>(RoomInfo::new);
+    // room
+    // mediasoup-demo/app/lib/redux/reducers/room.js
+    private SupplierMutableLiveData<RoomInfo> roomInfo = new SupplierMutableLiveData<>(RoomInfo::new);
 
-  // me
-  // mediasoup-demo/app/lib/redux/reducers/me.js
-  private SupplierMutableLiveData<Me> me = new SupplierMutableLiveData<>(Me::new);
+    // me
+    // mediasoup-demo/app/lib/redux/reducers/me.js
+    private SupplierMutableLiveData<Me> me = new SupplierMutableLiveData<>(Me::new);
 
-  // producers
-  // mediasoup-demo/app/lib/redux/reducers/producers.js
-  private SupplierMutableLiveData<Producers> producers =
-      new SupplierMutableLiveData<>(Producers::new);
+    // producers
+    // mediasoup-demo/app/lib/redux/reducers/producers.js
+    private SupplierMutableLiveData<Producers> producers =
+        new SupplierMutableLiveData<>(Producers::new);
 
-  // peers
-  // mediasoup-demo/app/lib/redux/reducers/peer.js
-  private SupplierMutableLiveData<Peers> peers = new SupplierMutableLiveData<>(Peers::new);
+    // peers
+    // mediasoup-demo/app/lib/redux/reducers/peer.js
+    private SupplierMutableLiveData<Peers> peers = new SupplierMutableLiveData<>(Peers::new);
 
-  // consumers
-  // mediasoup-demo/app/lib/redux/reducers/consumers.js
-  private SupplierMutableLiveData<Consumers> consumers =
-      new SupplierMutableLiveData<>(Consumers::new);
+    // consumers
+    // mediasoup-demo/app/lib/redux/reducers/consumers.js
+    private SupplierMutableLiveData<Consumers> consumers =
+        new SupplierMutableLiveData<>(Consumers::new);
 
-  // notify
-  // mediasoup-demo/app/lib/redux/reducers/notifications.js
-  private MutableLiveData<Notify> notify = new MutableLiveData<>();
+    // notify
+    // mediasoup-demo/app/lib/redux/reducers/notifications.js
+    private MutableLiveData<Notify> notify = new MutableLiveData<>();
 
-  /**
-   * 设置房间信息
-   * @param roomId
-   * @param url
-   */
-  public void setRoomUrl(String roomId, String url) {
-    roomInfo.postValue(
-        roomInfo -> {
-          roomInfo.setRoomId(roomId);
-          roomInfo.setUrl(url);
-        });
-  }
-
-  /**
-   * 设置房间状态
-   * @param state
-   */
-  public void setRoomState(RoomConstant.ConnectionState state) {
-    roomInfo.postValue(roomInfo -> roomInfo.setConnectionState(state));
-
-    if (RoomConstant.ConnectionState.CLOSED.equals(state)) {
-      Logger.e(TAG, "setRoomState RoomClient.ConnectionState.CLOSED");
-      clearAllConnectPeer();
-    }
-  }
-
-  /**
-   * 清除房间所有连接
-   */
-  public void clearAllConnectPeer(){
-    Logger.e(TAG, "setRoomState clearAllConnect");
-    peers.postValue(Peers::clear);
-    me.postValue(Me::clear);
-    producers.postValue(Producers::clear);
-    consumers.postValue(Consumers::clear);
-  }
-
-  /**
-   * 设置房间连接模式
-   * @param isP2PMode
-   */
-  public void setP2PMode(final boolean isP2PMode) {
-    roomInfo.postValue(
+    /**
+     * 设置房间信息
+     *
+     * @param roomId
+     * @param url
+     */
+    public void setRoomUrl(String roomId, String url) {
+        LogUtils.i(TAG, "roomInfo setRoomUrl roomId:" + roomId + ", url:" + url);
+        roomInfo.postValue(
             roomInfo -> {
-              roomInfo.setP2PMode(isP2PMode);
+                roomInfo.setRoomId(roomId);
+                roomInfo.setUrl(url);
             });
-  }
+    }
 
-  /**
-   * 设置有声音room？
-   * @param peerId
-  */
-  public void setRoomActiveSpeaker(String peerId) {
-    roomInfo.postValue(roomInfo -> roomInfo.setActiveSpeakerId(peerId));
-  }
+    /**
+     * 设置房间状态
+     *
+     * @param state
+     */
+    public void setRoomState(RoomConstant.ConnectionState state) {
+        LogUtils.i(TAG, "roomInfo and (peers,me,producers,consumers) setRoomState state:" + state);
+        roomInfo.postValue(roomInfo -> roomInfo.setConnectionState(state));
+        if (RoomConstant.ConnectionState.CLOSED.equals(state)) {
+            clearAllConnectPeer();
+        }
+    }
 
-  public void setRoomStatsPeerId(String peerId) {
-    roomInfo.postValue(roomInfo -> roomInfo.setStatsPeerId(peerId));
-  }
+    /**
+     * 清除房间所有连接
+     */
+    public void clearAllConnectPeer(){
+        Logger.e(TAG, "setRoomState clearAllConnect");
+        peers.postValue(Peers::clear);
+        me.postValue(Me::clear);
+        producers.postValue(Producers::clear);
+        consumers.postValue(Consumers::clear);
+    }
 
-  public void setRoomFaceDetection(boolean enable) {
-    roomInfo.postValue(roomInfo -> roomInfo.setFaceDetection(enable));
-  }
+    /**
+     * 设置房间连接模式
+     * @param isP2PMode
+     */
+    public void setP2PMode(final boolean isP2PMode) {
+        Logger.e(TAG, "setP2PMode isP2PMode：" + isP2PMode);
+        roomInfo.postValue(
+            roomInfo -> {
+                roomInfo.setP2PMode(isP2PMode);
+            });
+    }
 
-  public void setMe(String peerId, String displayName, DeviceInfo device) {
-    me.postValue(
-        me -> {
-          me.setId(peerId);
-          me.setDisplayName(displayName);
-          me.setDevice(device);
-        });
-  }
+    /**
+     * 设置网络状态
+     *
+     * @param networkMode
+     */
+    public void setNetworkMode(MediasoupConstant.NetworkMode networkMode) {
+        LogUtils.i(TAG, "roomInfo setNetworkMode networkMode:" + networkMode);
+        roomInfo.postValue(roomInfo -> roomInfo.setNetworkMode(networkMode));
+    }
 
-  public void setMe(String peerId, String displayName, DeviceInfo device, boolean isP2PMode) {
-    me.postValue(
+    /**
+     * 通话的时间
+     *
+     * @param callTiming
+     */
+    public void setCallTiming(String callTiming) {
+        LogUtils.i(TAG, "roomInfo setCallTiming callTiming:" + callTiming);
+        roomInfo.postValue(roomInfo -> roomInfo.setCallTiming(callTiming));
+    }
+
+    /**
+     * 设置有声音room？
+     *
+     * @param peerId
+     */
+    public void setRoomActiveSpeaker(String peerId) {
+        LogUtils.i(TAG, "roomInfo setRoomActiveSpeaker peerId:" + peerId);
+        if (!Utils.isEmptyString(peerId)) {
+            roomInfo.postValue(roomInfo -> roomInfo.setActiveSpeakerId(peerId));
+        }
+    }
+
+    public void setRoomStatsPeerId(String peerId) {
+        LogUtils.i(TAG, "roomInfo setRoomStatsPeerId peerId:" + peerId);
+        if (!Utils.isEmptyString(peerId)) {
+            roomInfo.postValue(roomInfo -> roomInfo.setStatsPeerId(peerId));
+        }
+    }
+
+    public void setRoomFaceDetection(boolean enable) {
+        LogUtils.i(TAG, "roomInfo setRoomFaceDetection enable:" + enable);
+        roomInfo.postValue(roomInfo -> roomInfo.setFaceDetection(enable));
+    }
+
+    public void setMe(String peerId, String displayName, DeviceInfo device) {
+        LogUtils.i(TAG, "me setMe peerId:" + peerId + ",displayName:" + displayName);
+        if (!Utils.isEmptyString(peerId)) {
+            me.postValue(
+                me -> {
+                    me.setId(peerId);
+                    me.setDisplayName(displayName);
+                    me.setDevice(device);
+                });
+        }
+    }
+
+
+    public void setMe(String peerId, String displayName, DeviceInfo device, boolean isP2PMode) {
+        LogUtils.i(TAG, "me setMe peerId:" + peerId + ",displayName:" + displayName + "，isP2PMode：" + isP2PMode);
+        me.postValue(
             me -> {
-              me.setId(peerId);
-              me.setDisplayName(displayName);
-              me.setDevice(device);
-              me.setP2PMode(isP2PMode);
+                me.setId(peerId);
+                me.setDisplayName(displayName);
+                me.setDevice(device);
+                me.setP2PMode(isP2PMode);
             });
-  }
+    }
 
     /**
      * 设置摄像头和麦克风状态
+     *
      * @param canSendMic
      * @param canSendCam
      */
-  public void setMediaCapabilities(boolean canSendMic, boolean canSendCam) {
-    me.postValue(
-        me -> {
-          me.setCanSendMic(canSendMic);
-          me.setCanSendCam(canSendCam);
-        });
-  }
+    public void setMediaCapabilities(boolean canSendMic, boolean canSendCam) {
+        LogUtils.i(TAG, "me setMediaCapabilities canSendMic:" + canSendMic + ",canSendCam:" + canSendCam);
+        me.postValue(
+            me -> {
+                me.setCanSendMic(canSendMic);
+                me.setCanSendCam(canSendCam);
+            });
+    }
 
-  public void setCanChangeCam(boolean canChangeCam) {
-    me.postValue(me -> me.setCanSendCam(canChangeCam));
-  }
+    public void setCanChangeCam(boolean canChangeCam) {
+        LogUtils.i(TAG, "me setCanChangeCam canChangeCam:" + canChangeCam);
+        me.postValue(me -> me.setCanSendCam(canChangeCam));
+    }
+
+    /**
+     * 开启共享屏幕进度
+     * @param inProgress
+     */
+    public void setShareInProgress(boolean inProgress) {
+        LogUtils.i(TAG, "me setShareInProgress inProgress:" + inProgress);
+        me.postValue(me -> me.setShareInProgress(inProgress));
+    }
 
     /**
      * 改变显示的名字
+     *
      * @param displayName
      */
-  public void setDisplayName(String displayName) {
-    me.postValue(me -> me.setDisplayName(displayName));
-  }
+    public void setDisplayName(String displayName) {
+        LogUtils.i(TAG, "me setDisplayName displayName:" + displayName);
+        me.postValue(me -> me.setDisplayName(displayName));
+    }
 
     /**
      * 只有音频
+     *
      * @param enabled
      */
-  public void setAudioOnlyState(boolean enabled) {
-    me.postValue(me -> me.setAudioOnly(enabled));
-  }
+    public void setAudioOnlyState(boolean enabled) {
+        LogUtils.i(TAG, "me setAudioOnlyState enabled:" + enabled);
+        me.postValue(me -> me.setAudioOnly(enabled));
+    }
 
     /**
      * 设置只有音频 进行中
+     *
      * @param enabled 进行中
      */
-  public void setAudioOnlyInProgress(boolean enabled) {
-    me.postValue(me -> me.setAudioOnlyInProgress(enabled));
-  }
+    public void setAudioOnlyInProgress(boolean enabled) {
+        LogUtils.i(TAG, "me setAudioOnlyInProgress enabled:" + enabled);
+        me.postValue(me -> me.setAudioOnlyInProgress(enabled));
+    }
 
     /**
      * 设置静音状态
+     *
      * @param enabled
      */
-  public void setAudioMutedState(boolean enabled) {
-    me.postValue(me -> me.setAudioMuted(enabled));
-  }
+    public void setAudioMutedState(boolean enabled) {
+        LogUtils.i(TAG, "me setAudioMutedState enabled:" + enabled);
+        me.postValue(me -> me.setAudioMuted(enabled));
+    }
 
-  /**
-   * 重新启动ice 进度
-   * @param restartIceInProgress 是否进行中
-   */
-  public void setRestartIceInProgress(boolean restartIceInProgress) {
-    me.postValue(me -> me.setRestartIceInProgress(restartIceInProgress));
-  }
+    /**
+     * 重新启动ice 进度
+     *
+     * @param restartIceInProgress 是否进行中
+     */
+    public void setRestartIceInProgress(boolean restartIceInProgress) {
+        LogUtils.i(TAG, "me setRestartIceInProgress restartIceInProgress:" + restartIceInProgress);
+        me.postValue(me -> me.setRestartIceInProgress(restartIceInProgress));
+    }
 
     /**
      * 设置听筒和扬声器切换
+     *
      * @param enabled
      */
-  public void setEnableSpeaker(boolean enabled) {
-    me.postValue(me -> me.setEnableSpeaker(enabled));
-  }
+    public void setEnableSpeaker(boolean enabled) {
+        LogUtils.i(TAG, "me setEnableSpeaker enabled:" + enabled);
+        me.postValue(me -> me.setEnableSpeaker(enabled));
+    }
 
-  /**
-   * 启用摄像头 进度
-   * @param inProgress 是否进行中
-   */
-  public void setCamInProgress(boolean inProgress) {
-    me.postValue(me -> me.setCamInProgress(inProgress));
-  }
-
-  /**
-   * 开启共享屏幕进度
-   * @param inProgress
-   */
-  public void setShareInProgress(boolean inProgress) {
-    me.postValue(me -> me.setShareInProgress(inProgress));
-  }
+    /**
+     * 启用摄像头 进度
+     *
+     * @param inProgress 是否进行中
+     */
+    public void setCamInProgress(boolean inProgress) {
+        LogUtils.i(TAG, "me setCamInProgress inProgress:" + inProgress);
+        me.postValue(me -> me.setCamInProgress(inProgress));
+    }
 
     /**
      * 切换摄像头完成
-     * @param isFrontCamera 是否前置
+     *
+     * @param isChangeFail 是否前置
      */
-  public void cameraSwitchDone(boolean isFrontCamera) {
-    me.postValue(me -> me.setFrontCamera(isFrontCamera));
-  }
+    public void cameraSwitchDone(boolean isChangeFail) {
+        LogUtils.i(TAG, "me cameraSwitchDone isFrontCamera:" + isChangeFail);
+        me.postValue(me -> me.setCameraChangeFail(isChangeFail));
+    }
 
-  public void addProducer(Producer producer) {
-    producers.postValue(producers -> producers.addProducer(producer));
-  }
+    public void addProducer(Producer producer) {
+        LogUtils.i(TAG, "producers addProducer producer:" + producer);
+        producers.postValue(producers -> producers.addProducer(producer));
+    }
 
-  public void addProducer(Producer producer, String type) {
-    producers.postValue(producers -> {
-      producers.addProducer(producer);
-      producers.setProducerType(producer.getId(), type);
-    });
-  }
-
-  public void setProducerPaused(String producerId) {
-    producers.postValue(producers -> producers.setProducerPaused(producerId));
-  }
-
-  public void setProducerResumed(String producerId) {
-    producers.postValue(producers -> producers.setProducerResumed(producerId));
-  }
-
-  public void removeProducer(String producerId) {
-    producers.postValue(producers -> producers.removeProducer(producerId));
-  }
-
-  public void setProducerType(String producerId, String type) {
-    producers.postValue(producers -> producers.setProducerType(producerId, type));
-  }
-
-  public void setProducerScore(String producerId, JSONArray score) {
-    producers.postValue(producers -> producers.setProducerScore(producerId, score));
-  }
-
-  public void addDataProducer(Object dataProducer) {
-    // TODO(HaiyangWU): support data consumer. Note, new DataConsumer.java
-  }
-
-  public void removeDataProducer(String dataProducerId) {
-    // TODO(HaiyangWU): support data consumer.
-  }
-
-  public void addP2PSelfAudioTrack(String peerId, AudioTrack audioTrack) {
-    producers.postValue(producers -> producers.addP2PAudioTrack(peerId, audioTrack));
-  }
-
-  public void addP2PSelfVideoTrack(String peerId, String type, VideoTrack videoTrack) {
-    producers.postValue(producers -> {
-      producers.addP2PVideoTrack(peerId, videoTrack);
-      producers.setProducerType(peerId, type);
-    });
-  }
-
-  /**
-   * 添加连接用户
-   * @param peerId
-   * @param peerInfo
-   */
-  public void addPeer(String peerId, JSONObject peerInfo) {
-    peers.postValue(peersInfo -> peersInfo.addPeer(peerId, peerInfo));
-  }
-
-  /**
-   * 设置用户名
-   * @param peerId
-   * @param displayName
-   */
-  public void setPeerDisplayName(String peerId, String displayName) {
-    peers.postValue(peersInfo -> peersInfo.setPeerDisplayName(peerId, displayName));
-  }
-
-  /**
-   * 更新当前peer 视频音频状态
-   * @param peerId
-   * @param isVideoVisible
-   * @param isAudioEnabled
-   */
-  public void updatePeerVideoAudioState(String peerId, boolean isVideoVisible, boolean isAudioEnabled) {
-    peers.postValue(peersInfo -> peersInfo.updatePeerVideoAudioState(peerId, isVideoVisible, isAudioEnabled));
-  }
-
-  public void updatePeerP2PMode(String peerId, boolean isP2PMode) {
-    peers.postValue(peersInfo -> peersInfo.updatePeerP2PMode(peerId, isP2PMode));
-  }
-
-  /**
-   * 移除连接用户
-   * @param peerId
-   */
-  public void removePeer(String peerId) {
-    roomInfo.postValue(
-        roomInfo -> {
-          if (!TextUtils.isEmpty(peerId) && peerId.equals(roomInfo.getActiveSpeakerId())) {
-            roomInfo.setActiveSpeakerId(null);
-          }
-          if (!TextUtils.isEmpty(peerId) && peerId.equals(roomInfo.getStatsPeerId())) {
-            roomInfo.setStatsPeerId(null);
-          }
+    public void addProducer(Producer producer, String type) {
+        LogUtils.i(TAG, "producers addProducer producer:" + producer + "，type：" + type);
+        producers.postValue(producers -> {
+            producers.addProducer(producer);
+            producers.setProducerType(producer.getId(), type);
         });
-    peers.postValue(peersInfo -> peersInfo.removePeer(peerId));
-  }
+    }
 
-  /**
-   * 添加 其他用户相关的 consumer
-   * @param peerId
-   * @param type
-   * @param consumer
-   * @param remotelyPaused
-   */
-  public void addConsumer(String peerId, String type, Consumer consumer, boolean remotelyPaused) {
-    consumers.postValue(consumers -> consumers.addConsumer(type, consumer, remotelyPaused));
-    peers.postValue(peers -> peers.addConsumer(peerId, consumer));
-  }
+    public void setProducerPaused(String producerId) {
+        LogUtils.i(TAG, "producers setProducerPaused producerId:" + producerId);
+        producers.postValue(producers -> producers.setProducerPaused(producerId));
+    }
 
-  /**
-   * 移除 其他用户相关的 consumer
-   * @param peerId
-   * @param consumerId
-   */
-  public void removeConsumer(String peerId, String consumerId) {
-    consumers.postValue(consumers -> consumers.removeConsumer(consumerId));
-    peers.postValue(peers -> peers.removeConsumer(peerId, consumerId));
-  }
+    public void setProducerResumed(String producerId) {
+        LogUtils.i(TAG, "producers setProducerResumed producerId:" + producerId);
+        producers.postValue(producers -> producers.setProducerResumed(producerId));
+    }
 
-  public void setConsumerPaused(String consumerId, String originator) {
-    consumers.postValue(consumers -> consumers.setConsumerPaused(consumerId, originator));
-  }
+    public void removeProducer(String producerId) {
+        LogUtils.i(TAG, "producers removeProducer producerId:" + producerId);
+        producers.postValue(producers -> producers.removeProducer(producerId));
+    }
 
-  public void setConsumerResumed(String consumerId, String originator) {
-    consumers.postValue(consumers -> consumers.setConsumerResumed(consumerId, originator));
-  }
+    public void setProducerType(String producerId, String type) {
+        producers.postValue(producers -> producers.setProducerType(producerId, type));
+    }
 
-  public void setConsumerCurrentLayers(String consumerId, int spatialLayer, int temporalLayer) {
-    consumers.postValue(
-        consumers -> consumers.setConsumerCurrentLayers(consumerId, spatialLayer, temporalLayer));
-  }
+    public void setProducerScore(String producerId, JSONArray score) {
+        LogUtils.i(TAG, "producers setProducerScore producerId:" + producerId);
+        producers.postValue(producers -> producers.setProducerScore(producerId, score));
+    }
 
-  public void setConsumerType(String consumerId, String type) {
-    consumers.postValue(consumers -> consumers.setConsumerType(consumerId, type));
-  }
+    public void addDataProducer(Object dataProducer) {
+        // TODO(HaiyangWU): support data consumer. Note, new DataConsumer.java
+        LogUtils.i(TAG, "addDataProducer dataProducer:" + dataProducer);
+    }
 
-  public void setConsumerScore(String consumerId, JSONArray score) {
-    consumers.postValue(consumers -> consumers.setConsumerScore(consumerId, score));
-  }
+    public void removeDataProducer(String dataProducerId) {
+        // TODO(HaiyangWU): support data consumer.
+        LogUtils.i(TAG, "removeDataProducer dataProducerId:" + dataProducerId);
+    }
 
-  public void addDataConsumer(String peerId, Object dataConsumer) {
-    // TODO(HaiyangWU): support data consumer. Note, new DataConsumer.java
-  }
+    public void addP2PSelfAudioTrack(String peerId, AudioTrack audioTrack) {
+        LogUtils.i(TAG, "addP2PSelfAudioTrack peerId:" + peerId + "，audioTrack：" + audioTrack);
+        producers.postValue(producers -> producers.addP2PAudioTrack(peerId, audioTrack));
+    }
 
-  public void removeDataConsumer(String peerId, String dataConsumerId) {
-    // TODO(HaiyangWU): support data consumer.
-  }
+    public void addP2PSelfVideoTrack(String peerId, String type, VideoTrack videoTrack) {
+        LogUtils.i(TAG, "addP2PSelfVideoTrack peerId:" + peerId + "，type：" + type + "，videoTrack：" + videoTrack);
+        producers.postValue(producers -> {
+            producers.addP2PVideoTrack(peerId, videoTrack);
+            producers.setProducerType(peerId, type);
+        });
+    }
 
-  public void addP2POtherAudioTrack(String peerId, AudioTrack audioTrack) {
-    consumers.postValue(consumers -> consumers.addP2PAudioTrack(peerId, audioTrack));
-  }
+    /**
+     * 添加连接用户
+     *
+     * @param peerId
+     * @param peerInfo
+     */
+    public void addPeer(String peerId, JSONObject peerInfo) {
+        LogUtils.i(TAG, "peers addPeer peerId:" + peerId);
+        if (!Utils.isEmptyString(peerId)) {
+            peers.postValue(peersInfo -> peersInfo.addPeer(peerId, peerInfo));
+        }
+    }
 
-  public void addP2POtherVideoTrack(String peerId, VideoTrack videoTrack) {
-    consumers.postValue(consumers -> consumers.addP2PVideoTrack(peerId, videoTrack));
-  }
+    /**
+     * 设置用户名
+     *
+     * @param peerId
+     * @param displayName
+     */
+    public void setPeerDisplayName(String peerId, String displayName) {
+        LogUtils.i(TAG, "peers setPeerDisplayName peerId:" + peerId + ", displayName:" + displayName);
+        if (!Utils.isEmptyString(peerId)) {
+            peers.postValue(peersInfo -> peersInfo.setPeerDisplayName(peerId, displayName));
+        }
+    }
 
-  public void addNotify(String text) {
-    notify.postValue(new Notify("info", text));
-  }
+    /**
+     * 更新当前peer状态
+     *
+     * @param peerId
+     * @param state
+     */
+    public void updatePeerState(String peerId, RoomConstant.PeerState state) {
+        LogUtils.i(TAG, "peers updatePeerState peerId:" + peerId + ", state:" + state);
+        if (!Utils.isEmptyString(peerId)) {
+            peers.postValue(peersInfo -> peersInfo.updatePeerState(peerId, state));
+        }
+    }
 
-  public void addNotify(String text, int timeout) {
-    notify.postValue(new Notify("info", text, timeout));
-  }
+    /**
+     * 更新当前peer 视频音频状态
+     *
+     * @param peerId
+     * @param isVideoVisible
+     * @param isAudioEnabled
+     */
+    public void updatePeerVideoAudioState(String peerId, boolean isVideoVisible, boolean isAudioEnabled) {
+        LogUtils.i(TAG, "peers updatePeerVideoAudioState peerId:" + peerId + ", isVideoVisible:" + isVideoVisible + ", isAudioEnabled:" + isAudioEnabled);
+        if (!Utils.isEmptyString(peerId)) {
+            peers.postValue(peersInfo -> peersInfo.updatePeerVideoAudioState(peerId, isVideoVisible, isAudioEnabled));
+        }
+    }
 
-  public void addNotify(String type, String text) {
-    notify.postValue(new Notify(type, text));
-  }
+    public void updatePeerP2PMode(String peerId, boolean isP2PMode) {
+        LogUtils.i(TAG, "updatePeerP2PMode peerId:" + peerId + "，isP2PMode：" + isP2PMode);
+        peers.postValue(peersInfo -> peersInfo.updatePeerP2PMode(peerId, isP2PMode));
+    }
 
-  public void addNotify(String text, Throwable throwable) {
-    notify.postValue(new Notify("error", text + throwable.getMessage()));
-  }
 
-  public SupplierMutableLiveData<RoomInfo> getRoomInfo() {
-    return roomInfo;
-  }
+    /**
+     * 移除连接用户
+     *
+     * @param peerId
+     */
+    public void removePeer(String peerId) {
+        LogUtils.i(TAG, "roomInfo and peers removePeer peerId:" + peerId);
+        if (!Utils.isEmptyString(peerId)) {
+            roomInfo.postValue(
+                roomInfo -> {
+                    if (!Utils.isEmptyString(peerId) && peerId.equals(roomInfo.getActiveSpeakerId())) {
+                        roomInfo.setActiveSpeakerId(null);
+                    }
+                    if (!Utils.isEmptyString(peerId) && peerId.equals(roomInfo.getStatsPeerId())) {
+                        roomInfo.setStatsPeerId(null);
+                    }
+                });
+            peers.postValue(peersInfo -> peersInfo.removePeer(peerId));
+        }
+    }
 
-  public SupplierMutableLiveData<Me> getMe() {
-    return me;
-  }
+    /**
+     * 添加 其他用户相关的 consumer
+     *
+     * @param peerId
+     * @param type
+     * @param consumer
+     * @param remotelyPaused
+     */
+    public void addConsumer(String peerId, String type, Consumer consumer, boolean remotelyPaused) {
+        LogUtils.i(TAG, "consumers and peers addConsumer peerId:" + peerId);
+        if (!Utils.isEmptyString(peerId)) {
+            consumers.postValue(consumers -> consumers.addConsumer(type, consumer, remotelyPaused));
+            peers.postValue(peers -> peers.addConsumer(peerId, consumer));
+        }
+    }
 
-  public MutableLiveData<Notify> getNotify() {
-    return notify;
-  }
+    /**
+     * 移除 其他用户相关的 consumer
+     *
+     * @param peerId
+     * @param consumerId
+     */
+    public void removeConsumer(String peerId, String consumerId) {
+        LogUtils.i(TAG, "consumers and peers removeConsumer peerId:" + peerId + ", consumerId:" + consumerId);
+        if (!Utils.isEmptyString(peerId)) {
+            consumers.postValue(consumers -> consumers.removeConsumer(consumerId));
+            peers.postValue(peers -> peers.removeConsumer(peerId, consumerId));
+        }
+    }
 
-  public SupplierMutableLiveData<Peers> getPeers() {
-    return peers;
-  }
+    public void setConsumerPaused(String consumerId, String originator) {
+        LogUtils.i(TAG, "consumers setConsumerPaused consumerId:" + consumerId + ", originator:" + originator);
+        consumers.postValue(consumers -> consumers.setConsumerPaused(consumerId, originator));
+    }
 
-  public SupplierMutableLiveData<Producers> getProducers() {
-    return producers;
-  }
+    public void setConsumerResumed(String consumerId, String originator) {
+        LogUtils.i(TAG, "consumers setConsumerResumed consumerId:" + consumerId + ", originator:" + originator);
+        consumers.postValue(consumers -> consumers.setConsumerResumed(consumerId, originator));
+    }
 
-  public SupplierMutableLiveData<Consumers> getConsumers() {
-    return consumers;
-  }
+    public void setConsumerCurrentLayers(String consumerId, int spatialLayer, int temporalLayer) {
+        LogUtils.i(TAG, "consumers setConsumerCurrentLayers consumerId:" + consumerId + ", spatialLayer:" + spatialLayer + ", temporalLayer:" + temporalLayer);
+        consumers.postValue(
+            consumers -> consumers.setConsumerCurrentLayers(consumerId, spatialLayer, temporalLayer));
+    }
+
+    public void setConsumerType(String consumerId, String type) {
+        LogUtils.i(TAG, "setConsumerType consumerId:" + consumerId + "，type：" + type);
+        consumers.postValue(consumers -> consumers.setConsumerType(consumerId, type));
+    }
+
+    public void setConsumerScore(String consumerId, JSONArray score) {
+        LogUtils.i(TAG, "consumers setConsumerScore consumerId:" + consumerId);
+        consumers.postValue(consumers -> consumers.setConsumerScore(consumerId, score));
+    }
+
+    public void addDataConsumer(String peerId, Object dataConsumer) {
+        // TODO(HaiyangWU): support data consumer. Note, new DataConsumer.java
+        LogUtils.i(TAG, "addDataConsumer peerId:" + peerId + ", dataConsumer:" + dataConsumer);
+    }
+
+    public void removeDataConsumer(String peerId, String dataConsumerId) {
+        // TODO(HaiyangWU): support data consumer.
+        LogUtils.i(TAG, "removeDataConsumer peerId:" + peerId + ", dataConsumerId:" + dataConsumerId);
+    }
+
+    public void addP2POtherAudioTrack(String peerId, AudioTrack audioTrack) {
+        LogUtils.i(TAG, "addP2POtherAudioTrack peerId:" + peerId + "，audioTrack：" + audioTrack);
+        consumers.postValue(consumers -> consumers.addP2PAudioTrack(peerId, audioTrack));
+    }
+
+    public void addP2POtherVideoTrack(String peerId, VideoTrack videoTrack) {
+        LogUtils.i(TAG, "addP2POtherVideoTrack peerId:" + peerId + "，videoTrack：" + videoTrack);
+        consumers.postValue(consumers -> consumers.addP2PVideoTrack(peerId, videoTrack));
+    }
+
+
+    public void addNotify(String text) {
+        LogUtils.i(TAG, "notify addNotify text:" + text);
+        notify.postValue(new Notify("info", text));
+    }
+
+    public void addNotify(String text, int timeout) {
+        LogUtils.i(TAG, "notify addNotify text:" + text + ",timeout:" + timeout);
+        notify.postValue(new Notify("info", text, timeout));
+    }
+
+    public void addNotify(String type, String text) {
+        LogUtils.e(TAG, "notify addNotify text:" + text + ",type:" + type);
+        notify.postValue(new Notify(type, text));
+    }
+
+    public void addNotify(String text, Throwable throwable) {
+        LogUtils.e(TAG, "notify addNotify text:" + text + ", throwable:" + throwable.getMessage());
+        notify.postValue(new Notify("error", text + throwable.getMessage()));
+    }
+
+    public void changeAllPeerState(RoomConstant.PeerState peerState) {
+        LogUtils.i(TAG, "changeAllPeerState peerState:" + peerState);
+        me.postValue(me -> me.setPeerState(peerState));
+        peers.postValue(peers -> peers.changeAllPeerState(peerState));
+    }
+
+    public SupplierMutableLiveData<RoomInfo> getRoomInfo() {
+        return roomInfo;
+    }
+
+    public SupplierMutableLiveData<Me> getMe() {
+        return me;
+    }
+
+    public MutableLiveData<Notify> getNotify() {
+        return notify;
+    }
+
+    public SupplierMutableLiveData<Peers> getPeers() {
+        return peers;
+    }
+
+    public SupplierMutableLiveData<Producers> getProducers() {
+        return producers;
+    }
+
+    public SupplierMutableLiveData<Consumers> getConsumers() {
+        return consumers;
+    }
 }

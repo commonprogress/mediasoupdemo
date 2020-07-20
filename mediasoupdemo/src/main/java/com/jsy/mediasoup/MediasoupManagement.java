@@ -25,70 +25,79 @@ public class MediasoupManagement {
         return MediasoupLoaderUtils.getInstance().libraryVersion();
     }
 
-    public static boolean mediasoupCreate(Context context,
-                                          String userId,
-                                          String clientId,
-                                          String displayName,
-                                          MediasoupHandler mediasoupH) {
-        return MediasoupLoaderUtils.getInstance().mediasoupCreate(context, userId, clientId, displayName, mediasoupH);
+    public static String mediasoupCreate(Context context,
+                                         String userId,
+                                         String clientId,
+                                         String activeId,
+                                         String displayName,
+                                         MediasoupHandler mediasoupH) {
+        return MediasoupLoaderUtils.getInstance().mediasoupCreate(context, userId, clientId, activeId, displayName, mediasoupH);
     }
 
-    public static void setUserChangedHandler(UserChangedHandler userChangedHandler) {
-        MediasoupLoaderUtils.getInstance().setUserChangedHandler(userChangedHandler);
+    public static void setUserChangedHandler(String isRegister, UserChangedHandler userChangedHandler) {
+        MediasoupLoaderUtils.getInstance().setUserChangedHandler(isRegister, userChangedHandler);
     }
 
-    public static int mediasoupStartCall(Context context, String rConvId, int call_type, int conv_type, boolean audio_cbr) {
-        return MediasoupLoaderUtils.getInstance().mediasoupStartCall(context, rConvId, call_type, conv_type, audio_cbr);
+    public static int mediasoupStartCall(String isRegister, Context context, String rConvId, int call_type, int conv_type, boolean audio_cbr) {
+        return MediasoupLoaderUtils.getInstance().mediasoupStartCall(isRegister, context, rConvId, call_type, conv_type, audio_cbr);
     }
 
-    public void mediasoupAnswerCall(Context context, String rConvId, int call_type, int conv_type, int meidasoup_state, boolean audio_cbr) {
-        MediasoupLoaderUtils.getInstance().mediasoupAnswerCall(context, rConvId, call_type, conv_type, meidasoup_state, audio_cbr);
+    public static void mediasoupAnswerCall(String isRegister, Context context, String rConvId, int call_type, int conv_type, int meidasoup_state, boolean audio_cbr) {
+        MediasoupLoaderUtils.getInstance().mediasoupAnswerCall(isRegister, context, rConvId, call_type, conv_type, meidasoup_state, audio_cbr);
     }
 
-    public void onNetworkChanged() {
-        MediasoupLoaderUtils.getInstance().onNetworkChanged();
+    public static void onNetworkChanged(String isRegister, int networkMode) {
+        MediasoupLoaderUtils.getInstance().onNetworkChanged(isRegister, networkMode);
     }
 
-    public void onHttpResponse(int status, String reason) {
-        MediasoupLoaderUtils.getInstance().onHttpResponse(status, reason);
+    public static void onHttpResponse(String isRegister, int status, String reason) {
+        MediasoupLoaderUtils.getInstance().onHttpResponse(isRegister, status, reason);
     }
 
-    public void onReceiveMessage(Context context, String msg, long currTime, long msgTime, String rConvId, String userId, String clientId, boolean isMediasoup) {
-        MediasoupLoaderUtils.getInstance().receiveCallMessage(context, msg, currTime, msgTime, rConvId, userId, clientId, isMediasoup);
+    public static void onReceiveMessage(String isRegister, Context cxt, String msg, long currTime, long msgTime, String rConvId, String userId, String clientId, boolean isMediasoup) {
+        MediasoupLoaderUtils.getInstance().receiveCallMessage(isRegister, cxt, msg, currTime, msgTime, rConvId, userId, clientId, isMediasoup);
     }
 
-    public void onConfigRequest(int error, String json) {
-        MediasoupLoaderUtils.getInstance().onConfigRequest(error, json);
+    public static void onConfigRequest(String isRegister, int error, String json) {
+        MediasoupLoaderUtils.getInstance().onConfigRequest(isRegister, error, json);
     }
 
-    public static void endCall(String rConvId, int meidasoup_state) {
-        MediasoupLoaderUtils.getInstance().endMediasoupCall(rConvId, meidasoup_state);
+    public static void endCall(String isRegister, String rConvId, int meidasoup_state) {
+        MediasoupLoaderUtils.getInstance().endMediasoupCall(isRegister, rConvId, meidasoup_state);
     }
 
-    public void rejectCall(String rConvId, int meidasoup_state) {
-        MediasoupLoaderUtils.getInstance().rejectMediasoupCall(rConvId, meidasoup_state);
+    public static void rejectCall(String isRegister, String rConvId, int meidasoup_state) {
+        MediasoupLoaderUtils.getInstance().rejectMediasoupCall(isRegister, rConvId, meidasoup_state);
     }
 
-    public static void setVideoSendState(String rConvId, int state) {
-        MediasoupLoaderUtils.getInstance().setVideoSendState(rConvId, state);
+    public static void setVideoSendState(String isRegister, String rConvId, int state) {
+        MediasoupLoaderUtils.getInstance().setVideoSendState(isRegister, rConvId, state);
     }
 
-    public static void setCallMuted(boolean muted) {
-        MediasoupLoaderUtils.getInstance().setCallMuted(muted);
+    public static void setCallMuted(String isRegister, boolean muted) {
+        MediasoupLoaderUtils.getInstance().setCallMuted(isRegister, muted);
     }
 
     public static void switchCam() {
         MediasoupLoaderUtils.getInstance().switchCam();
     }
 
-    public void setProxy(String host, int port) {
-        MediasoupLoaderUtils.getInstance().setMediasoupProxy(host, port);
+    public static void setProxy(String isRegister, String host, int port) {
+        MediasoupLoaderUtils.getInstance().setMediasoupProxy(isRegister, host, port);
     }
 
-    public void unregisterAccount(Context cxt) {
-        MediasoupLoaderUtils.getInstance().closedMediasoup(MediasoupConstant.ClosedReason.DataChannel); //账号注销
+    public static boolean isMediasoupConnecting(String isRegister, String rConvId) {
+        return MediasoupLoaderUtils.getInstance().isMediasoupConnecting(isRegister, rConvId);
+    }
+
+    public static boolean isMediasoupConnected(String isRegister, String rConvId) {
+        return MediasoupLoaderUtils.getInstance().isMediasoupConnected(isRegister, rConvId);
+    }
+
+    public static void unregisterAccount(String isRegister, Context cxt) {
+        MediasoupLoaderUtils.getInstance().closedMediasoup(isRegister, MediasoupConstant.ClosedReason.DataChannel); //账号注销
         MediasoupLoaderUtils.getInstance().stopMediasoupService(cxt);
-        MediasoupLoaderUtils.getInstance().setInstanceNull();
+        MediasoupLoaderUtils.getInstance().setInstanceNull(isRegister);
     }
 
     public interface MediasoupHandler {
@@ -128,9 +137,11 @@ public class MediasoupManagement {
          */
         public void onClosedCall(int reasonCode, String rConvId, long msg_time, String userId);
 
+        public void onEndedCall(String rConvId, long msg_time, String userId);
+
         public void onMetricsReady(String rConvId, String metricsJson);
 
-        public int onConfigRequest(boolean isRegister);
+        public int onConfigRequest(String isRegister, String rConvId, String userId, String clientId, boolean isGroup, boolean isReady);
 
         public void onBitRateStateChanged(String userId, boolean enabled);
 
@@ -139,6 +150,10 @@ public class MediasoupManagement {
         public void joinMediasoupState(int state);
 
         public void rejectEndCancelCall();
+
+        public void startIfCallIsActive();
+
+        public void cameraOpenState(boolean isFail);
     }
 
     public interface UserChangedHandler {

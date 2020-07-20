@@ -1,7 +1,6 @@
 package com.jsy.mediasoup.vm;
 
 import android.app.Application;
-
 import androidx.lifecycle.LifecycleOwner;
 import androidx.databinding.BaseObservable;
 import androidx.databinding.Observable;
@@ -10,13 +9,13 @@ import androidx.annotation.NonNull;
 
 import com.jsy.mediasoup.utils.LogUtils;
 
+import org.mediasoup.droid.Logger;
 import org.mediasoup.droid.Producer;
 import org.mediasoup.droid.lib.RoomClient;
 import org.mediasoup.droid.lib.RoomConstant;
 import org.mediasoup.droid.lib.lv.RoomStore;
 import org.mediasoup.droid.lib.model.Me;
 import org.mediasoup.droid.lib.model.P2PTrack;
-import org.mediasoup.droid.lib.model.Peer;
 import org.mediasoup.droid.lib.model.Producers;
 import org.webrtc.AudioTrack;
 import org.webrtc.VideoTrack;
@@ -55,151 +54,185 @@ public class MeProps extends PeerViewProps {
         mStateComposer = new StateComposer();
         //自己的消费状态（连接状态已经改变）监听
         mStateComposer.addOnPropertyChangedCallback(
-                new Observable.OnPropertyChangedCallback() {
-                    @Override
-                    public void onPropertyChanged(Observable sender, int propertyId) {
-                        Me me = mStateComposer.mMe;
-                        boolean isP2PMode = null != me && me.isP2PMode();
-                        boolean isConnecting = null == mRoomClient ? true : mRoomClient.isConnecting();
-                        if (!isConnecting && !isP2PMode) {
-                            LogUtils.e(TAG, "MeProps, onPropertyChanged isConnecting=false isP2PMode=false");
-                        }
-                        if (isP2PMode) {
-                            Producers.ProducersWrapper wrapper = mStateComposer.mP2PTrack;
-                            P2PTrack p2PTrack = !isConnecting ? null : (wrapper != null ? wrapper.getP2PTrack() : null);
-                            mAudioProducerId.set(p2PTrack != null ? p2PTrack.getPeerId() : null);
-                            mVideoProducerId.set(p2PTrack != null ? p2PTrack.getPeerId() : null);
-                            mAudioTrack.set(p2PTrack != null ? p2PTrack.getAudioTrack() : null);
-                            mVideoTrack.set(p2PTrack != null ? p2PTrack.getVideoTrack() : null);
-
-                            DeviceState micState;
-                            if (me == null || !me.isCanSendMic()) {
-                                micState = DeviceState.UNSUPPORTED;
-                            } else if (p2PTrack == null) {
-                                micState = DeviceState.UNSUPPORTED;
-                            } else if (p2PTrack.getAudioTrack() != null) {
-                                micState = DeviceState.ON;
-                            } else {
-                                micState = DeviceState.OFF;
-                            }
-                            mMicState.set(micState);
-
-                            DeviceState camState;
-                            if (me == null || !me.isCanSendMic()) {
-                                camState = DeviceState.UNSUPPORTED;
-                            } else if (wrapper != null
-                                    && !Producers.ProducersWrapper.TYPE_SHARE.equals(wrapper.getType())) {
-                                camState = DeviceState.ON;
-                            } else {
-                                camState = DeviceState.OFF;
-                            }
-                            mCamState.set(camState);
-
-                            DeviceState changeCamState;
-                            if (me == null) {
-                                changeCamState = DeviceState.UNSUPPORTED;
-                            } else if (wrapper != null
-                                    && !Producers.ProducersWrapper.TYPE_SHARE.equals(wrapper.getType())
-                                    && me.isCanChangeCam()) {
-                                changeCamState = DeviceState.ON;
-                            } else {
-                                changeCamState = DeviceState.OFF;
-                            }
-                            mChangeCamState.set(changeCamState);
-
-                            DeviceState shareState;
-                            if (me == null) {
-                                shareState = DeviceState.UNSUPPORTED;
-                            } else if (wrapper != null
-                                    && Producers.ProducersWrapper.TYPE_SHARE.equals(wrapper.getType())) {
-                                shareState = DeviceState.ON;
-                            } else {
-                                shareState = DeviceState.OFF;
-                            }
-                            mShareState.set(shareState);
-
-                        } else {
-                            Producers.ProducersWrapper audioPW = mStateComposer.mAudioPW;
-                            Producer audioProducer = !isConnecting ? null : (audioPW != null ? audioPW.getProducer() : null);
-                            Producers.ProducersWrapper videoPW = mStateComposer.mVideoPW;
-                            Producer videoProducer = !isConnecting ? null : (videoPW != null ? videoPW.getProducer() : null);
-
-                            mAudioProducerId.set(audioProducer != null ? audioProducer.getId() : null);
-                            mVideoProducerId.set(videoProducer != null ? videoProducer.getId() : null);
-                            mAudioRtpParameters.set(
-                                    audioProducer != null ? audioProducer.getRtpParameters() : null);
-                            mVideoRtpParameters.set(
-                                    videoProducer != null ? videoProducer.getRtpParameters() : null);
-                            mAudioTrack.set(audioProducer != null ? (AudioTrack) audioProducer.getTrack() : null);
-                            mVideoTrack.set(videoProducer != null ? (VideoTrack) videoProducer.getTrack() : null);
-                            // TODO(HaiyangWu) : support codec property
-                            // mAudioCodec.set(audioProducer != null ? audioProducer.getCodec() : null);
-                            // mVideoCodec.set(videoProducer != null ? videoProducer.getCodec() : null);
-                            mAudioScore.set(audioPW != null ? audioPW.getScore() : null);
-                            mVideoScore.set(videoPW != null ? videoPW.getScore() : null);
-
-                            LogUtils.i(TAG, "MeProps, onPropertyChanged mAudioProducerId:" + mAudioProducerId.get()
-                                    + ", mVideoProducerId:" + mVideoProducerId.get()
-                                    + ", audioPW.getType():" + (audioPW != null ? audioPW.getType() : "null")
-                                    + ", videoPW.getType():" + (videoPW != null ? videoPW.getType() : "null")
-                                    + ", \nmAudioScore:" + mAudioScore.get()
-                                    + ", \nmVideoScore:" + mVideoScore.get()
-                                    + ", \nmAudioTrack:" + mAudioTrack.get()
-                                    + ", \nmVideoTrack:" + mVideoTrack.get()
-                                    + ", \nmAudioRtpParameters:" + mAudioRtpParameters.get() + "\n"
-                                    + ", \nmVideoRtpParameters:" + mVideoRtpParameters.get() + "\n");
-
-                            DeviceState micState;
-                            if (me == null || !me.isCanSendMic()) {
-                                micState = DeviceState.UNSUPPORTED;
-                            } else if (audioProducer == null) {
-                                micState = DeviceState.UNSUPPORTED;
-                            } else if (!audioProducer.isPaused()) {
-                                micState = DeviceState.ON;
-                            } else {
-                                micState = DeviceState.OFF;
-                            }
-                            mMicState.set(micState);
-
-                            DeviceState camState;
-                            if (me == null || !me.isCanSendMic()) {
-                                camState = DeviceState.UNSUPPORTED;
-                            } else if (videoPW != null
-                                    && !Producers.ProducersWrapper.TYPE_SHARE.equals(videoPW.getType())) {
-                                camState = DeviceState.ON;
-                            } else {
-                                camState = DeviceState.OFF;
-                            }
-                            mCamState.set(camState);
-
-                            DeviceState changeCamState;
-                            if (me == null) {
-                                changeCamState = DeviceState.UNSUPPORTED;
-                            } else if (videoPW != null
-                                    && !Producers.ProducersWrapper.TYPE_SHARE.equals(videoPW.getType())
-                                    && me.isCanChangeCam()) {
-                                changeCamState = DeviceState.ON;
-                            } else {
-                                changeCamState = DeviceState.OFF;
-                            }
-                            mChangeCamState.set(changeCamState);
-
-                            DeviceState shareState;
-                            if (me == null) {
-                                shareState = DeviceState.UNSUPPORTED;
-                            } else if (videoPW != null
-                                    && Producers.ProducersWrapper.TYPE_SHARE.equals(videoPW.getType())) {
-                                shareState = DeviceState.ON;
-                            } else {
-                                shareState = DeviceState.OFF;
-                            }
-                            mShareState.set(shareState);
-                        }
-                        if (null != mPropsLiveDataChange) {
-                            mPropsLiveDataChange.onDataChanged(MeProps.this);
-                        }
+            new Observable.OnPropertyChangedCallback() {
+                @Override
+                public void onPropertyChanged(Observable sender, int propertyId) {
+                    Me me = mStateComposer.mMe;
+                    boolean isP2PMode = null != me && me.isP2PMode();
+                    boolean isConnecting = null == mRoomClient ? true : mRoomClient.isConnecting();
+                    if (!isConnecting && !isP2PMode) {
+                        LogUtils.e(TAG, "MeProps, onPropertyChanged isConnecting=false ,isP2PMode=false");
                     }
-                });
+                    mPeerState.set(null == me ? RoomConstant.PeerState.CLOSED : me.getPeerState());
+                    if (isP2PMode) {
+                        Producers.ProducersWrapper wrapper = mStateComposer.mP2PTrack;
+                        P2PTrack p2PTrack = !isConnecting ? null : (wrapper != null ? wrapper.getP2PTrack() : null);
+
+                        AudioTrack audioTrack = p2PTrack != null ? p2PTrack.getAudioTrack() : null;
+                        VideoTrack videoTrack = p2PTrack != null ? p2PTrack.getVideoTrack() : null;
+                        if (null != audioTrack) {
+                            mAudioProducerId.set(p2PTrack.getPeerId());
+                            mAudioTrack.set(audioTrack);
+                        }
+                        if (null != videoTrack) {
+                            mVideoProducerId.set(p2PTrack.getPeerId());
+                            mVideoTrack.set(videoTrack);
+                        }
+
+                        mAudioRtpParameters.set(null);
+                        mVideoRtpParameters.set(null);
+                        mAudioScore.set(null);
+                        mVideoScore.set(null);
+
+                        DeviceState micState;
+                        if (me == null || !me.isCanSendMic()) {
+                            micState = DeviceState.UNSUPPORTED;
+                        } else if (p2PTrack == null) {
+                            micState = DeviceState.UNSUPPORTED;
+                        } else if (p2PTrack.getAudioTrack() != null) {
+                            micState = DeviceState.ON;
+                        } else {
+                            micState = DeviceState.OFF;
+                        }
+                        mMicState.set(micState);
+
+                        DeviceState camState;
+                        if (me == null || !me.isCanSendCam()) {
+                            camState = DeviceState.UNSUPPORTED;
+                        } else if (p2PTrack == null) {
+                            camState = DeviceState.UNSUPPORTED;
+                        } else if (p2PTrack.getVideoTrack() != null
+                            && !Producers.ProducersWrapper.TYPE_SHARE.equals(wrapper.getType())) {
+                            camState = DeviceState.ON;
+                        } else {
+                            camState = DeviceState.OFF;
+                        }
+                        mCamState.set(camState);
+
+                        DeviceState changeCamState;
+                        if (me == null) {
+                            changeCamState = DeviceState.UNSUPPORTED;
+                        } else if (p2PTrack == null) {
+                            changeCamState = DeviceState.UNSUPPORTED;
+                        } else if (p2PTrack.getVideoTrack() != null
+                            && !Producers.ProducersWrapper.TYPE_SHARE.equals(wrapper.getType())
+                            && me.isCanChangeCam()) {
+                            changeCamState = DeviceState.ON;
+                        } else {
+                            changeCamState = DeviceState.OFF;
+                        }
+                        mChangeCamState.set(changeCamState);
+
+                        DeviceState shareState;
+                        if (me == null) {
+                            shareState = DeviceState.UNSUPPORTED;
+                        } else if (p2PTrack == null) {
+                            shareState = DeviceState.UNSUPPORTED;
+                        } else if (p2PTrack.getVideoTrack() != null
+                            && Producers.ProducersWrapper.TYPE_SHARE.equals(wrapper.getType())) {
+                            shareState = DeviceState.ON;
+                        } else {
+                            shareState = DeviceState.OFF;
+                        }
+                        mShareState.set(shareState);
+
+                        LogUtils.i(TAG, "MeProps onPropertyChanged propertyId：" + propertyId
+                            + "，isP2PMode:" + isP2PMode
+                            + ", mAudioProducerId:" + mAudioProducerId.get()
+                            + ", mVideoProducerId:" + mVideoProducerId.get()
+                            + ", \nwrapper:" + wrapper
+                            + ", \np2PTrack:" + p2PTrack
+                            + ", \nmAudioScore:" + mAudioScore.get()
+                            + ", \nmVideoScore:" + mVideoScore.get()
+                            + ", \nmAudioTrack:" + mAudioTrack.get()
+                            + ", \nmVideoTrack:" + mVideoTrack.get()
+                            + ", \nmAudioRtpParameters:" + mAudioRtpParameters.get() + "\n"
+                            + ", \nmVideoRtpParameters:" + mVideoRtpParameters.get() + "\n");
+
+                    } else {
+                        Producers.ProducersWrapper audioPW = mStateComposer.mAudioPW;
+                        Producer audioProducer = !isConnecting ? null : (audioPW != null ? audioPW.getProducer() : null);
+                        Producers.ProducersWrapper videoPW = mStateComposer.mVideoPW;
+                        Producer videoProducer = !isConnecting ? null : (videoPW != null ? videoPW.getProducer() : null);
+
+                        mAudioProducerId.set(audioProducer != null ? audioProducer.getId() : null);
+                        mVideoProducerId.set(videoProducer != null ? videoProducer.getId() : null);
+                        mAudioRtpParameters.set(
+                            audioProducer != null ? audioProducer.getRtpParameters() : null);
+                        mVideoRtpParameters.set(
+                            videoProducer != null ? videoProducer.getRtpParameters() : null);
+                        mAudioTrack.set(audioProducer != null ? (AudioTrack) audioProducer.getTrack() : null);
+                        mVideoTrack.set(videoProducer != null ? (VideoTrack) videoProducer.getTrack() : null);
+                        // TODO(HaiyangWu) : support codec property
+                        // mAudioCodec.set(audioProducer != null ? audioProducer.getCodec() : null);
+                        // mVideoCodec.set(videoProducer != null ? videoProducer.getCodec() : null);
+                        mAudioScore.set(audioPW != null ? audioPW.getScore() : null);
+                        mVideoScore.set(videoPW != null ? videoPW.getScore() : null);
+
+                        DeviceState micState;
+                        if (me == null || !me.isCanSendMic()) {
+                            micState = DeviceState.UNSUPPORTED;
+                        } else if (audioProducer == null) {
+                            micState = DeviceState.UNSUPPORTED;
+                        } else if (!audioProducer.isPaused()) {
+                            micState = DeviceState.ON;
+                        } else {
+                            micState = DeviceState.OFF;
+                        }
+                        mMicState.set(micState);
+
+                        DeviceState camState;
+                        if (me == null || !me.isCanSendCam()) {
+                            camState = DeviceState.UNSUPPORTED;
+                        } else if (videoPW != null
+                            && !Producers.ProducersWrapper.TYPE_SHARE.equals(videoPW.getType())) {
+                            camState = DeviceState.ON;
+                        } else {
+                            camState = DeviceState.OFF;
+                        }
+                        mCamState.set(camState);
+
+                        DeviceState changeCamState;
+                        if (me == null) {
+                            changeCamState = DeviceState.UNSUPPORTED;
+                        } else if (videoPW != null
+                            && !Producers.ProducersWrapper.TYPE_SHARE.equals(videoPW.getType())
+                            && me.isCanChangeCam()) {
+                            changeCamState = DeviceState.ON;
+                        } else {
+                            changeCamState = DeviceState.OFF;
+                        }
+                        mChangeCamState.set(changeCamState);
+
+                        DeviceState shareState;
+                        if (me == null) {
+                            shareState = DeviceState.UNSUPPORTED;
+                        } else if (videoPW != null
+                            && Producers.ProducersWrapper.TYPE_SHARE.equals(videoPW.getType())) {
+                            shareState = DeviceState.ON;
+                        } else {
+                            shareState = DeviceState.OFF;
+                        }
+                        mShareState.set(shareState);
+
+                        LogUtils.i(TAG, "MeProps onPropertyChanged propertyId：" + propertyId
+                            + "，isP2PMode:" + isP2PMode
+                            + ", mAudioProducerId:" + mAudioProducerId.get()
+                            + ", mVideoProducerId:" + mVideoProducerId.get()
+                            + ", audioPW.getType():" + (audioPW != null ? audioPW.getType() : "null")
+                            + ", videoPW.getType():" + (videoPW != null ? videoPW.getType() : "null")
+                            + ", \nmAudioScore:" + mAudioScore.get()
+                            + ", \nmVideoScore:" + mVideoScore.get()
+                            + ", \nmAudioTrack:" + mAudioTrack.get()
+                            + ", \nmVideoTrack:" + mVideoTrack.get()
+                            + ", \nmAudioRtpParameters:" + mAudioRtpParameters.get() + "\n"
+                            + ", \nmVideoRtpParameters:" + mVideoRtpParameters.get() + "\n");
+                    }
+                    if (null != mPropsLiveDataChange) {
+                        mPropsLiveDataChange.onDataChanged(MeProps.this);
+                    }
+                }
+            });
     }
 
     /**
@@ -250,22 +283,22 @@ public class MeProps extends PeerViewProps {
     @Override
     public void connect(LifecycleOwner owner) {
         getRoomStore()
-                .getMe()
-                .observe(
-                        owner,
-                        me -> {
-                            mMe.set(me);
-                            mPeer.set(me);
-                        });
+            .getMe()
+            .observe(
+                owner,
+                me -> {
+                    mMe.set(me);
+                    mPeer.set(me);
+                });
         getRoomStore()
-                .getRoomInfo()
-                .observe(
-                        owner,
-                        roomInfo -> {
-                            mFaceDetection.set(roomInfo.isFaceDetection());
-                            mConnected.set(
-                                    RoomConstant.ConnectionState.CONNECTED.equals(roomInfo.getConnectionState()));
-                        });
+            .getRoomInfo()
+            .observe(
+                owner,
+                roomInfo -> {
+                    mFaceDetection.set(roomInfo.isFaceDetection());
+                    mConnected.set(
+                        RoomConstant.ConnectionState.CONNECTED.equals(roomInfo.getConnectionState()));
+                });
         mStateComposer.connect(owner, getRoomStore());
     }
 
@@ -278,23 +311,25 @@ public class MeProps extends PeerViewProps {
 
         void connect(@NonNull LifecycleOwner owner, RoomStore store) {
             store
-                    .getProducers()
-                    .observe(
-                            owner,
-                            (producers) -> {
-                                mAudioPW = producers.filter("audio");
-                                mVideoPW = producers.filter("video");
-                                mP2PTrack = producers.getP2PTrack();
-                                notifyChange();
-                            });
+                .getProducers()
+                .observe(
+                    owner,
+                    (producers) -> {
+                        mAudioPW = producers.filter("audio");
+                        mVideoPW = producers.filter("video");
+                        mP2PTrack = producers.getP2PTrack();
+                        Logger.w(TAG, "PeerProps getMe producers notifyChange");
+                        notifyChange();
+                    });
             store
-                    .getMe()
-                    .observe(
-                            owner,
-                            (me) -> {
-                                mMe = me;
-                                notifyChange();
-                            });
+                .getMe()
+                .observe(
+                    owner,
+                    (me) -> {
+                        mMe = me;
+                        Logger.w(TAG, "PeerProps getMe mMe notifyChange");
+                        notifyChange();
+                    });
         }
     }
 }

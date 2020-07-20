@@ -8,11 +8,12 @@ public class RoomConstant {
     /**
      * webrtc VideoCapturer 类型
      */
-    public enum VideoCapturerType{
+    public enum VideoCapturerType {
         CAMERA,//摄像头
         SCREEN,//共享屏幕
         FILE,//共享文件
     }
+
     /**
      * websocket连接状态 枚举
      */
@@ -162,10 +163,28 @@ public class RoomConstant {
         }
     }
 
+    public enum P2PConnectState {
+        NEW,//初始化
+        CREATE,//创建
+        OFFERSDP,//创建offerSDP
+        SETOFFER,//设置offerSDP
+        ANSWERSDP,//创建AnswerSDP
+        SETANSWER,//设置AnswerSDP
+        CONNECTED,//已经连接
+        CLOSED,//关闭销毁
+    }
+
+
     public enum P2POtherState {
         VIDEO_RESUME,//视频播放
         VIDEO_PAUSE,//视频暂停
         AUDIO_RESUME,//音频播放
         AUDIO_PAUSE,//音频暂停
+    }
+
+    public enum PeerState {
+        NEW,//初始化
+        CONNECTED,//已经连接
+        CLOSED,//断开连接
     }
 }

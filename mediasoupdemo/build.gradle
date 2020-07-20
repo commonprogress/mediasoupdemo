@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
-//apply plugin: 'kotlin-kapt'
-//apply plugin: 'kotlin-android'
-//apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
+apply plugin: 'kotlin-android-extensions'
 repositories {
     flatDir {
         dirs 'libs'
@@ -19,7 +19,7 @@ android {
         versionCode 1
         versionName "1.0"
         ndk {
-            abiFilters 'x86' ,'x86_64', 'armeabi-v7a', 'arm64-v8a'
+            abiFilters 'x86', 'x86_64', 'armeabi-v7a', 'arm64-v8a'
         }
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
         consumerProguardFiles 'proguard-rules.pro'
@@ -50,8 +50,9 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.3.72'
 
+    implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'androidx.core:core:1.3.0'
     implementation 'androidx.recyclerview:recyclerview:1.1.0'
@@ -67,20 +68,27 @@ dependencies {
 
     implementation 'com.nabinbhandari.android:permissions:3.8'
 
-    implementation (name:'protoo-client-release', ext:'aar')
+    implementation(name: 'protoo-client-release', ext: 'aar')
 //    implementation project(path: ':protoo-client')
 //    implementation 'org.protoojs.droid:protoo-client:4.0.3'
 
-    implementation (name:'mediasoup-client-release', ext:'aar')
+    implementation(name: 'mediasoup-client-release', ext: 'aar')
 //    implementation project(path: ':mediasoup-client')
-    implementation (name:'webrtc-made-release', ext:'aar')
+    implementation(name: 'webrtc-made-release', ext: 'aar')
 //    implementation project(path: ':webrtc-made')
 //    implementation 'org.mediasoup.droid:mediasoup-client:3.0.8-beta-1'
 
 //    implementation project(path: ':audioeffect')
 
-    implementation 'com.squareup.okhttp3:okhttp:4.7.2'
-    implementation('com.squareup.okhttp3:logging-interceptor:4.7.2')
+    implementation 'com.squareup.okhttp3:okhttp:4.8.0'
+    implementation('com.squareup.okhttp3:logging-interceptor:4.8.0')
     implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
-    implementation 'io.reactivex.rxjava2:rxjava:2.2.6'
+    implementation 'com.squareup.retrofit2:adapter-rxjava2:2.9.0'
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+    implementation 'org.jetbrains:annotations:19.0.0'
+    api 'net.java.dev.jna:jna:5.6.0'
+    implementation 'com.jakewharton.timber:timber:4.7.1'
+    implementation 'com.jakewharton.threetenabp:threetenabp:1.2.4'
+
 }

@@ -1,10 +1,10 @@
 package com.jsy.mediasoup.utils;
 
 
+import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.Observer;
-import androidx.annotation.NonNull;
 
 @SuppressWarnings("unused")
 public class CombinedLiveData<A, B, OUTPUT> extends MediatorLiveData<OUTPUT> {
@@ -35,7 +35,7 @@ public class CombinedLiveData<A, B, OUTPUT> extends MediatorLiveData<OUTPUT> {
 
     @Override
     public <S1> void addSource(
-            @NonNull LiveData<S1> source, @NonNull Observer<? super S1> onChanged) {
+        @NonNull LiveData<S1> source, @NonNull Observer<? super S1> onChanged) {
         throw new UnsupportedOperationException();
     }
 

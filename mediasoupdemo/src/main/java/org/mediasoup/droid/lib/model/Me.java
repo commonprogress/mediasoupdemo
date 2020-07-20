@@ -1,7 +1,10 @@
 package org.mediasoup.droid.lib.model;
 
 import android.os.Build;
+
 import androidx.annotation.RequiresApi;
+
+import org.mediasoup.droid.lib.RoomConstant;
 
 import java.util.Objects;
 
@@ -10,151 +13,152 @@ import java.util.Objects;
  */
 public class Me extends Info {
 
-  private String mId;//peerid 类似于userid
-  private String mClientId;
-  private String mDisplayName;
-  private boolean mDisplayNameSet;
-  private DeviceInfo mDevice;
-  private boolean isP2PMode;
-  private boolean mCanSendMic;
-  private boolean mCanSendCam;
-  private boolean mCanChangeCam;
+    private String mId;//peerid 类似于userid
+    private String mClientId;
+    private String mDisplayName;
+    private boolean mDisplayNameSet;
+    private DeviceInfo mDevice;
+    private boolean isP2PMode;
+    private boolean mCanSendMic;
+    private boolean mCanSendCam;
+    private boolean mCanChangeCam;
 
-  private boolean mCamInProgress;
-  private boolean mShareInProgress;
+    private boolean mCamInProgress;
+    private boolean mShareInProgress;
 
-  private boolean mAudioOnly;
-  private boolean mAudioOnlyInProgress;
-  private boolean mAudioMuted;
-  private boolean mRestartIceInProgress;
+    private boolean mAudioOnly;
+    private boolean mAudioOnlyInProgress;
+    private boolean mAudioMuted;
+    private boolean mRestartIceInProgress;
 
-  private boolean mEnableSpeaker;
-  private boolean mFrontCamera = true;
+    private boolean mEnableSpeaker;
+    private boolean mCameraChangeFail = true;
+    private RoomConstant.PeerState mPeerState = RoomConstant.PeerState.NEW;
 
-  @Override
-  public String getId() {
-    return mId;
-  }
+    @Override
+    public String getId() {
+        return mId;
+    }
 
-  public void setId(String id) {
-    this.mId = id;
-  }
+    public void setId(String id) {
+        this.mId = id;
+    }
 
-  @Override
-  public String getClientId() {
-    return mClientId;
-  }
+    @Override
+    public String getClientId() {
+        return mClientId;
+    }
 
-  public void setClientId(String clientId) {
-    this.mClientId = clientId;
-  }
+    public void setClientId(String clientId) {
+        this.mClientId = clientId;
+    }
 
-  @Override
-  public String getDisplayName() {
-    return mDisplayName;
-  }
+    @Override
+    public String getDisplayName() {
+        return mDisplayName;
+    }
 
-  public void setDisplayName(String displayName) {
-    this.mDisplayName = displayName;
-  }
+    public void setDisplayName(String displayName) {
+        this.mDisplayName = displayName;
+    }
 
-  public boolean isDisplayNameSet() {
-    return mDisplayNameSet;
-  }
+    public boolean isDisplayNameSet() {
+        return mDisplayNameSet;
+    }
 
-  public void setDisplayNameSet(boolean displayNameSet) {
-    this.mDisplayNameSet = displayNameSet;
-  }
+    public void setDisplayNameSet(boolean displayNameSet) {
+        this.mDisplayNameSet = displayNameSet;
+    }
 
-  @Override
-  public boolean isP2PMode() {
-    return isP2PMode;
-  }
+    @Override
+    public boolean isP2PMode() {
+        return isP2PMode;
+    }
 
-  public void setP2PMode(boolean p2PMode) {
-    isP2PMode = p2PMode;
-  }
+    public void setP2PMode(boolean p2PMode) {
+        isP2PMode = p2PMode;
+    }
 
-  @Override
-  public DeviceInfo getDevice() {
-    return mDevice;
-  }
+    @Override
+    public DeviceInfo getDevice() {
+        return mDevice;
+    }
 
-  public void setDevice(DeviceInfo device) {
-    this.mDevice = device;
-  }
+    public void setDevice(DeviceInfo device) {
+        this.mDevice = device;
+    }
 
-  public boolean isCanSendMic() {
-    return mCanSendMic;
-  }
+    public boolean isCanSendMic() {
+        return mCanSendMic;
+    }
 
-  public void setCanSendMic(boolean canSendMic) {
-    this.mCanSendMic = canSendMic;
-  }
+    public void setCanSendMic(boolean canSendMic) {
+        this.mCanSendMic = canSendMic;
+    }
 
-  public boolean isCanSendCam() {
-    return mCanSendCam;
-  }
+    public boolean isCanSendCam() {
+        return mCanSendCam;
+    }
 
-  public void setCanSendCam(boolean canSendCam) {
-    this.mCanSendCam = canSendCam;
-  }
+    public void setCanSendCam(boolean canSendCam) {
+        this.mCanSendCam = canSendCam;
+    }
 
-  public boolean isCanChangeCam() {
-    return mCanChangeCam;
-  }
+    public boolean isCanChangeCam() {
+        return mCanChangeCam;
+    }
 
-  public void setCanChangeCam(boolean canChangeCam) {
-    this.mCanChangeCam = canChangeCam;
-  }
+    public void setCanChangeCam(boolean canChangeCam) {
+        this.mCanChangeCam = canChangeCam;
+    }
 
-  public boolean isCamInProgress() {
-    return mCamInProgress;
-  }
+    public boolean isCamInProgress() {
+        return mCamInProgress;
+    }
 
-  public void setCamInProgress(boolean camInProgress) {
-    this.mCamInProgress = camInProgress;
-  }
+    public void setCamInProgress(boolean camInProgress) {
+        this.mCamInProgress = camInProgress;
+    }
 
-  public boolean isShareInProgress() {
-    return mShareInProgress;
-  }
+    public boolean isShareInProgress() {
+        return mShareInProgress;
+    }
 
-  public void setShareInProgress(boolean shareInProgress) {
-    this.mShareInProgress = shareInProgress;
-  }
+    public void setShareInProgress(boolean shareInProgress) {
+        this.mShareInProgress = shareInProgress;
+    }
 
-  public boolean isAudioOnly() {
-    return mAudioOnly;
-  }
+    public boolean isAudioOnly() {
+        return mAudioOnly;
+    }
 
-  public void setAudioOnly(boolean audioOnly) {
-    this.mAudioOnly = audioOnly;
-  }
+    public void setAudioOnly(boolean audioOnly) {
+        this.mAudioOnly = audioOnly;
+    }
 
-  public boolean isAudioOnlyInProgress() {
-    return mAudioOnlyInProgress;
-  }
+    public boolean isAudioOnlyInProgress() {
+        return mAudioOnlyInProgress;
+    }
 
-  public void setAudioOnlyInProgress(boolean audioOnlyInProgress) {
-    this.mAudioOnlyInProgress = audioOnlyInProgress;
-  }
+    public void setAudioOnlyInProgress(boolean audioOnlyInProgress) {
+        this.mAudioOnlyInProgress = audioOnlyInProgress;
+    }
 
-  public boolean isAudioMuted() {
-    return mAudioMuted;
-  }
+    public boolean isAudioMuted() {
+        return mAudioMuted;
+    }
 
-  public void setAudioMuted(boolean audioMuted) {
-    this.mAudioMuted = audioMuted;
-  }
+    public void setAudioMuted(boolean audioMuted) {
+        this.mAudioMuted = audioMuted;
+    }
 
-  public boolean isRestartIceInProgress() {
-    return mRestartIceInProgress;
-  }
+    public boolean isRestartIceInProgress() {
+        return mRestartIceInProgress;
+    }
 
-  public void setRestartIceInProgress(boolean restartIceInProgress) {
-    this.mRestartIceInProgress = restartIceInProgress;
-  }
+    public void setRestartIceInProgress(boolean restartIceInProgress) {
+        this.mRestartIceInProgress = restartIceInProgress;
+    }
 
     public boolean getEnableSpeaker() {
         return mEnableSpeaker;
@@ -164,31 +168,40 @@ public class Me extends Info {
         this.mEnableSpeaker = enableSpeaker;
     }
 
-    public void setFrontCamera(boolean frontCamera) {
-        this.mFrontCamera = frontCamera;
+    public void setCameraChangeFail(boolean isChangeFail) {
+        this.mCameraChangeFail = isChangeFail;
     }
 
-    public boolean isFrontCamera() {
-        return mFrontCamera;
+    public boolean isCameraChangeFail() {
+        return mCameraChangeFail;
+    }
+
+    public RoomConstant.PeerState getPeerState() {
+        return mPeerState;
+    }
+
+    public void setPeerState(RoomConstant.PeerState peerState) {
+        this.mPeerState = peerState;
     }
 
     public void clear() {
-    mCamInProgress = false;
-    mShareInProgress = false;
-    mAudioOnly = false;
-    mAudioOnlyInProgress = false;
-    mAudioMuted = false;
-    mRestartIceInProgress = false;
-      mEnableSpeaker = false;
-      mFrontCamera = true;
-  }
+        mCamInProgress = false;
+        mShareInProgress = false;
+        mAudioOnly = false;
+        mAudioOnlyInProgress = false;
+        mAudioMuted = false;
+        mRestartIceInProgress = false;
+        mEnableSpeaker = false;
+        mCameraChangeFail = true;
+        mPeerState = RoomConstant.PeerState.NEW;
+    }
 
-  @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    Me me = (Me) o;
-    return Objects.equals(mId, me.mId);
-  }
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Me me = (Me) o;
+        return Objects.equals(mId, me.mId);
+    }
 }

@@ -7,6 +7,7 @@ import android.os.Looper;
 import android.preference.PreferenceManager;
 
 import com.jsy.mediasoup.interfaces.RoomManagementCallback;
+import com.jsy.mediasoup.vm.MeProps;
 import com.jsy.mediasoup.vm.RoomProps;
 import com.jsy.mediasoup.utils.LogUtils;
 
@@ -15,62 +16,65 @@ import org.mediasoup.droid.lib.PeerConnectionUtils;
 import org.mediasoup.droid.lib.RoomClient;
 import org.mediasoup.droid.lib.RoomConstant;
 import org.mediasoup.droid.lib.RoomOptions;
+import org.mediasoup.droid.lib.Utils;
 import org.mediasoup.droid.lib.interfaces.MediasoupConnectCallback;
 import org.mediasoup.droid.lib.lv.RoomStore;
 import org.mediasoup.droid.lib.model.Peer;
 import org.mediasoup.droid.lib.model.Peers;
+import org.threeten.bp.Duration;
+import org.threeten.bp.Instant;
 
 import java.util.List;
 
 public class RoomManagement implements MediasoupConnectCallback {
     private static final String TAG = RoomManagement.class.getSimpleName();
     private final Context mContext;
+    private String curRegister;
     //房间id 自己userid 自己名字
     private String mRoomId, mPeerId, mClientId, mDisplayName;
     //视频编码
     private boolean mForceH264, mForceVP9;
     private boolean isP2PMode;
     private RoomConstant.ConnectionState connectionState = RoomConstant.ConnectionState.NEW;
+    private MediasoupConstant.NetworkMode networkMode = MediasoupConstant.NetworkMode.UNKNOWN;
     private RoomOptions mOptions;//房间的配置信息
     private RoomStore mRoomStore;
     private RoomClient mRoomClient;//房间操作类
     private int roomMode;
-    private Handler mMainHandler;
+    private Handler mLooperHandler;
     private RoomManagementCallback managementCallback;
-    private boolean isOtherJoin = false;
+    private boolean isJoinSuc = false;//是否加入房间成功过
+    private boolean isOtherJoin = false;//是否有用户加入过房间
     private boolean isVisibleCall = true;
     private boolean isMediasoupCalling = false;
+    private String mConnectHost;
+    private int mConnectPort;
+    private boolean isEnableCamera;//摄像头是否可用
+    private boolean isMuteAudio;//是否静音模式
+    private TalkTimeRunnable mTalkTimeTicker;//通话计时器
+
+    public String getCurRegister() {
+        return curRegister;
+    }
 
     public String getRoomId() {
         return mRoomId;
     }
 
-    public void setRoomId(String mRoomId) {
-        this.mRoomId = mRoomId;
+    public boolean isP2PMode() {
+        return isP2PMode;
     }
 
-    public String getPeerId() {
+    public String getSelfPeerId() {
         return mPeerId;
     }
 
-    public void setPeerId(String mPeerId) {
-        this.mPeerId = mPeerId;
-    }
-
-    public String getClientId() {
+    public String getSelfClientId() {
         return mClientId;
     }
 
-    public void setClientId(String mClientId) {
-        this.mClientId = mClientId;
-    }
-
-    public String getDisplayName() {
+    public String getSelfName() {
         return mDisplayName;
-    }
-
-    public void setDisplayName(String mDisplayName) {
-        this.mDisplayName = mDisplayName;
     }
 
     public RoomManagement(Context context) {
@@ -101,21 +105,27 @@ public class RoomManagement implements MediasoupConnectCallback {
 
     public void setConnectionState(RoomConstant.ConnectionState connectionState) {
         this.connectionState = connectionState;
-        MediasoupLoaderUtils.getInstance().joinMediasoupState(connectionState.ordinal());
+        MediasoupLoaderUtils.getInstance().joinMediasoupState(getCurRegister(), connectionState.getIndex());
+    }
+
+    public RoomConstant.ConnectionState getConnectionState() {
+        return connectionState;
     }
 
     public boolean isRoomConnecting() {
         if (null == connectionState) {
             return false;
         }
-        return isMediasoupCalling && (RoomConstant.ConnectionState.CONNECTED.equals(connectionState) || RoomConstant.ConnectionState.DISCONNECTED.equals(connectionState) || RoomConstant.ConnectionState.CONNECTING.equals(connectionState));
+        return isMediasoupCalling && (RoomConstant.ConnectionState.CONNECTED.equals(connectionState)
+            || RoomConstant.ConnectionState.DISCONNECTED.equals(connectionState)
+            || RoomConstant.ConnectionState.CONNECTING.equals(connectionState));
     }
 
     public boolean isRoomConnected() {
         if (null == connectionState) {
             return false;
         }
-        return isMediasoupCalling && (RoomConstant.ConnectionState.CONNECTED.equals(connectionState));
+        return isMediasoupCalling && RoomConstant.ConnectionState.CONNECTED.equals(connectionState);
     }
 
     public boolean isRoomClosed() {
@@ -125,6 +135,19 @@ public class RoomManagement implements MediasoupConnectCallback {
         return RoomConstant.ConnectionState.CLOSED.equals(connectionState) || (null != mRoomClient ? mRoomClient.isClosed() : true);
     }
 
+    public void setNetworkMode(MediasoupConstant.NetworkMode networkMode) {
+        this.networkMode = networkMode;
+    }
+
+    public MediasoupConstant.NetworkMode getNetworkMode() {
+        return networkMode;
+    }
+
+    public boolean isJoinSuc() {
+        return isJoinSuc;
+    }
+
+    @Override
     public boolean isOtherJoin() {
         return isOtherJoin;
     }
@@ -141,23 +164,13 @@ public class RoomManagement implements MediasoupConnectCallback {
         return isVisibleCall;
     }
 
-    public void create() {
-        isMediasoupCalling = true;
-        mMainHandler = new Handler(Looper.getMainLooper());
+    public void startIfCallIsActive() {
+        MediasoupLoaderUtils.getInstance().startIfCallIsActive(getCurRegister());
     }
 
-    public void acceptAnsweredTime() {
-        if (!isRoomConnecting() && MediasoupLoaderUtils.getInstance().isReceiveCall()) {
-            mMainHandler.postDelayed(() -> {
-                if (!isRoomConnecting()) {
-                    MediasoupLoaderUtils.getInstance().sendMediasoupMsg(MediasoupConstant.CallState.Missed);//长时间为响应
-                    MediasoupLoaderUtils.getInstance().missedJoinMediasoup();
-                    MediasoupLoaderUtils.getInstance().closedMediasoup(MediasoupConstant.ClosedReason.TimeoutEconn);//长时间为响应
-                }
-            }, MediasoupConstant.mediasoup_missed_time);
-        } else {
-            mMainHandler.removeCallbacksAndMessages(null);
-        }
+    public void create() {
+        isMediasoupCalling = true;
+        mLooperHandler = new Handler(Looper.getMainLooper());
     }
 
     /**
@@ -168,44 +181,16 @@ public class RoomManagement implements MediasoupConnectCallback {
         mOptions = new RoomOptions();
         //配置room信息
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(mContext);
-        // Room initial config.
-//        mRoomId = preferences.getString("roomId", "");
-//        mPeerId = preferences.getString("peerId", "");
-//        mDisplayName = preferences.getString("displayName", "");
-        mForceH264 = preferences.getBoolean("forceH264", false);
-        mForceVP9 = preferences.getBoolean("forceVP9", false);
-        isP2PMode = MediasoupLoaderUtils.getInstance().isOneOnOneCall();
-        mRoomId = MediasoupLoaderUtils.getInstance().getCurRConvId();
-        mPeerId = MediasoupLoaderUtils.getInstance().getCurUserId();
-        mDisplayName = MediasoupLoaderUtils.getInstance().getDisplayName();
-        mClientId = MediasoupLoaderUtils.getInstance().getCurClientId();
-
-//        if (TextUtils.isEmpty(mRoomId)) {
-//            mRoomId = Utils.getRandomString(8);
-//            preferences.edit().putString("roomId", "mRoomId").apply();
-//        }
-//        if (TextUtils.isEmpty(mPeerId)) {
-//            mPeerId = Utils.getRandomString(8);
-//            preferences.edit().putString("peerId", mPeerId).apply();
-//        }
-//        if (TextUtils.isEmpty(mDisplayName)) {
-//            mDisplayName = Utils.getRandomString(8);
-//            preferences.edit().putString("displayName", mDisplayName).apply();
-//        }
-
-        // Room action config. 房间配置
-//        mOptions.setProduce(preferences.getBoolean("produce", true));//是否立即打开摄像头和录音？
-//        mOptions.setConsume(preferences.getBoolean("consume", true));//是否立即连接，显示对方音视频等？
-        mOptions.setForceTcp(preferences.getBoolean("forceTcp", false));//是否强制tcp 否则rtc
-        mOptions.setForceTcp(false);
-
+        curRegister = MediasoupLoaderUtils.getInstance().getCurRegister();
+        isP2PMode = MediasoupLoaderUtils.getInstance().isOneOnOneCall(getCurRegister());
+        mRoomId = MediasoupLoaderUtils.getInstance().getCurRConvId(getCurRegister());
+        mRoomId = MediasoupLoaderUtils.getInstance().getCurRConvId(getCurRegister());
+        mPeerId = MediasoupLoaderUtils.getInstance().getCurUserId(getCurRegister());
+        mDisplayName = MediasoupLoaderUtils.getInstance().getDisplayName(getCurRegister());
+        mClientId = MediasoupLoaderUtils.getInstance().getCurClientId(getCurRegister());
+//        isP2PMode = false;
 //        mRoomId = "dongxl";
-        mForceH264 = true;
-        mForceVP9 = true;
-        isP2PMode = false;
-
         updateRoomOptions();
-
         // Device config. 获取上传保存的摄像头信息 默认前置摄像头
         String camera = preferences.getString("camera", "front");
         PeerConnectionUtils.setPreferCameraFace(camera);
@@ -214,9 +199,9 @@ public class RoomManagement implements MediasoupConnectCallback {
         mRoomStore = new RoomStore();
         //初始化房间
         mRoomClient =
-                new RoomClient(
-                        mContext, mRoomStore, isP2PMode, mRoomId, mPeerId, mClientId, mDisplayName, mForceH264, mForceVP9, mOptions, this);
-        boolean isReady = MediasoupLoaderUtils.getInstance().setRoomClientStoreOptions(mRoomClient, mRoomStore, mOptions);
+            new RoomClient(
+                mContext, mRoomStore, curRegister, isP2PMode, mRoomId, mPeerId, mClientId, mDisplayName, mForceH264, mForceVP9, mOptions, this);
+        boolean isReady = MediasoupLoaderUtils.getInstance().setRoomClientStoreOptions(getCurRegister(), mRoomClient, mRoomStore, mOptions);
         if (null != managementCallback) {
             managementCallback.onMediasoupReady(isReady);
         }
@@ -226,7 +211,26 @@ public class RoomManagement implements MediasoupConnectCallback {
         if (null == mOptions || null == mRoomClient) {
             return;
         }
-        boolean isVideo = MediasoupLoaderUtils.getInstance().isVideoIncoming();
+
+        if (Utils.isEmptyString(mRoomClient.getIsRegister()) || !mRoomClient.getIsRegister().equals(MediasoupLoaderUtils.getInstance().getCurRegister())) {
+            curRegister = MediasoupLoaderUtils.getInstance().getCurRegister();
+            isP2PMode = MediasoupLoaderUtils.getInstance().isOneOnOneCall(getCurRegister());
+            mRoomId = MediasoupLoaderUtils.getInstance().getCurRConvId(getCurRegister());
+            mPeerId = MediasoupLoaderUtils.getInstance().getCurUserId(getCurRegister());
+            mDisplayName = MediasoupLoaderUtils.getInstance().getDisplayName(getCurRegister());
+            mClientId = MediasoupLoaderUtils.getInstance().getCurClientId(getCurRegister());
+            mRoomClient.updateRoomClient(curRegister, isP2PMode, mRoomId, mPeerId, mDisplayName, mClientId);
+        }
+
+//        isP2PMode = false;
+//        mRoomId = "dongxl";
+        mForceH264 = false;
+        mForceVP9 = false;
+        mOptions.setProduce(true);
+        mOptions.setConsume(true);
+        mOptions.setForceTcp(false);
+
+        boolean isVideo = MediasoupLoaderUtils.getInstance().isMediasoupVideoState(getCurRegister());
         roomMode = isVideo ? MediasoupConstant.roommode_video : MediasoupConstant.roommode_audio;
         if (roomMode == MediasoupConstant.roommode_see) {
             //观看模式
@@ -249,6 +253,8 @@ public class RoomManagement implements MediasoupConnectCallback {
                 mOptions.setEnableVideo(false);
             }
         }
+        isEnableCamera = mOptions.isEnableVideo();
+        isMuteAudio = !mOptions.isEnableAudio();
         LogUtils.i(TAG, "updateRoomOptions isVideo:" + isVideo + ", roomMode:" + roomMode);
 //        mRoomClient.setRoomOptions(mOptions);
     }
@@ -263,74 +269,228 @@ public class RoomManagement implements MediasoupConnectCallback {
             return;
         }
         updateRoomOptions();
+        if (MediasoupLoaderUtils.getInstance().isSelfCalling(getCurRegister())) {
+            waitAnsweredTime();//自己发起等待对方响应且加入房间 等待对方响应加入
+        } else if (MediasoupLoaderUtils.getInstance().isReceiveCall(getCurRegister())) {
+            acceptAnsweredTime(false);//响应对方邀请 自己加入房间的等待
+        }
         //有权限加入房间
+        isJoinSuc = false;
         mRoomClient.joinRoom();
-        waitAnsweredTime();
+        MediasoupLoaderUtils.getInstance().configRequestMediasoup(getCurRegister());
     }
 
     /**
-     * 发起后 等待响应
+     * 自己发起等待对方响应且加入房间 等待对付响应
      */
     private void waitAnsweredTime() {
-        if (isRoomConnecting() || !MediasoupLoaderUtils.getInstance().isSelfCalling()) {
-//            mMainHandler.removeCallbacksAndMessages(null);
-            return;
-        }
-        MediasoupLoaderUtils.getInstance().sendMediasoupMsg(MediasoupConstant.CallState.Started);//发起mediasoup 邀请
-        mMainHandler.postDelayed(() -> {
-            if (!isRoomConnecting() || !isOtherJoin()) {
-                MediasoupLoaderUtils.getInstance().sendMediasoupMsg(MediasoupConstant.CallState.Missed);//发起后没人响应
-                MediasoupLoaderUtils.getInstance().missedJoinMediasoup();
-                MediasoupLoaderUtils.getInstance().closedMediasoup(MediasoupConstant.ClosedReason.TimeoutEconn);//发起后没人响应
-                closeWebSocketDestroyRoom(true);
+        if (!isRoomConnecting()) {
+            MediasoupLoaderUtils.getInstance().sendMediasoupMsg(getCurRegister(), MediasoupConstant.CallState.Started);//发起mediasoup 邀请
+            if (null != mLooperHandler) {
+                mLooperHandler.postDelayed(() -> {
+                    if (!isRoomConnected() || !isOtherJoin()) {
+                        callSelfCancel(MediasoupConstant.ClosedReason.TimeoutEconn);
+                    }
+                }, MediasoupConstant.mediasoup_missed_time);
             }
-        }, MediasoupConstant.mediasoup_missed_time);
+        } else {
+//            mMainHandler.removeCallbacksAndMessages(null);
+        }
     }
 
     /**
-     * 响应了邀请或者有用户加入房间
+     * 响应对方邀请 自己加入房间的等待
+     *
+     * @param isDisconnected 是否连接中断的等待
+     */
+    public void acceptAnsweredTime(boolean isDisconnected) {
+        if (null != mLooperHandler && !isRoomConnecting()) {
+            mLooperHandler.postDelayed(() -> {
+                if (!isRoomConnected() || !isOtherJoin()) {
+                    if (isDisconnected) {
+                        callSelfEnd(MediasoupConstant.ClosedReason.TimeoutEconn);
+                    } else {
+                        MediasoupLoaderUtils.getInstance().sendMediasoupMsg(getCurRegister(), MediasoupConstant.CallState.Missed);//长时间为响应
+                        MediasoupLoaderUtils.getInstance().missedJoinMediasoup(getCurRegister());
+                        closedJoinMediasoup(getCurRegister(), MediasoupConstant.ClosedReason.TimeoutEconn);//长时间为响应
+                        closeWebSocketDestroyRoom(true);
+                    }
+                }
+            }, MediasoupConstant.answered_missed_time);
+        } else {
+//            mMainHandler.removeCallbacksAndMessages(null);
+        }
+    }
+
+    /**
+     * socket 连接的响应
+     */
+    public void answeredJoinMediasoup() {
+        LogUtils.i(TAG, "answeredJoinMediasoup  connectionState:" + getConnectionState());
+        MediasoupLoaderUtils.getInstance().answeredJoinMediasoup(getCurRegister(), isConnected());
+        if (getConnectionState() == RoomConstant.ConnectionState.DISCONNECTED) {
+            acceptAnsweredTime(true);
+        }
+        if (null != managementCallback) {
+            managementCallback.onAnsweredState();
+        }
+    }
+
+    /**
+     * 建立通话或者有用户加入房间
      */
     public void establishedJoinMediasoup() {
-        mMainHandler.removeCallbacksAndMessages(null);
-        MediasoupLoaderUtils.getInstance().establishedJoinMediasoup();
+        if (null != mLooperHandler) {
+            mLooperHandler.removeCallbacksAndMessages(null);
+        }
+        Instant estabTime = MediasoupLoaderUtils.getInstance().establishedJoinMediasoup(getCurRegister());
+        talkTimeCalculation(estabTime);
+        if (null != managementCallback) {
+            managementCallback.onEstablishedState(estabTime);
+        }
+    }
+
+    /**
+     * 通话时间开始计时
+     *
+     * @param estabTime
+     */
+    private void talkTimeCalculation(Instant estabTime) {
+        LogUtils.i(TAG, "talkTimeCalculation  estabTime:" + estabTime);
+        if (null == estabTime || estabTime == Instant.EPOCH) {
+            if (null != mRoomStore) {
+                mRoomStore.setCallTiming("");
+            }
+            return;
+        }
+        if (null != mLooperHandler) {
+            mLooperHandler.removeCallbacksAndMessages(null);
+            if (null == mTalkTimeTicker) {
+                mTalkTimeTicker = new TalkTimeRunnable();
+            }
+            mTalkTimeTicker.setEstabTime(estabTime);
+            mLooperHandler.postDelayed(mTalkTimeTicker, MediasoupConstant.mediasoup_duration_timing);
+        }
+    }
+
+    /**
+     * 通话时间实时计算
+     */
+    class TalkTimeRunnable implements Runnable {
+        private Instant estabTime; //the time that a joined call was established, if any
+
+        public void setEstabTime(Instant estabTime) {
+            this.estabTime = estabTime;
+        }
+
+        @Override
+        public void run() {
+            if (isConnected()) {
+                Duration duration = Duration.between(estabTime, Instant.now());
+                if (null != mLooperHandler && null != mTalkTimeTicker) {
+                    mTalkTimeTicker.setEstabTime(estabTime);
+                    mLooperHandler.postDelayed(mTalkTimeTicker, MediasoupConstant.mediasoup_duration_timing);
+                }
+                String callTiming;
+                if (null != duration && !duration.isNegative() && !duration.isZero()) {
+                    int seconds = (int) ((duration.toMillis() / 1000) % 60);
+                    int minutes = (int) ((duration.toMillis() / 1000) / 60);
+                    callTiming = String.format("%02d:%02d", minutes, seconds);
+                } else {
+                    callTiming = "";
+                }
+//                LogUtils.i(TAG, "talkTimeCalculation estabTime:" + estabTime + ",duration:" + duration + ",callTiming:" + callTiming);
+                if (null != mRoomStore) {
+                    mRoomStore.setCallTiming(callTiming);
+                }
+            }
+        }
+    }
+
+    /**
+     * 关闭了通话
+     *
+     * @param isRegister
+     * @param closedReason
+     */
+    public void closedJoinMediasoup(String isRegister, MediasoupConstant.ClosedReason closedReason) {
+        MediasoupLoaderUtils.getInstance().closedMediasoup(isRegister, closedReason);
+        if (null != managementCallback) {
+            managementCallback.onClosedState();
+        }
+    }
+
+    /**
+     * 设置连接的 host和port
+     *
+     * @param host
+     * @param port
+     */
+    public void setMediasoupProxy(String host, int port) {
+        this.mConnectHost = host;
+        this.mConnectPort = port;
+    }
+
+    @Override
+    public String getConnectHost() {
+        return Utils.isEmptyString(mConnectHost) ? MediasoupLoaderUtils.getInstance().getConnectHost() : mConnectHost;
+    }
+
+    @Override
+    public int getConnectPort() {
+        return mConnectPort <= 0 ? MediasoupLoaderUtils.getInstance().getConnectPort() : mConnectPort;
+    }
+
+    @Override
+    public boolean isEnableAudioJoin() {
+        return isJoinSuc() ? !isMuteAudio : mOptions.isEnableAudio();
+    }
+
+    @Override
+    public boolean isEnableVideoJoin() {
+        return isJoinSuc() ? isEnableCamera : mOptions.isEnableVideo();
     }
 
     @Override
     public void onConnectSuc() {
-        isOtherJoin = false;
+        LogUtils.i(TAG, "onConnectSuc isOtherJoin:" + isOtherJoin());
         if (null != managementCallback) {
-            managementCallback.onConnectSuc();
+            managementCallback.onConnectSuc(isOtherJoin());
         }
-        MediasoupLoaderUtils.getInstance().answeredJoinMediasoup();
+        setOtherJoin(false);
     }
 
     @Override
     public void onConnectFail() {
-        isOtherJoin = false;
+        LogUtils.e(TAG, "onConnectFail isOtherJoin:" + isOtherJoin());
         if (null != managementCallback) {
-            managementCallback.onConnectFail();
+            managementCallback.onConnectFail(isOtherJoin());
         }
-        webSocketConnectFail();
+        setOtherJoin(false);
+        answeredJoinMediasoup();
+
     }
 
     @Override
     public void onConnectDisconnected() {
-        isOtherJoin = false;
-        if (null != managementCallback) {
-            managementCallback.onConnectDisconnected();
-        }
         //连接中断 重新连接
-        LogUtils.e(TAG, "onConnectDisconnected joinMediasoupRoom:");
-//        joinMediasoupRoom();
+        LogUtils.e(TAG, "onConnectDisconnected isOtherJoin:" + isOtherJoin());
+        if (null != managementCallback) {
+            managementCallback.onConnectDisconnected(isOtherJoin());
+        }
+        setOtherJoin(false);
+        answeredJoinMediasoup();
     }
 
     @Override
     public void onConnectClose() {
-        isOtherJoin = false;
+        LogUtils.e(TAG, "onConnectClose isOtherJoin:" + isOtherJoin());
         if (null != managementCallback) {
-            managementCallback.onConnectClose();
+            managementCallback.onConnectClose(isOtherJoin());
         }
-        MediasoupLoaderUtils.getInstance().closedMediasoup(MediasoupConstant.ClosedReason.Normal);//websocket 关闭
+        callSelfEnd(MediasoupConstant.ClosedReason.Normal);
+        setOtherJoin(false);
+        isJoinSuc = false;
     }
 
     @Override
@@ -356,46 +516,97 @@ public class RoomManagement implements MediasoupConnectCallback {
 
     @Override
     public String getConnectPeerId() {
-        return MediasoupLoaderUtils.getInstance().getIncomingUserId();
+        return MediasoupLoaderUtils.getInstance().getIncomingUserId(getCurRegister());
     }
 
     @Override
     public String getConnectPeerName() {
-        return MediasoupLoaderUtils.getInstance().getIncomingDisplayName();
+        return MediasoupLoaderUtils.getInstance().getIncomingDisplayName(getCurRegister());
+    }
+
+    @Override
+    public Peer getConnectPeer() {
+        return new Peer(getConnectPeerId(), getConnectPeerName());
     }
 
     @Override
     public void sendOfferSdp(String peerId, JSONObject sdpJson) {
-        MediasoupLoaderUtils.getInstance().sendMediasoupMsg(MediasoupConstant.CallState.P2POffer, getRoomId(), sdpJson);
+        MediasoupLoaderUtils.getInstance().sendMediasoupMsg(getCurRegister(), MediasoupConstant.CallState.P2POffer, getRoomId(), sdpJson);
     }
 
     @Override
     public void sendAnswerSdp(String peerId, JSONObject sdpJson) {
-        MediasoupLoaderUtils.getInstance().sendMediasoupMsg(MediasoupConstant.CallState.P2PAnswer, getRoomId(), sdpJson);
+        MediasoupLoaderUtils.getInstance().sendMediasoupMsg(getCurRegister(), MediasoupConstant.CallState.P2PAnswer, getRoomId(), sdpJson);
     }
 
     @Override
     public void sendIceCandidate(String peerId, JSONObject iceJson) {
-        MediasoupLoaderUtils.getInstance().sendMediasoupMsg(MediasoupConstant.CallState.P2PIce, getRoomId(), iceJson);
+        MediasoupLoaderUtils.getInstance().sendMediasoupMsg(getCurRegister(), MediasoupConstant.CallState.P2PIce, getRoomId(), iceJson);
     }
 
     @Override
-    public void onJoinSuc() {
+    public void onJoinSuc(int existPeer) {
+        LogUtils.i(TAG, "onJoinSuc isOtherJoin:" + isOtherJoin() + ", existPeer:" + existPeer);
+        isJoinSuc = true;
         if (null != managementCallback) {
-            managementCallback.onJoinSuc();
+            managementCallback.onJoinSuc(existPeer);
         }
-        if (MediasoupLoaderUtils.getInstance().isReceiveCall()) {
+        if (existPeer > 0 /*&& MediasoupLoaderUtils.getInstance().isReceiveCall(getCurRegister())*/) {
             establishedJoinMediasoup();
+        } else {
+            answeredJoinMediasoup();
         }
     }
 
+    /**
+     * p2p 连接模式 加入或者连接失败
+     */
     @Override
-    public void onJoinFail() {
-        isOtherJoin = false;
+    public void onP2PJoinFail() {
+        LogUtils.e(TAG, "onP2PJoinFail");
+        isJoinSuc = false;
         if (null != managementCallback) {
-            managementCallback.onJoinFail();
+            managementCallback.onP2PJoinFail();
         }
-        MediasoupLoaderUtils.getInstance().closedMediasoup(MediasoupConstant.ClosedReason.Error);//加入房间失败
+//        if (null != mRoomClient) {
+//            mRoomClient.switchP2POrMediasoup(false);
+//        }
+    }
+
+    /**
+     * mediasoup 连接模式 加入房间失败
+     */
+    @Override
+    public void onMediasoupJoinFail() {
+        LogUtils.e(TAG, "onMediasoupJoinFail");
+        isJoinSuc = false;
+        if (null != managementCallback) {
+            managementCallback.onMediasoupJoinFail();
+        }
+        callSelfEnd(MediasoupConstant.ClosedReason.Error);//加入房间失败
+    }
+
+    /**
+     * p2p 建立通话后，连接断开 失败
+     */
+    @Override
+    public void onP2PConnectionFailed() {
+        LogUtils.e(TAG, "onP2PConnectionFailed");
+        callSelfEnd(MediasoupConstant.ClosedReason.Error);//p2p 建立通话后，连接断开 失败
+    }
+
+    /**
+     * 是否需要重新交换sdp
+     *
+     * @param isRenegotiation true 重新交换
+     */
+    @Override
+    public void onP2PReExchangeSDP(boolean isRenegotiation) {
+        LogUtils.e(TAG, "onP2PReExchangeSDP isRenegotiation:" + isRenegotiation);
+        if (null == mRoomClient || !isRenegotiation) {
+            return;
+        }
+        mRoomClient.onP2PReExchangeSDP(isRenegotiation);
     }
 
     public RoomProps getRoomProps() {
@@ -405,13 +616,36 @@ public class RoomManagement implements MediasoupConnectCallback {
         return null;
     }
 
+    public MeProps getMeProps() {
+        if (null != managementCallback) {
+            return managementCallback.getMeProps();
+        }
+        return null;
+    }
+
     public Peers getCurRoomPeers() {
         return null == mRoomStore ? null : mRoomStore.getPeers().getValue();
+    }
+
+    public boolean isContainsCurPeer(String peerId) {
+        Peers peers = getCurRoomPeers();
+        return null == peers ? false : peers.isContainsCurPeer(peerId);
     }
 
     public List<Peer> getCurRoomPeerList() {
         Peers peers = getCurRoomPeers();
         return null == peers ? null : peers.getAllPeers();
+    }
+
+    public int getCurRoomPeerSize() {
+        List<Peer> peers = getCurRoomPeerList();
+        return null == peers ? 0 : peers.size();
+    }
+
+    public void updatePeerVideoAudioState(String peerId, boolean isVideoVisible, boolean isAudioEnabled) {
+        if (null != mRoomStore) {
+            mRoomStore.updatePeerVideoAudioState(peerId, isVideoVisible, isAudioEnabled);
+        }
     }
 
     public void onReceiveP2POffer(String peerId, JSONObject jsonData) {
@@ -438,65 +672,137 @@ public class RoomManagement implements MediasoupConnectCallback {
     /**
      * 自己的其他设备已经接受
      */
-    public void onSelfOtherAcceptCall() {
-        MediasoupLoaderUtils.getInstance().closedMediasoup(MediasoupConstant.ClosedReason.Normal);//自己的其他设备已经接受
-        closeWebSocketDestroyRoom(true);
+    public void onSelfOtherAcceptCall(String isRegister) {
+        boolean isSameRegister = !Utils.isEmptyString(isRegister) && isRegister.equals(getCurRegister());
+        if (isSameRegister) {
+            closedJoinMediasoup(isRegister, MediasoupConstant.ClosedReason.Normal);//自己的其他设备已经接受
+            closeWebSocketDestroyRoom(true);
+        } else {
+            closedJoinMediasoup(isRegister, MediasoupConstant.ClosedReason.Normal);//自己的其他设备已经接受
+        }
     }
 
     /**
      * 对方接受邀请
      */
-    public void onOtherAcceptCall() {
-        if (MediasoupLoaderUtils.getInstance().isSelfCalling()) {
-            establishedJoinMediasoup();
+    public void onOtherAcceptCall(String isRegister) {
+        //自己发起 且连接
+        boolean isSameRegister = !Utils.isEmptyString(isRegister) && isRegister.equals(getCurRegister());
+        LogUtils.i(TAG, "onOtherAcceptCall isMediasoupCalling:" + isMediasoupCalling + ", connectionState:" + getConnectionState() + ", isSameRegister:" + isSameRegister + ",isP2PMode:" + isP2PMode());
+        if (isSameRegister) {
+            if (MediasoupLoaderUtils.getInstance().isSelfCalling(isRegister) && isRoomConnecting()) {
+                if (isOtherJoin()) {
+                    establishedJoinMediasoup();
+                } else {
+                    if (isP2PMode()) {
+                        if (null == mRoomClient) {
+                            return;
+                        }
+                        mRoomClient.createP2POfferSdp(getConnectPeerId());
+                    }
+                    answeredJoinMediasoup();
+                }
+            } else if (MediasoupLoaderUtils.getInstance().isSelfCalling(isRegister) && !isRoomConnecting()) {
+                LogUtils.e(TAG, "onOtherAcceptCall isMediasoupCalling:" + isMediasoupCalling + ", connectionState:" + getConnectionState() + ", isSameRegister:" + isSameRegister + ",isP2PMode:" + isP2PMode());
+                callSelfEnd(MediasoupConstant.ClosedReason.IOError);
+            }
+        } else {
+
         }
     }
 
     /**
      * 对方拒绝
      */
-    public void onOtherRejectCall() {
-        if (MediasoupLoaderUtils.getInstance().isOneOnOneCall()) {
-            MediasoupLoaderUtils.getInstance().closedMediasoup(MediasoupConstant.ClosedReason.Rejected);//对方拒绝
-            closeWebSocketDestroyRoom(true);
+    public void onOtherRejectCall(String isRegister) {
+        boolean isSameRegister = !Utils.isEmptyString(isRegister) && isRegister.equals(isRegister);
+        LogUtils.e(TAG, "onOtherRejectCall isMediasoupCalling:" + isMediasoupCalling + ", connectionState:" + getConnectionState() + ", isSameRegister:" + isSameRegister);
+        if (isSameRegister) {
+            if (MediasoupLoaderUtils.getInstance().isOneOnOneCall(isRegister) || (!isRoomConnecting() && !MediasoupLoaderUtils.getInstance().isReceiveCall(isRegister))) {
+                closedJoinMediasoup(isRegister, MediasoupConstant.ClosedReason.Rejected);//对方拒绝
+                closeWebSocketDestroyRoom(true);
+            }
+        } else {
+            closedJoinMediasoup(isRegister, MediasoupConstant.ClosedReason.Rejected);//对方拒绝
         }
     }
 
     /**
      * 对方挂掉
      */
-    public void onOtherEndCall() {
-        if (MediasoupLoaderUtils.getInstance().isOneOnOneCall()) {
-            MediasoupLoaderUtils.getInstance().closedMediasoup(MediasoupConstant.ClosedReason.Normal);//对方挂掉
-            closeWebSocketDestroyRoom(true);
+    public void onOtherEndCall(String isRegister, int count) {
+        boolean isSameRegister = !Utils.isEmptyString(isRegister) && isRegister.equals(getCurRegister());
+        int peerSize = getCurRoomPeerSize();
+        LogUtils.e(TAG, "onOtherEndCall count :" + count + ", peerSize:" + peerSize + ", isMediasoupCalling:" + isMediasoupCalling + ", connectionState:" + getConnectionState() + ", isSameRegister:" + isSameRegister);
+        if (isSameRegister) {
+            if (null == managementCallback || (!isRoomConnecting() && !MediasoupLoaderUtils.getInstance().isReceiveCall(isRegister)) || (MediasoupLoaderUtils.getInstance().isOneOnOneCall(isRegister) && (peerSize <= 0 || isP2PMode()))) {
+                closedJoinMediasoup(isRegister, MediasoupConstant.ClosedReason.Normal);//对方挂掉
+                closeWebSocketDestroyRoom(true);
+            } else {
+                if (MediasoupLoaderUtils.getInstance().isOneOnOneCall(isRegister) || peerSize <= 0 || count <= 1) {
+                    //一对一 连接中 且有人
+                    managementCallback.onAllLeaveRoom();
+                    managementCallback.onDelayedCheckRoom();
+                }
+            }
+        } else {
+            closedJoinMediasoup(isRegister, MediasoupConstant.ClosedReason.Normal);//对方挂掉
         }
     }
 
     /**
      * 对方取消呼叫
      */
-    public void onOtherCloseCall() {
-        MediasoupLoaderUtils.getInstance().closedMediasoup(MediasoupConstant.ClosedReason.Canceled);//对方取消呼叫
-        closeWebSocketDestroyRoom(false);
-        if (null != managementCallback) {
-            managementCallback.onFinishServiceActivity();
+    public void onOtherCloseCall(String isRegister) {
+        boolean isSameRegister = !Utils.isEmptyString(isRegister) && isRegister.equals(getCurRegister());
+        LogUtils.e(TAG, "onOtherCloseCall isMediasoupCalling:" + isMediasoupCalling + ", connectionState:" + getConnectionState() + ", isSameRegister:" + isSameRegister);
+        if (isSameRegister) {
+            if (MediasoupLoaderUtils.getInstance().isOneOnOneCall(isRegister) || (!isRoomConnecting() && !MediasoupLoaderUtils.getInstance().isReceiveCall(isRegister))) {
+                closedJoinMediasoup(isRegister, MediasoupConstant.ClosedReason.Canceled);//对方取消呼叫
+                closeWebSocketDestroyRoom(true);
+            }
+        } else {
+            closedJoinMediasoup(isRegister, MediasoupConstant.ClosedReason.Canceled);//对方取消呼叫
         }
     }
 
     /**
      * 对方未响应呼叫
      */
-    public void onOtherMissedCall() {
-        if (MediasoupLoaderUtils.getInstance().isOneOnOneCall()) {
-            MediasoupLoaderUtils.getInstance().closedMediasoup(MediasoupConstant.ClosedReason.TimeoutEconn);//对方未响应呼叫
-            closeWebSocketDestroyRoom(true);
+    public void onOtherMissedCall(String isRegister) {
+        boolean isSameRegister = !Utils.isEmptyString(isRegister) && isRegister.equals(getCurRegister());
+        LogUtils.e(TAG, "onOtherMissedCall isMediasoupCalling:" + isMediasoupCalling + ", connectionState:" + getConnectionState() + ", isSameRegister:" + isSameRegister);
+        if (isSameRegister) {
+            if (MediasoupLoaderUtils.getInstance().isOneOnOneCall(isRegister) || (!isRoomConnecting() && !MediasoupLoaderUtils.getInstance().isReceiveCall(isRegister))) {
+                closedJoinMediasoup(isRegister, MediasoupConstant.ClosedReason.TimeoutEconn);//对方未响应呼叫
+                closeWebSocketDestroyRoom(true);
+            }
+        } else {
+            closedJoinMediasoup(isRegister, MediasoupConstant.ClosedReason.TimeoutEconn);//对方未响应呼叫
+        }
+    }
+
+    /**
+     * 对方忙碌中
+     */
+    public void onOtherBusyedCall(String isRegister) {
+        boolean isSameRegister = !Utils.isEmptyString(isRegister) && isRegister.equals(getCurRegister());
+        LogUtils.e(TAG, "onOtherBusyedCall isMediasoupCalling:" + isMediasoupCalling + ", connectionState:" + getConnectionState() + ", isSameRegister:" + isSameRegister);
+        if (isSameRegister) {
+            if (MediasoupLoaderUtils.getInstance().isOneOnOneCall(isRegister) || (!isRoomConnecting() && !MediasoupLoaderUtils.getInstance().isReceiveCall(isRegister))) {
+                closedJoinMediasoup(isRegister, MediasoupConstant.ClosedReason.Normal);//对方忙碌中
+                closeWebSocketDestroyRoom(true);
+            }
+        } else {
+            closedJoinMediasoup(isRegister, MediasoupConstant.ClosedReason.Normal);//对方忙碌中
         }
     }
 
     /**
      * 自己接受或加入
      */
-    public void setSelfAcceptOrJoin() {
+    public void setSelfAcceptOrJoin(String isRegister) {
+        LogUtils.i(TAG, "setSelfAcceptOrJoin isRegister:" + isRegister + ", connectionState:" + getConnectionState() + ", peersize:" + getCurRoomPeerSize());
         if (null != managementCallback) {
             managementCallback.onSelfAcceptOrJoin();
         }
@@ -506,26 +812,31 @@ public class RoomManagement implements MediasoupConnectCallback {
      * 自己接受
      */
     public void callSelfAccept() {
+        LogUtils.i(TAG, "callSelfAccept isRegister:" + getCurRegister() + ", connectionState:" + getConnectionState() + ", peersize:" + getCurRoomPeerSize());
         //0发起，1接受，2拒绝，3结束，4取消
-        MediasoupLoaderUtils.getInstance().sendMediasoupMsg(MediasoupConstant.CallState.Accepted);//自己接受
-        setSelfAcceptOrJoin();
+        MediasoupLoaderUtils.getInstance().sendMediasoupMsg(getCurRegister(), MediasoupConstant.CallState.Accepted);//自己接受
+        setSelfAcceptOrJoin(getCurRegister());
     }
 
     /**
      * 自己结束
      */
-    public void callSelfEnd() {
-        MediasoupLoaderUtils.getInstance().sendMediasoupMsg(MediasoupConstant.CallState.Ended);//自己结束
-        MediasoupLoaderUtils.getInstance().closedMediasoup(MediasoupConstant.ClosedReason.Normal);//自己结束
+    public void callSelfEnd(MediasoupConstant.ClosedReason closedReason) {
+        LogUtils.i(TAG, "callSelfEnd isRegister:" + getCurRegister() + ", connectionState:" + getConnectionState() + ", peersize:" + getCurRoomPeerSize());
+        leaveRoom();
+        MediasoupLoaderUtils.getInstance().sendMediasoupMsg(getCurRegister(), MediasoupConstant.CallState.Ended);//自己结束
+        closedJoinMediasoup(getCurRegister(), closedReason);//自己结束
         closeWebSocketDestroyRoom(true);
     }
 
     /**
      * 自己取消
      */
-    public void callSelfCancel() {
-        MediasoupLoaderUtils.getInstance().closedMediasoup(MediasoupConstant.ClosedReason.Canceled);//自己取消
-        MediasoupLoaderUtils.getInstance().sendMediasoupMsg(MediasoupConstant.CallState.Canceled);//自己取消
+    public void callSelfCancel(MediasoupConstant.ClosedReason closedReason) {
+        LogUtils.i(TAG, "callSelfCancel isRegister:" + getCurRegister() + ", connectionState:" + getConnectionState() + ", peersize:" + getCurRoomPeerSize());
+        leaveRoom();
+        closedJoinMediasoup(getCurRegister(), closedReason);//自己取消
+        MediasoupLoaderUtils.getInstance().sendMediasoupMsg(getCurRegister(), MediasoupConstant.CallState.Canceled);//自己取消
         closeWebSocketDestroyRoom(true);
     }
 
@@ -533,28 +844,29 @@ public class RoomManagement implements MediasoupConnectCallback {
      * 自己拒绝
      */
     public void callSelfReject() {
-        MediasoupLoaderUtils.getInstance().sendMediasoupMsg(MediasoupConstant.CallState.Rejected);//自己拒绝
-        MediasoupLoaderUtils.getInstance().closedMediasoup(MediasoupConstant.ClosedReason.Rejected);//自己拒绝
-        closeWebSocketDestroyRoom(false);
-        if (null != managementCallback) {
-            managementCallback.onFinishServiceActivity();
-        }
+        LogUtils.i(TAG, "callSelfReject isRegister:" + getCurRegister() + ", connectionState:" + getConnectionState() + ", peersize:" + getCurRoomPeerSize());
+        leaveRoom();
+        MediasoupLoaderUtils.getInstance().sendMediasoupMsg(getCurRegister(), MediasoupConstant.CallState.Rejected);//自己拒绝
+        closedJoinMediasoup(getCurRegister(), MediasoupConstant.ClosedReason.Rejected);//自己拒绝
+        closeWebSocketDestroyRoom(true);
     }
 
     /**
-     * 拒绝 结束 取消
+     * 自己  拒绝 结束 取消
      */
     public void rejectEndCancelCall() {
-        MediasoupLoaderUtils.getInstance().rejectEndCancelCall();
+        MediasoupLoaderUtils.getInstance().rejectEndCancelCall(getCurRegister());
     }
 
     /**
-     * 是否是否打开摄像头
+     * 禁用和启用摄像头
      *
      * @param isEnable true 启用摄像头
      */
-    public void disAndEnableCam(boolean isEnable) {
-        if (null != mRoomClient && isRoomConnecting()) {
+    public void disableAndEnableCam(boolean isEnable) {
+        LogUtils.i(TAG, "disableAndEnableCam enableCam disableCam isEnable:" + isEnable + ", connectionState:" + getConnectionState());
+        if (mRoomClient != null && isRoomConnected() && this.isEnableCamera != isEnable) {
+            this.isEnableCamera = isEnable;
             if (isEnable) {
                 //启用摄像头
                 mRoomClient.enableCam();
@@ -562,8 +874,6 @@ public class RoomManagement implements MediasoupConnectCallback {
                 //关闭摄像头
                 mRoomClient.disableCam();
             }
-        } else {
-
         }
     }
 
@@ -573,11 +883,13 @@ public class RoomManagement implements MediasoupConnectCallback {
      * @param muted
      */
     public void setCallMuted(boolean muted) {
-        if (null != mRoomClient) {
+        LogUtils.i(TAG, "setCallMuted muteMic isRegister:" + getCurRegister() + ", connectionState:" + getConnectionState() + ", peersize:" + getCurRoomPeerSize());
+        if (mRoomClient != null && isRoomConnected() && this.isMuteAudio != muted) {
+            this.isMuteAudio = muted;
             if (muted) {
-                mRoomClient.muteAudio();
+                mRoomClient.muteMic();
             } else {
-                mRoomClient.unmuteAudio();
+                mRoomClient.unmuteMic();
             }
         }
     }
@@ -586,27 +898,41 @@ public class RoomManagement implements MediasoupConnectCallback {
      * 切换摄像头
      */
     public void switchCam() {
+        LogUtils.i(TAG, "switchCam isRegister:" + getCurRegister() + ", connectionState:" + getConnectionState() + ", peersize:" + getCurRoomPeerSize());
         if (null != mRoomClient) {
             mRoomClient.changeCam();
         }
     }
 
     /**
-     * websocket 连接失败
+     * 相机打开状态
      */
-    private void webSocketConnectFail() {
-        MediasoupLoaderUtils.getInstance().closedMediasoup(MediasoupConstant.ClosedReason.Error);//webSocket连接失败
-        if (mRoomClient != null) {
-            mRoomClient.close();
+    public void cameraOpenState(boolean isFail) {
+        MediasoupLoaderUtils.getInstance().cameraOpenState(getCurRegister(), isFail);
+    }
+
+    /**
+     * 网络状态改变
+     */
+    public void onNetworkChanged(String isRegister, MediasoupConstant.NetworkMode networkMode) {
+        LogUtils.v(TAG, "onNetworkChanged isMediasoupCalling:" + isMediasoupCalling + ", connectionState:" + getConnectionState() + ", networkMode:" + networkMode);
+        setNetworkMode(networkMode);
+        if (null != mRoomStore) {
+            mRoomStore.setNetworkMode(networkMode);
+        }
+        if (mRoomClient != null && isRoomConnected() && MediasoupConstant.isAvailableNetwork(networkMode)) {
+            //重启ice
+            mRoomClient.restartIce();
         }
     }
 
     /**
-     * 网络状态改变重启ice
+     * 离开房间
      */
-    public void onNetworkChanged() {
-        if (mRoomClient != null && !isRoomClosed()) {
-            mRoomClient.restartIce();
+    public void leaveRoom() {
+        LogUtils.i(TAG, "leaveRoom isRegister");
+        if (mRoomClient != null && isRoomConnected() && isP2PMode()) {
+            mRoomClient.leaveRoom();
         }
     }
 
@@ -614,30 +940,32 @@ public class RoomManagement implements MediasoupConnectCallback {
      * 关闭WebSocket销毁房间
      */
     public void closeWebSocketDestroyRoom(boolean isFinish) {
-        if (closeVideoAndAudio()) {
-            mMainHandler.postDelayed(() -> {
-                destroyRoom();
-                if (isFinish) {
-                    if (null != managementCallback) {
-                        managementCallback.onFinishServiceActivity();
-                    }
-                }
-            }, 200);
-        } else {
-            destroyRoom();
-            if (isFinish) {
-                if (null != managementCallback) {
-                    managementCallback.onFinishServiceActivity();
-                }
+        LogUtils.i(TAG, "closeWebSocketDestroyRoom isRegister:" + getCurRegister() + " ,isFinish:" + isFinish);
+//        if (closeVideoAndAudio()) {
+//            mMainHandler.postDelayed(() -> {
+//                destroyRoom();
+//                if (isFinish) {
+//                    if (null != managementCallback) {
+//                        managementCallback.onFinishServiceActivity();
+//                    }
+//                }
+//            }, 200);
+//        } else {
+        MediasoupLoaderUtils.getInstance().endedMediasoup(getCurRegister(), getRoomId());
+        destroyRoom();
+        if (isFinish) {
+            if (null != managementCallback) {
+                managementCallback.onFinishServiceActivity();
             }
         }
+//        }
     }
 
     /**
      * 关闭摄像头和暂停音频
      */
     public boolean closeVideoAndAudio() {
-        if (null != mRoomClient && !isRoomClosed() && isRoomConnecting()) {
+        if (null != mRoomClient) {
 //            mRoomClient.disableCam();
 //            mRoomClient.muteMic();
 
@@ -656,7 +984,10 @@ public class RoomManagement implements MediasoupConnectCallback {
      */
     public void destroyRoom() {
         isOtherJoin = false;
+        isJoinSuc = false;
         isVisibleCall = false;
+        mConnectHost = "";
+        mConnectPort = 0;
         if (mRoomClient != null) {
             mRoomClient.close();
             mRoomClient = null;
@@ -670,10 +1001,17 @@ public class RoomManagement implements MediasoupConnectCallback {
     public void destroy() {
         closeWebSocketDestroyRoom(false);
         isMediasoupCalling = false;
+        isEnableCamera = false;
+        isMuteAudio = false;
         managementCallback = null;
-        mMainHandler.removeCallbacksAndMessages(null);
-        MediasoupLoaderUtils.getInstance().closedMediasoup(MediasoupConstant.ClosedReason.Normal);//mediasoup  销毁
-        MediasoupLoaderUtils.getInstance().mediasoupDestroy();
+        if (null != mLooperHandler) {
+            mLooperHandler.removeCallbacksAndMessages(null);
+        }
+        mLooperHandler = null;
+        mTalkTimeTicker = null;
+        closedJoinMediasoup(getCurRegister(), MediasoupConstant.ClosedReason.Normal);//mediasoup  销毁
+        MediasoupLoaderUtils.getInstance().mediasoupDestroy(getCurRegister());
+        curRegister = "";
         LogUtils.e(TAG, "destroy 3 close ：服务销毁");
     }
 
@@ -790,6 +1128,18 @@ public class RoomManagement implements MediasoupConnectCallback {
             return;
         }
         mRoomClient.enableCam();
+    }
+
+    /**
+     * 改变摄像头采集的分辨率
+     *
+     * @param videoSize
+     */
+    public void changeCaptureFormat(int videoSize) {
+        if (null == mRoomClient) {
+            return;
+        }
+        mRoomClient.changeCaptureFormat(videoSize);
     }
 
     /**

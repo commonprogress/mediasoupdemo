@@ -1,10 +1,13 @@
 package com.dongxl.mediasoup;
 
 import androidx.lifecycle.LifecycleOwner;
+
 import android.content.Context;
 import android.graphics.Color;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
 import android.util.AttributeSet;
 import android.view.View;
 
@@ -21,15 +24,18 @@ import org.mediasoup.droid.lib.model.Peer;
 public class OtherMediasoupView extends UserMediasoupView {
 
     private static final String TAG = OtherMediasoupView.class.getSimpleName();
+    private String curRegister;
     private Peer peer;
+
 
     public OtherMediasoupView(@NonNull Context context) {
         super(context);
     }
 
-    public OtherMediasoupView(@NonNull Context context, LifecycleOwner lifecycleOwner, Peer peer, PropsChangeAndNotify changeAndNotify) {
+    public OtherMediasoupView(@NonNull Context context, LifecycleOwner lifecycleOwner, Peer peer, PropsChangeAndNotify changeAndNotify, String curRegister) {
         super(context, lifecycleOwner, changeAndNotify);
         this.peer = peer;
+        this.curRegister = curRegister;
     }
 
     public OtherMediasoupView(@NonNull Context context, @Nullable AttributeSet attrs) {
@@ -45,12 +51,12 @@ public class OtherMediasoupView extends UserMediasoupView {
         this.setBackgroundColor(Color.YELLOW);
         PeerView peerView = new PeerView(mContext);
 //        peerView.setNeatView(true);
-        boolean isMediasoupReady = MediasoupLoaderUtils.getInstance().isMediasoupReady();
+        boolean isMediasoupReady = MediasoupLoaderUtils.getInstance().isMediasoupReady(curRegister);
         LogUtils.e(TAG, "registerHandler() isMediasoupReady:" + isMediasoupReady);
         if (isMediasoupReady) {
             RoomClient roomClient = MediasoupLoaderUtils.getInstance().getRoomClient();
             RoomStore roomStore = MediasoupLoaderUtils.getInstance().getRoomStore();
-            PeerProps peerProps = changeAndNotify.getPeerPropsAndChange(lifecycleOwner, roomClient, roomStore, peer);
+            PeerProps peerProps = changeAndNotify.getPeerPropsAndChange(lifecycleOwner, roomClient, roomStore, peer.getId());
             peerView.setProps(peerProps, roomClient, roomStore);
         }
         return peerView;

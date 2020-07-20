@@ -13,9 +13,9 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.jsy.mediasoup.utils.DisplayUtils;
 import com.jsy.mediasoup.R;
 import com.jsy.mediasoup.utils.ClipboardCopy;
+import com.jsy.mediasoup.utils.DisplayUtils;
 import com.jsy.mediasoup.utils.LogUtils;
 import com.nabinbhandari.android.permissions.PermissionHandler;
 import com.nabinbhandari.android.permissions.Permissions;

@@ -8,9 +8,8 @@ public class MediasoupManager {
     //p2p connect mode
     private boolean isP2PMode;
 
-    public MediasoupManager(Context context, boolean isP2PMode) {
+    public MediasoupManager(Context context) {
         this.mContext = context.getApplicationContext();
-        this.isP2PMode = isP2PMode;
     }
 
     public boolean isP2PMode() {

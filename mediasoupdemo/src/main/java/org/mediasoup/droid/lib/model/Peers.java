@@ -2,11 +2,12 @@ package org.mediasoup.droid.lib.model;
 
 
 import androidx.annotation.NonNull;
-import android.text.TextUtils;
 
 import org.json.JSONObject;
 import org.mediasoup.droid.Consumer;
 import org.mediasoup.droid.Logger;
+import org.mediasoup.droid.lib.RoomConstant;
+import org.mediasoup.droid.lib.Utils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,7 +20,7 @@ import java.util.Map;
  */
 public class Peers {
 
-  private static final String TAG = "Peers";
+  private static final String TAG = Peers.class.getSimpleName();
 
   /**
    * 连接用户信息集合
@@ -44,9 +45,9 @@ public class Peers {
    * @param peerId
    */
   public void removePeer(String peerId) {
-    if(isContainsCurPeer(peerId)) {
-      mPeersInfo.remove(peerId);
-    }
+      if(isContainsCurPeer(peerId)) {
+          mPeersInfo.remove(peerId);
+      }
   }
 
   /**
@@ -57,10 +58,24 @@ public class Peers {
   public void setPeerDisplayName(String peerId, String displayName) {
     Peer peer = getPeer(peerId);
     if (peer == null) {
-      Logger.e(TAG, "setPeerDisplayName no Protoo found");
+      Logger.e(TAG, "no Protoo found");
       return;
     }
     peer.setDisplayName(displayName);
+  }
+
+    /**
+     * 更新当前peer状态
+     * @param peerId
+     * @param state
+     */
+  public void updatePeerState(String peerId, RoomConstant.PeerState state) {
+    Peer peer = getPeer(peerId);
+    if (peer == null) {
+      Logger.e(TAG, "no Peer found for update peer state");
+      return;
+    }
+    peer.setPeerState(state);
   }
 
   /**
@@ -70,23 +85,23 @@ public class Peers {
    * @param isAudioEnabled
    */
   public void updatePeerVideoAudioState(String peerId, boolean isVideoVisible, boolean isAudioEnabled) {
-    Peer peer = getPeer(peerId);
-    if (peer == null) {
-      Logger.e(TAG, "updatePeerVideoAudioState no Peer found for update Video Audio state");
-      return;
-    }
-    peer.setVideoVisible(isVideoVisible);
-    peer.setAudioEnabled(isAudioEnabled);
+      Peer peer = getPeer(peerId);
+      if (peer == null) {
+          Logger.e(TAG, "no Peer found for update Video Audio state");
+          return;
+      }
+      peer.setVideoVisible(isVideoVisible);
+      peer.setAudioEnabled(isAudioEnabled);
   }
 
-  public void updatePeerP2PMode(String peerId, boolean isP2PMode) {
-    Peer peer = getPeer(peerId);
-    if (peer == null) {
-      Logger.e(TAG, "updatePeerP2PMode no Peer found for update P2PMode");
-      return;
+    public void updatePeerP2PMode(String peerId, boolean isP2PMode) {
+        Peer peer = getPeer(peerId);
+        if (peer == null) {
+            Logger.e(TAG, "updatePeerP2PMode no Peer found for update P2PMode");
+            return;
+        }
+        peer.setP2PMode(isP2PMode);
     }
-    peer.setP2PMode(isP2PMode);
-  }
 
   /**
    * 添加 其他用户相关的 consumer
@@ -96,7 +111,7 @@ public class Peers {
   public void addConsumer(String peerId, Consumer consumer) {
     Peer peer = getPeer(peerId);
     if (peer == null) {
-      Logger.e(TAG, "addConsumer no Peer found for new Consumer");
+      Logger.e(TAG, "no Peer found for new Consumer");
       return;
     }
     peer.getConsumers().add(consumer.getId());
@@ -110,11 +125,22 @@ public class Peers {
   public void removeConsumer(String peerId, String consumerId) {
     Peer peer = getPeer(peerId);
     if (peer == null) {
-      Logger.e(TAG, "removeConsumer no Peer found for new Consumer");
       return;
     }
     peer.getConsumers().remove(consumerId);
   }
+
+    public void changeAllPeerState(RoomConstant.PeerState peerState) {
+        if (mPeersInfo.isEmpty()) {
+            return;
+        }
+        for (Map.Entry<String, Peer> peers : mPeersInfo.entrySet()) {
+            Peer peer = null != peers ? peers.getValue() : null;
+            if (null != peer) {
+                peer.setPeerState(peerState);
+            }
+        }
+    }
 
   /**
    * 根据peerId 获取连接用户
@@ -122,7 +148,7 @@ public class Peers {
    * @return
    */
   public Peer getPeer(String peerId) {
-    return isContainsCurPeer(peerId) ? mPeersInfo.get(peerId) : null;
+      return isContainsCurPeer(peerId) ? mPeersInfo.get(peerId) : null;
   }
 
   /**
@@ -131,19 +157,22 @@ public class Peers {
    * @return
    */
   public boolean isContainsCurPeer(String peerId) {
-    return !TextUtils.isEmpty(peerId) && mPeersInfo.containsKey(peerId);
+      return !Utils.isEmptyString(peerId) && mPeersInfo.containsKey(peerId);
   }
 
   /**
    * 获取连接用户的集合
    * @return
    */
-  public List<Peer> getAllPeers() {
-    List<Peer> peers = new ArrayList<>();
-    for (Map.Entry<String, Peer> info : mPeersInfo.entrySet()) {
-      peers.add(info.getValue());
-    }
-    return peers;
+  public synchronized List<Peer> getAllPeers() {
+      final Map<String, Peer> peersInfo = mPeersInfo;
+      synchronized (peersInfo) {
+          List<Peer> peers = new ArrayList<>();
+          for (Map.Entry<String, Peer> info : peersInfo.entrySet()) {
+              peers.add(info.getValue());
+          }
+          return peers;
+      }
   }
 
   /**

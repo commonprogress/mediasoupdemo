@@ -29,25 +29,25 @@ public class Producers {
       this.mProducer = producer;
     }
 
-    ProducersWrapper(P2PTrack p2PTrack) {
-      this.mP2PTrack = p2PTrack;
-    }
+      ProducersWrapper(P2PTrack p2PTrack) {
+          this.mP2PTrack = p2PTrack;
+      }
 
     public Producer getProducer() {
       return mProducer;
     }
 
-    public void setProducer(Producer producer) {
-      this.mProducer = producer;
-    }
+      public void setProducer(Producer producer) {
+          this.mProducer = producer;
+      }
 
-    public JSONArray getScore() {
+      public JSONArray getScore() {
       return mScore;
     }
 
-    public void setScore(JSONArray score) {
-      this.mScore = score;
-    }
+      public void setScore(JSONArray score) {
+          this.mScore = score;
+      }
 
     public String getType() {
       return mType;
@@ -57,13 +57,13 @@ public class Producers {
       mType = type;
     }
 
-    public P2PTrack getP2PTrack() {
-      return mP2PTrack;
-    }
+      public P2PTrack getP2PTrack() {
+          return mP2PTrack;
+      }
 
-    public void setP2PTrack(P2PTrack p2PTrack) {
-      this.mP2PTrack = p2PTrack;
-    }
+      public void setP2PTrack(P2PTrack p2PTrack) {
+          this.mP2PTrack = p2PTrack;
+      }
   }
 
   private final Map<String, ProducersWrapper> mProducers;
@@ -76,31 +76,31 @@ public class Producers {
     mProducers.put(producer.getId(), new ProducersWrapper(producer));
   }
 
-  public void addP2PTrack(P2PTrack p2PTrack) {
-    mProducers.put(p2PTrack.getPeerId(), new ProducersWrapper(p2PTrack));
-  }
-
-  public void addP2PAudioTrack(String peerId, AudioTrack audioTrack) {
-    ProducersWrapper wrapper = mProducers.get(peerId);
-    if (wrapper == null || null == wrapper.mP2PTrack) {
-      addP2PTrack(new P2PTrack(peerId));
+    public void addP2PTrack(P2PTrack p2PTrack) {
+        mProducers.put(p2PTrack.getPeerId(), new ProducersWrapper(p2PTrack));
     }
-    ProducersWrapper wrapper1 = mProducers.get(peerId);
-    P2PTrack p2PTrack = wrapper1.mP2PTrack;
-    p2PTrack.setAudioTrack(audioTrack);
-    wrapper1.setP2PTrack(p2PTrack);
-  }
 
-  public void addP2PVideoTrack(String peerId, VideoTrack videoTrack) {
-    ProducersWrapper wrapper = mProducers.get(peerId);
-    if (wrapper == null || null == wrapper.mP2PTrack) {
-      addP2PTrack(new P2PTrack(peerId));
+    public void addP2PAudioTrack(String peerId, AudioTrack audioTrack) {
+        ProducersWrapper wrapper = mProducers.get(peerId);
+        if (wrapper == null || null == wrapper.mP2PTrack) {
+            addP2PTrack(new P2PTrack(peerId));
+        }
+        ProducersWrapper wrapper1 = mProducers.get(peerId);
+        P2PTrack p2PTrack = wrapper1.mP2PTrack;
+        p2PTrack.setAudioTrack(audioTrack);
+        wrapper1.setP2PTrack(p2PTrack);
     }
-    ProducersWrapper wrapper1 = mProducers.get(peerId);
-    P2PTrack p2PTrack = wrapper1.mP2PTrack;
-    p2PTrack.setVideoTrack(videoTrack);
-    wrapper1.setP2PTrack(p2PTrack);
-  }
+
+    public void addP2PVideoTrack(String peerId, VideoTrack videoTrack) {
+        ProducersWrapper wrapper = mProducers.get(peerId);
+        if (wrapper == null || null == wrapper.mP2PTrack) {
+            addP2PTrack(new P2PTrack(peerId));
+        }
+        ProducersWrapper wrapper1 = mProducers.get(peerId);
+        P2PTrack p2PTrack = wrapper1.mP2PTrack;
+        p2PTrack.setVideoTrack(videoTrack);
+        wrapper1.setP2PTrack(p2PTrack);
+    }
 
   public void removeProducer(String producerId) {
     mProducers.remove(producerId);
@@ -153,15 +153,15 @@ public class Producers {
     return null;
   }
 
-  public ProducersWrapper getP2PTrack() {
-    for (ProducersWrapper wrapper : mProducers.values()) {
-      if (wrapper.mP2PTrack == null) {
-        continue;
-      }
-      return wrapper;
+    public ProducersWrapper getP2PTrack() {
+        for (ProducersWrapper wrapper : mProducers.values()) {
+            if (wrapper.mP2PTrack == null) {
+                continue;
+            }
+            return wrapper;
+        }
+        return null;
     }
-    return null;
-  }
 
   public void clear() {
     mProducers.clear();
