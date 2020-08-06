@@ -20,7 +20,6 @@ package com.waz.media.manager;
 import android.app.Activity;
 import android.content.Context;
 import android.media.AudioManager;
-import android.media.AudioManager;
 
 import android.media.AudioManager.OnAudioFocusChangeListener;
 

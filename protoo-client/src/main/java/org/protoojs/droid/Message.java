@@ -12,6 +12,18 @@ import org.json.JSONObject;
 public class Message {
 
   private static final String TAG = "message";
+  private static final String KEY_REQUEST = "request";
+  private static final String KEY_RESPONSE = "response";
+  private static final String KEY_NOTIFICATION = "notification";
+  private static final String KEY_METHOD = "method";
+  private static final String KEY_ID = "id";
+  private static final String KEY_OK = "ok";
+  private static final String KEY_DATA = "data";
+  private static final String KEY_ERRORCODE = "errorCode";
+  private static final String KEY_ERRORREASON = "errorReason";
+  private static final String KEY_TOID = "toId";
+  private static final String KEY_FROM = "from";
+
 
   // message data.
   private JSONObject mData;
@@ -142,10 +154,17 @@ public class Message {
 
     private boolean mNotification = true;
     private String mMethod;
+    private String mFrom;
 
     public Notification(String method, JSONObject data) {
       super(data);
       mMethod = method;
+    }
+
+    public Notification(String method, String from, JSONObject data) {
+      super(data);
+      mMethod = method;
+      mFrom = from;
     }
 
     public boolean isNotification() {
@@ -162,6 +181,14 @@ public class Message {
 
     public void setMethod(String method) {
       mMethod = method;
+    }
+
+    public String getFrom() {
+      return mFrom;
+    }
+
+    public void setFrom(String from) {
+      mFrom = from;
     }
   }
 
@@ -180,10 +207,10 @@ public class Message {
       return null;
     }
 
-    if (object.optBoolean("request")) {
+    if (object.optBoolean(KEY_REQUEST)) {
       // Request.
-      String method = object.optString("method");
-      long id = object.optLong("id");
+      String method = object.optString(KEY_METHOD);
+      long id = object.optLong(KEY_ID);
 
       if (TextUtils.isEmpty(method)) {
         Logger.e(TAG, "parse() | missing/invalid method field. rawData: " + raw);
@@ -194,31 +221,31 @@ public class Message {
         return null;
       }
 
-      return new Request(method, id, object.optJSONObject("data"));
-    } else if (object.optBoolean("response")) {
+      return new Request(method, id, object.optJSONObject(KEY_DATA));
+    } else if (object.optBoolean(KEY_RESPONSE)) {
       // Response.
-      long id = object.optLong("id");
+      long id = object.optLong(KEY_ID);
 
       if (id == 0) {
         Logger.e(TAG, "parse() | missing/invalid id field. rawData: " + raw);
         return null;
       }
 
-      if (object.optBoolean("ok")) {
-        return new Response(id, object.optJSONObject("data"));
+      if (object.optBoolean(KEY_OK)) {
+        return new Response(id, object.optJSONObject(KEY_DATA));
       } else {
-        return new Response(id, object.optLong("errorCode"), object.optString("errorReason"));
+        return new Response(id, object.optLong(KEY_ERRORCODE), object.optString(KEY_ERRORREASON));
       }
-    } else if (object.optBoolean("notification")) {
+    } else if (object.optBoolean(KEY_NOTIFICATION)) {
       // Notification.
-      String method = object.optString("method");
+      String method = object.optString(KEY_METHOD);
 
       if (TextUtils.isEmpty(method)) {
         Logger.e(TAG, "parse() | missing/invalid method field. rawData: " + raw);
         return null;
       }
 
-      return new Notification(method, object.optJSONObject("data"));
+      return new Notification(method, object.optJSONObject(KEY_DATA));
     } else {
       // Invalid.
       Logger.e(TAG, "parse() | missing request/response field. rawData: " + raw);
@@ -235,10 +262,30 @@ public class Message {
   public static JSONObject createRequest(String method, JSONObject data) {
     JSONObject request = new JSONObject();
     try {
-      request.put("request", true);
-      request.put("method", method);
-      request.put("id", Utils.generateRandomNumber());
-      request.put("data", data != null ? data : new JSONObject());
+      request.put(KEY_REQUEST, true);
+      request.put(KEY_METHOD, method);
+      request.put(KEY_ID, Utils.generateRandomNumber());
+      request.put(KEY_DATA, data != null ? data : new JSONObject());
+    } catch (JSONException e) {
+      e.printStackTrace();
+    }
+    return request;
+  }
+
+  /**
+   * 创建请求消息
+   * @param method
+   * @param data
+   * @return
+   */
+  public static JSONObject createRequest(String method, String toId, JSONObject data) {
+    JSONObject request = new JSONObject();
+    try {
+      request.put(KEY_REQUEST, true);
+      request.put(KEY_METHOD, method);
+      request.put(KEY_ID, Utils.generateRandomNumber());
+      request.put(KEY_TOID, toId);
+      request.put(KEY_DATA, data != null ? data : new JSONObject());
     } catch (JSONException e) {
       e.printStackTrace();
     }
@@ -255,10 +302,10 @@ public class Message {
   public static JSONObject createSuccessResponse(@NonNull Request request, JSONObject data) {
     JSONObject response = new JSONObject();
     try {
-      response.put("response", true);
-      response.put("id", request.getId());
-      response.put("ok", true);
-      response.put("data", data != null ? data : new JSONObject());
+      response.put(KEY_RESPONSE, true);
+      response.put(KEY_ID, request.getId());
+      response.put(KEY_OK, true);
+      response.put(KEY_DATA, data != null ? data : new JSONObject());
     } catch (JSONException e) {
       e.printStackTrace();
     }
@@ -277,11 +324,11 @@ public class Message {
           @NonNull Request request, long errorCode, String errorReason) {
     JSONObject response = new JSONObject();
     try {
-      response.put("response", true);
-      response.put("id", request.getId());
-      response.put("ok", false);
-      response.put("errorCode", errorCode);
-      response.put("errorReason", errorReason);
+      response.put(KEY_RESPONSE, true);
+      response.put(KEY_ID, request.getId());
+      response.put(KEY_OK, false);
+      response.put(KEY_ERRORCODE, errorCode);
+      response.put(KEY_ERRORREASON, errorReason);
     } catch (JSONException e) {
       e.printStackTrace();
     }
@@ -298,9 +345,29 @@ public class Message {
   public static JSONObject createNotification(String method, JSONObject data) {
     JSONObject notification = new JSONObject();
     try {
-      notification.put("notification", true);
-      notification.put("method", method);
-      notification.put("data", data != null ? data : new JSONObject());
+      notification.put(KEY_NOTIFICATION, true);
+      notification.put(KEY_METHOD, method);
+      notification.put(KEY_DATA, data != null ? data : new JSONObject());
+    } catch (JSONException e) {
+      e.printStackTrace();
+    }
+    return notification;
+  }
+
+  /**
+   * 创建通知消息
+   * @param method
+   * @param data
+   * @return
+   */
+  @NonNull
+  public static JSONObject createNotification(String method, String toId, JSONObject data) {
+    JSONObject notification = new JSONObject();
+    try {
+      notification.put(KEY_NOTIFICATION, true);
+      notification.put(KEY_METHOD, method);
+      notification.put(KEY_TOID, toId);
+      notification.put(KEY_DATA, data != null ? data : new JSONObject());
     } catch (JSONException e) {
       e.printStackTrace();
     }

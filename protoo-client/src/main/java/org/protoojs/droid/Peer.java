@@ -212,6 +212,14 @@ public class Peer implements AbsWebSocketTransport.Listener {
     }
   }
 
+  public void request(String method, String toId, String data, ClientRequestHandler clientRequestHandler) {
+    try {
+      request(method, toId, new JSONObject(data), clientRequestHandler);
+    } catch (JSONException e) {
+      e.printStackTrace();
+    }
+  }
+
   /**
    * 发送一个请求
    * @param method
@@ -231,6 +239,25 @@ public class Peer implements AbsWebSocketTransport.Listener {
         requestId, new ClientRequestHandlerProxy(requestId, method, timeout, clientRequestHandler));
   }
 
+  /**
+   * 发送一个请求
+   * @param method
+   * @param data
+   * @param clientRequestHandler
+   */
+  public void request(
+          String method, String toId, @NonNull JSONObject data, ClientRequestHandler clientRequestHandler) {
+    JSONObject request = Message.createRequest(method, toId, data);
+    long requestId = request.optLong("id");
+    Logger.d(TAG, String.format("request() [method:%s, data:%s]", method, data.toString()));
+    String payload = mTransport.sendMessage(request);
+
+    long timeout = (long) (1500 * (15 + (0.1 * payload.length())));
+    //把发送消息添加的集合
+    mSends.put(
+            requestId, new ClientRequestHandlerProxy(requestId, method, timeout, clientRequestHandler));
+  }
+
   public void notify(String method, String data) {
     try {
       notify(method, new JSONObject(data));
@@ -239,8 +266,22 @@ public class Peer implements AbsWebSocketTransport.Listener {
     }
   }
 
+  public void notify(String method, String toId, String data) {
+    try {
+      notify(method, toId, new JSONObject(data));
+    } catch (JSONException e) {
+      e.printStackTrace();
+    }
+  }
+
   public void notify(String method, JSONObject data) {
     JSONObject notification = Message.createNotification(method, data);
+    Logger.d(TAG, String.format("notify() [method:%s]", method));
+    mTransport.sendMessage(notification);
+  }
+
+  public void notify(String method, String toId, JSONObject data) {
+    JSONObject notification = Message.createNotification(method, toId, data);
     Logger.d(TAG, String.format("notify() [method:%s]", method));
     mTransport.sendMessage(notification);
   }
@@ -263,7 +304,7 @@ public class Peer implements AbsWebSocketTransport.Listener {
   }
 
   /**
-   * WebSocket 连接 成功后消息的接收 请求消息
+   * WebSocket 连接 成功后消息的接收 响应给对方
    * @param request
    */
   private void handleRequest(final Message.Request request) {
