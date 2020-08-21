@@ -56,7 +56,7 @@ public class Protoo extends org.protoojs.droid.Peer {
                   public void resolve(String data) {
                       Logger.d(TAG, "request(), resolve method: " + method + ", data: " + data);
                     if (!emitter.isDisposed()) {
-                      emitter.onNext(data);
+                      emitter.onNext(Utils.isEmptyString(data) ? "" : data);
                     }
                   }
 
