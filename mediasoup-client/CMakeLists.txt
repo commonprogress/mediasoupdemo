@@ -29,8 +29,6 @@ set(
 	${SOURCE_DIR}/peerconnection_jni.cpp
 	${SOURCE_DIR}/producer_jni.cpp
 	${SOURCE_DIR}/transport_jni.cpp
-	${SOURCE_DIR}/audio_effect.cc
-	${SOURCE_DIR}/media_manager.cc
 )
 
 # TODO(haiyang wu): add condition
@@ -55,7 +53,6 @@ endif()
 # Source Dependencies. override LIBWEBRTC_BINARY_PATH
 # TODO(HaiyangWu) add libwebrtc.a without change CMakeLists in libmediasoupclient
 # set(LIBWEBRTC_BINARY_PATH ${LIBWEBRTC_BINARY_ANDROID_PATH}/${ANDROID_ABI} CACHE STRING "libwebrtc binary path" FORCE)
-add_subdirectory("deps/avs")
 add_subdirectory("deps/libmediasoupclient")
 
 add_library(ffmpeg SHARED IMPORTED)
@@ -86,15 +83,6 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 	"${PROJECT_SOURCE_DIR}/deps/libmediasoupclient/include"
 	"${PROJECT_SOURCE_DIR}/deps/libmediasoupclient/test/include"
 	"${PROJECT_SOURCE_DIR}/deps/libmediasoupclient/deps/libsdptransform/include"
-    "${PROJECT_SOURCE_DIR}/deps/avs/include"
-    "${PROJECT_SOURCE_DIR}/deps/avs/src/audio_effect"
-	"${PROJECT_SOURCE_DIR}/deps/avs/src/audio_io"
-	"${PROJECT_SOURCE_DIR}/deps/avs/src/audio_io/mock"
-	"${PROJECT_SOURCE_DIR}/deps/avs/src/flowmgr"
-    "${PROJECT_SOURCE_DIR}/deps/avs/src/mediamgr"
-    "${PROJECT_SOURCE_DIR}/deps/avs/src/msystem"
-    "${PROJECT_SOURCE_DIR}/deps/avs/contrib/re"
-    "${PROJECT_SOURCE_DIR}/deps/avs/contrib/re/include"
 	"${LIBWEBRTC_INCLUDE_PATH}"
 	"${LIBWEBRTC_INCLUDE_PATH}/rtc_base"
     "${LIBWEBRTC_INCLUDE_PATH}/third_party"
@@ -121,6 +109,5 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 	log
 	OpenSLES
 	ffmpeg
-	avs
 	mediasoupclient
 )
