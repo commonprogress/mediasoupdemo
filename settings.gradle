@@ -1,5 +1,4 @@
 rootProject.name='mediasoupdemo'
-//include ':app', ':library'
 //include ':protoo-client'
 //include ':mediasoup-client'
 //include ':webrtc-made'
