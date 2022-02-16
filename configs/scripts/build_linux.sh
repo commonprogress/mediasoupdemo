@@ -23,23 +23,25 @@ fi
 
 pushd src > /dev/null
 
-if [ "$WEBRTC_COMMIT" == "" ]; then
-	git checkout remotes/branch-heads/$WEBRTC_RELEASE
-else
-	git checkout $WEBRTC_COMMIT
-fi
-#git checkout -b m74 refs/remotes/branch-heads/m74
-yes | gclient sync -D
-#yes | gclient sync
+#if [ "$WEBRTC_COMMIT" == "" ]; then
+#	git checkout remotes/branch-heads/$WEBRTC_RELEASE
+        git checkout -b $WEBRTC_RELEASE refs/remotes/branch-heads/4606
+#else
+#	git checkout $WEBRTC_COMMIT
+#fi
+#yes | gclient sync -D
+yes | gclient sync
 
-#./build/install-build-deps-android.sh
-sed s/sudo/echo\ sudo/g build/install-build-deps-android.sh > build/install-build-deps-android-nosudo.sh
-. build/install-build-deps-android-nosudo.sh --quick-check
-. build/android/envsetup.sh 
+#sed s/sudo/echo\ sudo/g build/install-build-deps-android.sh > build/install-build-deps-android-nosudo.sh
+#. build/install-build-deps-android-nosudo.sh --quick-check
+#. build/android/envsetup.sh
 
-#for PATCH in ../../patch/*.patch; do 
+#for PATCH in ../../patch/*.patch; do
 #  patch -p1 < $PATCH
 #done
+
+#In Linux Debian Stretch with GCC 6.3 this works:
+#gn gen out/m94 --args='is_debug=false is_component_build=false is_clang=false rtc_include_tests=false rtc_use_h264=true use_rtti=true use_custom_libcxx=false treat_warnings_as_errors=false use_ozone=true'
 
 export ARGS="is_debug=false is_component_build=false libyuv_include_tests=false rtc_include_tests=false rtc_build_tools=false is_chrome_branded=true rtc_use_h264=true proprietary_codecs=true rtc_enable_protobuf=false ffmpeg_branding=\"Chrome\" is_component_ffmpeg=true use_rtti=true use_custom_libcxx=false use_custom_libcxx_for_host=false treat_warnings_as_errors=false use_ozone=true"
 #export ARGS="is_debug=false rtc_include_tests=false rtc_build_examples=false rtc_build_tools=false use_rtti=true rtc_use_h264=true proprietary_codecs=true use_custom_libcxx=false"

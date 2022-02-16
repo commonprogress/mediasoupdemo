@@ -21,14 +21,25 @@ else
 	fetch --nohooks webrtc_ios
 fi
 
-pushd src > /dev/null
-git checkout remotes/branch-heads/$WEBRTC_RELEASE
+#gclient sync
 
+pushd src > /dev/null
+#if [ "$WEBRTC_COMMIT" == "" ]; then
+#	git checkout remotes/branch-heads/$WEBRTC_RELEASE
+        git checkout -b $WEBRTC_RELEASE refs/remotes/branch-heads/4606
+#else
+#	git checkout $WEBRTC_COMMIT
+#fi
+#gclient sync -D
 gclient sync
 
-for PATCH in ../../patch/*.patch; do 
-  patch -p1 < $PATCH
-done
+#for PATCH in ../../patch/*.patch; do
+#  patch -p1 < $PATCH
+#done
+
+#In OSX 10.14.16 this works:
+#gn gen out/m94 --args='is_debug=false is_component_build=false is_clang=true rtc_include_tests=false rtc_use_h264=true use_rtti=true mac_deployment_target="10.11" use_custom_libcxx=false'
+
 
 export ARGS="is_debug=false rtc_include_tests=false rtc_build_examples=false rtc_build_tools=false"
 gn gen out/osx-x86_64 -args="target_os=\"mac\" target_cpu=\"x64\" $ARGS"
