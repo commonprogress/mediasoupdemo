@@ -3,7 +3,9 @@
 #include "ortc.hpp"
 #include "Logger.hpp"
 #include "MediaSoupClientErrors.hpp"
-#include <media/base/h264_profile_level_id.h>
+#include "media/base/codec.h"
+#include "media/base/sdp_video_format_utils.h"
+#include <api/video_codecs/h264_profile_level_id.h>
 #include <algorithm> // std::find_if
 #include <regex>
 #include <stdexcept>
@@ -17,7 +19,7 @@ static const std::string ProbatorMid("probator");
 
 // Static functions declaration.
 static bool isRtxCodec(const json& codec);
-static bool matchCodecs(json& aCodec, const json& bCodec, bool strict = false, bool modify = false);
+static bool matchCodecs(json& aCodec, json& bCodec, bool strict = false, bool modify = false);
 static bool matchHeaderExtensions(const json& aExt, const json& bExt);
 static json reduceRtcpFeedback(const json& codecA, const json& codecB);
 static uint8_t getH264PacketizationMode(const json& codec);
@@ -104,7 +106,8 @@ namespace mediasoupclient
 				MSC_THROW_TYPE_ERROR("missing codec.mimeType");
 
 			std::smatch mimeTypeMatch;
-			std::regex_match(mimeTypeIt->get<std::string>(), mimeTypeMatch, MimeTypeRegex);
+			std::string regexTarget = mimeTypeIt->get<std::string>();
+			std::regex_match(regexTarget, mimeTypeMatch, MimeTypeRegex);
 
 			if (mimeTypeMatch.empty())
 				MSC_THROW_TYPE_ERROR("invalid codec.mimeType");
@@ -141,8 +144,8 @@ namespace mediasoupclient
 
 			for (auto it = parametersIt->begin(); it != parametersIt->end(); ++it)
 			{
-				auto& key   = it.key();
-				auto& value = it.value();
+				const auto& key = it.key();
+				auto& value     = it.value();
 
 				if (!value.is_string() && !value.is_number() && value != nullptr)
 					MSC_THROW_TYPE_ERROR("invalid codec parameter");
@@ -210,14 +213,14 @@ namespace mediasoupclient
 			auto preferredEncryptIt = ext.find("preferredEncrypt");
 			auto directionIt        = ext.find("direction");
 
-			// kind is optional. If unset set it to an empty string.
+			// kind is mandatory.
 			if (kindIt == ext.end() || !kindIt->is_string())
-				ext["kind"] = "";
+				MSC_THROW_TYPE_ERROR("missing ext.kind");
 
 			kindIt           = ext.find("kind");
 			std::string kind = kindIt->get<std::string>();
 
-			if (kind != "" && kind != "audio" && kind != "video")
+			if (kind != "audio" && kind != "video")
 				MSC_THROW_TYPE_ERROR("invalid ext.kind");
 
 			// uri is mandatory.
@@ -347,7 +350,8 @@ namespace mediasoupclient
 				MSC_THROW_TYPE_ERROR("missing codec.mimeType");
 
 			std::smatch mimeTypeMatch;
-			std::regex_match(mimeTypeIt->get<std::string>(), mimeTypeMatch, MimeTypeRegex);
+			std::string regexTarget = mimeTypeIt->get<std::string>();
+			std::regex_match(regexTarget, mimeTypeMatch, MimeTypeRegex);
 
 			if (mimeTypeMatch.empty())
 				MSC_THROW_TYPE_ERROR("invalid codec.mimeType");
@@ -384,8 +388,8 @@ namespace mediasoupclient
 
 			for (auto it = parametersIt->begin(); it != parametersIt->end(); ++it)
 			{
-				auto& key   = it.key();
-				auto& value = it.value();
+				const auto& key = it.key();
+				auto& value     = it.value();
 
 				if (!value.is_string() && !value.is_number() && value != nullptr)
 					MSC_THROW_TYPE_ERROR("invalid codec parameter");
@@ -639,7 +643,6 @@ namespace mediasoupclient
 			auto orderedIt           = params.find("ordered");
 			auto maxPacketLifeTimeIt = params.find("maxPacketLifeTime");
 			auto maxRetransmitsIt    = params.find("maxRetransmits");
-			auto priorityIt          = params.find("priority");
 			auto labelIt             = params.find("label");
 			auto protocolIt          = params.find("protocol");
 
@@ -691,10 +694,6 @@ namespace mediasoupclient
 			{
 				params["ordered"] = false;
 			}
-
-			// priority is optional. If unset set it to empty string.
-			if (priorityIt == params.end() || !priorityIt->is_string())
-				params["priority"] = "";
 
 			// label is optional. If unset set it to empty string.
 			if (labelIt == params.end() || !labelIt->is_string())
@@ -790,7 +789,8 @@ namespace mediasoupclient
 			}
 
 			std::smatch protocolMatch;
-			std::regex_match(protocolIt->get<std::string>(), protocolMatch, ProtocolRegex);
+			std::string regexTarget = protocolIt->get<std::string>();
+			std::regex_match(regexTarget, protocolMatch, ProtocolRegex);
 
 			if (protocolMatch.empty())
 				MSC_THROW_TYPE_ERROR("invalid params.protocol");
@@ -806,7 +806,8 @@ namespace mediasoupclient
 			}
 
 			std::smatch typeMatch;
-			std::regex_match(typeIt->get<std::string>(), typeMatch, TypeRegex);
+			regexTarget = typeIt->get<std::string>();
+			std::regex_match(regexTarget, typeMatch, TypeRegex);
 
 			if (typeMatch.empty())
 				MSC_THROW_TYPE_ERROR("invalid params.type");
@@ -885,7 +886,8 @@ namespace mediasoupclient
 			}
 
 			std::smatch roleMatch;
-			std::regex_match(roleIt->get<std::string>(), roleMatch, RoleRegex);
+			std::string regexTarget = roleIt->get<std::string>();
+			std::regex_match(regexTarget, roleMatch, RoleRegex);
 
 			if (roleMatch.empty())
 				MSC_THROW_TYPE_ERROR("invalid params.role");
@@ -916,6 +918,7 @@ namespace mediasoupclient
 			auto opusFecIt                 = params.find("opusFec");
 			auto opusDtxIt                 = params.find("opusDtx");
 			auto opusMaxPlaybackRateIt     = params.find("opusMaxPlaybackRate");
+			auto opusMaxAverageBitrateIt   = params.find("opusMaxAverageBitrate");
 			auto opusPtimeIt               = params.find("opusPtime");
 			auto videoGoogleStartBitrateIt = params.find("videoGoogleStartBitrate");
 			auto videoGoogleMaxBitrateIt   = params.find("videoGoogleMaxBitrate");
@@ -940,7 +943,10 @@ namespace mediasoupclient
 			{
 				MSC_THROW_TYPE_ERROR("invalid params.opusMaxPlaybackRate");
 			}
-
+			if (opusMaxAverageBitrateIt != params.end() && !opusMaxAverageBitrateIt->is_number_unsigned())
+			{
+				MSC_THROW_TYPE_ERROR("invalid params.opusMaxAverageBitrate");
+			}
 			if (opusPtimeIt != params.end() && !opusPtimeIt->is_number_integer())
 			{
 				MSC_THROW_TYPE_ERROR("invalid params.opusPtime");
@@ -1120,7 +1126,7 @@ namespace mediasoupclient
 			};
 			// clang-format on
 
-			for (auto& extendedCodec : extendedRtpCapabilities["codecs"])
+			for (const auto& extendedCodec : extendedRtpCapabilities["codecs"])
 			{
 				// clang-format off
 				json codec =
@@ -1167,7 +1173,7 @@ namespace mediasoupclient
 				// TODO: In the future, we need to add FEC, CN, etc, codecs.
 			}
 
-			for (auto& extendedExtension : extendedRtpCapabilities["headerExtensions"])
+			for (const auto& extendedExtension : extendedRtpCapabilities["headerExtensions"])
 			{
 				std::string direction = extendedExtension["direction"].get<std::string>();
 
@@ -1212,7 +1218,7 @@ namespace mediasoupclient
 			};
 			// clang-format on
 
-			for (auto& extendedCodec : extendedRtpCapabilities["codecs"])
+			for (const auto& extendedCodec : extendedRtpCapabilities["codecs"])
 			{
 				if (kind != extendedCodec["kind"].get<std::string>())
 					continue;
@@ -1261,7 +1267,7 @@ namespace mediasoupclient
 				break;
 			}
 
-			for (auto& extendedExtension : extendedRtpCapabilities["headerExtensions"])
+			for (const auto& extendedExtension : extendedRtpCapabilities["headerExtensions"])
 			{
 				if (kind != extendedExtension["kind"].get<std::string>())
 					continue;
@@ -1306,7 +1312,7 @@ namespace mediasoupclient
 			};
 			// clang-format on
 
-			for (auto& extendedCodec : extendedRtpCapabilities["codecs"])
+			for (const auto& extendedCodec : extendedRtpCapabilities["codecs"])
 			{
 				if (kind != extendedCodec["kind"].get<std::string>())
 					continue;
@@ -1355,7 +1361,7 @@ namespace mediasoupclient
 				break;
 			}
 
-			for (auto& extendedExtension : extendedRtpCapabilities["headerExtensions"])
+			for (const auto& extendedExtension : extendedRtpCapabilities["headerExtensions"])
 			{
 				if (kind != extendedExtension["kind"].get<std::string>())
 					continue;
@@ -1515,10 +1521,10 @@ namespace mediasoupclient
 		{
 			MSC_TRACE();
 
-			auto& codecs = extendedRtpCapabilities["codecs"];
-			auto codecIt = std::find_if(codecs.begin(), codecs.end(), [&kind](const json& codec) {
-				return kind == codec["kind"].get<std::string>();
-			});
+			const auto& codecs = extendedRtpCapabilities["codecs"];
+			auto codecIt       = std::find_if(codecs.begin(), codecs.end(), [&kind](const json& codec) {
+        return kind == codec["kind"].get<std::string>();
+      });
 
 			return codecIt != codecs.end();
 		}
@@ -1538,7 +1544,7 @@ namespace mediasoupclient
 				return false;
 
 			auto& firstMediaCodec = rtpParameters["codecs"][0];
-			auto& codecs          = extendedRtpCapabilities["codecs"];
+			const auto& codecs    = extendedRtpCapabilities["codecs"];
 			auto codecIt =
 			  std::find_if(codecs.begin(), codecs.end(), [&firstMediaCodec](const json& codec) {
 				  return codec["remotePayloadType"] == firstMediaCodec["payloadType"];
@@ -1546,6 +1552,44 @@ namespace mediasoupclient
 
 			return codecIt != codecs.end();
 		}
+
+		nlohmann::json reduceCodecs(nlohmann::json& codecs, const nlohmann::json* capCodec)
+		{
+			MSC_TRACE();
+
+			nlohmann::json filteredCodecs = nlohmann::json::array();
+
+			// If no capability codec is given, take the first one (and RTX).
+			if (!capCodec || !capCodec->is_object())
+			{
+				filteredCodecs.push_back(codecs[0]);
+
+				if (codecs.size() > 1 && isRtxCodec(codecs[1]))
+					filteredCodecs.push_back(codecs[1]);
+			}
+			// Otherwise look for a compatible set of codecs.
+			else
+			{
+				for (int idx = 0; idx < codecs.size(); ++idx)
+				{
+					if (matchCodecs(codecs[idx], const_cast<json&>(*capCodec)))
+					{
+						filteredCodecs.push_back(codecs[idx]);
+
+						if (isRtxCodec(codecs[idx + 1]))
+							filteredCodecs.push_back(codecs[idx + 1]);
+
+						break;
+					}
+				}
+
+				if (filteredCodecs.size() == 0)
+					MSC_THROW_TYPE_ERROR("no matching codec found");
+			}
+
+			return filteredCodecs;
+		}
+
 	} // namespace ortc
 } // namespace mediasoupclient
 
@@ -1564,7 +1608,7 @@ static bool isRtxCodec(const json& codec)
 	return std::regex_match(mimeType, match, RtxMimeTypeRegex);
 }
 
-static bool matchCodecs(json& aCodec, const json& bCodec, bool strict, bool modify)
+static bool matchCodecs(json& aCodec, json& bCodec, bool strict, bool modify)
 {
 	MSC_TRACE();
 
@@ -1591,17 +1635,16 @@ static bool matchCodecs(json& aCodec, const json& bCodec, bool strict, bool modi
 	// Match H264 parameters.
 	if (aMimeType == "video/h264")
 	{
-		auto aPacketizationMode = getH264PacketizationMode(aCodec);
-		auto bPacketizationMode = getH264PacketizationMode(bCodec);
-
-		if (aPacketizationMode != bPacketizationMode)
-			return false;
-
-		// If strict matching check profile-level-id.
 		if (strict)
 		{
-			webrtc::H264::CodecParameterMap aParameters;
-			webrtc::H264::CodecParameterMap bParameters;
+			auto aPacketizationMode = getH264PacketizationMode(aCodec);
+			auto bPacketizationMode = getH264PacketizationMode(bCodec);
+
+			if (aPacketizationMode != bPacketizationMode)
+				return false;
+
+			cricket::CodecParameterMap aParameters;
+			cricket::CodecParameterMap bParameters;
 
 			aParameters["level-asymmetry-allowed"] = std::to_string(getH264LevelAssimetryAllowed(aCodec));
 			aParameters["packetization-mode"]      = std::to_string(aPacketizationMode);
@@ -1610,14 +1653,14 @@ static bool matchCodecs(json& aCodec, const json& bCodec, bool strict, bool modi
 			bParameters["packetization-mode"]      = std::to_string(bPacketizationMode);
 			bParameters["profile-level-id"]        = getH264ProfileLevelId(bCodec);
 
-			if (!webrtc::H264::IsSameH264Profile(aParameters, bParameters))
+			if (!webrtc::H264IsSameProfile(aParameters, bParameters))
 				return false;
 
-			webrtc::H264::CodecParameterMap newParameters;
+			cricket::CodecParameterMap newParameters;
 
 			try
 			{
-				webrtc::H264::GenerateProfileLevelIdForAnswer(aParameters, bParameters, &newParameters);
+				webrtc::H264GenerateProfileLevelIdForAnswer(aParameters, bParameters, &newParameters);
 			}
 			catch (std::runtime_error)
 			{
@@ -1629,16 +1672,21 @@ static bool matchCodecs(json& aCodec, const json& bCodec, bool strict, bool modi
 				auto profileLevelIdIt = newParameters.find("profile-level-id");
 
 				if (profileLevelIdIt != newParameters.end())
+				{
 					aCodec["parameters"]["profile-level-id"] = profileLevelIdIt->second;
+					bCodec["parameters"]["profile-level-id"] = profileLevelIdIt->second;
+				}
 				else
+				{
 					aCodec["parameters"].erase("profile-level-id");
+					bCodec["parameters"].erase("profile-level-id");
+				}
 			}
 		}
 	}
 	// Match VP9 parameters.
 	else if (aMimeType == "video/vp9")
 	{
-		// If strict matching check profile-id.
 		if (strict)
 		{
 			auto aProfileId = getVP9ProfileId(aCodec);
@@ -1670,7 +1718,7 @@ static json reduceRtcpFeedback(const json& codecA, const json& codecB)
 	auto rtcpFeedbackAIt     = codecA.find("rtcpFeedback");
 	auto rtcpFeedbackBIt     = codecB.find("rtcpFeedback");
 
-	for (auto& aFb : *rtcpFeedbackAIt)
+	for (const auto& aFb : *rtcpFeedbackAIt)
 	{
 		auto rtcpFeedbackIt =
 		  std::find_if(rtcpFeedbackBIt->begin(), rtcpFeedbackBIt->end(), [&aFb](const json& bFb) {
@@ -1708,7 +1756,7 @@ static uint8_t getH264LevelAssimetryAllowed(const json& codec)
 {
 	MSC_TRACE();
 
-	auto& parameters             = codec["parameters"];
+	const auto& parameters       = codec["parameters"];
 	auto levelAssimetryAllowedIt = parameters.find("level-asymmetry-allowed");
 
 	// clang-format off
@@ -1728,8 +1776,8 @@ static std::string getH264ProfileLevelId(const json& codec)
 {
 	MSC_TRACE();
 
-	auto& parameters      = codec["parameters"];
-	auto profileLevelIdIt = parameters.find("profile-level-id");
+	const auto& parameters = codec["parameters"];
+	auto profileLevelIdIt  = parameters.find("profile-level-id");
 
 	if (profileLevelIdIt == parameters.end())
 		return "";
@@ -1743,8 +1791,8 @@ static std::string getVP9ProfileId(const json& codec)
 {
 	MSC_TRACE();
 
-	auto& parameters = codec["parameters"];
-	auto profileIdIt = parameters.find("profile-id");
+	const auto& parameters = codec["parameters"];
+	auto profileIdIt       = parameters.find("profile-id");
 
 	if (profileIdIt == parameters.end())
 		return "0";
