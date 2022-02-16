@@ -15,7 +15,7 @@ import android.media.AudioRecord;
 import android.media.MediaRecorder.AudioSource;
 import android.os.Build;
 import android.os.Process;
-import androidx.annotation.Nullable;
+import android.support.annotation.Nullable;
 import java.lang.System;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -83,7 +83,7 @@ public class WebRtcAudioRecord {
 
   /**
    * Contains audio sample information. Object is passed using {@link
-   * WebRtcAudioRecordSamplesReadyCallback}
+   * WebRtcAudioRecord.WebRtcAudioRecordSamplesReadyCallback}
    */
   public static class AudioSamples {
     /** See {@link AudioRecord#getAudioFormat()} */
@@ -155,29 +155,22 @@ public class WebRtcAudioRecord {
       while (keepAlive) {
         int bytesRead = audioRecord.read(byteBuffer, byteBuffer.capacity());
         if (bytesRead == byteBuffer.capacity()) {
-          try {
-            if (microphoneMute) {
-              byteBuffer.clear();
-              byteBuffer.put(emptyBytes);
-            }
-            // It's possible we've been shut down during the read, and stopRecording() tried and
-            // failed to join this thread. To be a bit safer, try to avoid calling any native methods
-            // in case they've been unregistered after stopRecording() returned.
-            if (keepAlive) {
-              nativeDataIsRecorded(bytesRead, nativeAudioRecord);
-            }
-            if (audioSamplesReadyCallback != null) {
-              // Copy the entire byte buffer array.  Assume that the start of the byteBuffer is
-              // at index 0.
-              byte[] data = Arrays.copyOf(byteBuffer.array(), byteBuffer.capacity());
-              audioSamplesReadyCallback.onWebRtcAudioRecordSamplesReady(
-                      new AudioSamples(audioRecord, data));
-            }
-          } catch (UnsatisfiedLinkError e) {
-            e.printStackTrace();
-            stopThread();
-            reportWebRtcAudioRecordError("AudioRecordThread UnsatisfiedLinkError: " + e.getLocalizedMessage());
-            Logging.e(TAG, "AudioRecordThread nativeDataIsRecorded unsatisfiedLinkError: " + e.getLocalizedMessage());
+          if (microphoneMute) {
+            byteBuffer.clear();
+            byteBuffer.put(emptyBytes);
+          }
+          // It's possible we've been shut down during the read, and stopRecording() tried and
+          // failed to join this thread. To be a bit safer, try to avoid calling any native methods
+          // in case they've been unregistered after stopRecording() returned.
+          if (keepAlive) {
+            nativeDataIsRecorded(bytesRead, nativeAudioRecord);
+          }
+          if (audioSamplesReadyCallback != null) {
+            // Copy the entire byte buffer array.  Assume that the start of the byteBuffer is
+            // at index 0.
+            byte[] data = Arrays.copyOf(byteBuffer.array(), byteBuffer.capacity());
+            audioSamplesReadyCallback.onWebRtcAudioRecordSamplesReady(
+                new AudioSamples(audioRecord, data));
           }
         } else {
           String errorMessage = "AudioRecord.read failed: " + bytesRead;
@@ -373,7 +366,7 @@ public class WebRtcAudioRecord {
     return AudioSource.VOICE_COMMUNICATION;
   }
 
-  // Sets all recorded samples to zero if |mute| is true, i.e., ensures that
+  // Sets all recorded samples to zero if `mute` is true, i.e., ensures that
   // the microphone is muted.
   public static void setMicrophoneMute(boolean mute) {
     Logging.w(TAG, "setMicrophoneMute(" + mute + ")");

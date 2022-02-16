@@ -10,16 +10,18 @@
 
 package org.webrtc;
 
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
-import androidx.test.platform.app.InstrumentationRegistry;
+import android.support.test.InstrumentationRegistry;
+import android.support.test.runner.AndroidJUnit4;
 import androidx.test.filters.SmallTest;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
 import java.util.ArrayList;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.webrtc.Loggable;
 import org.webrtc.Logging.Severity;
+import org.webrtc.PeerConnectionFactory;
 
 @RunWith(AndroidJUnit4.class)
 public class LoggableTest {

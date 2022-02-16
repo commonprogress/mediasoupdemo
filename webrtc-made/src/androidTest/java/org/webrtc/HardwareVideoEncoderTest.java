@@ -18,9 +18,9 @@ import static org.junit.Assert.fail;
 import android.annotation.TargetApi;
 import android.graphics.Matrix;
 import android.opengl.GLES11Ext;
-import androidx.annotation.Nullable;
-import androidx.test.filters.SmallTest;
+import android.support.annotation.Nullable;
 import android.util.Log;
+import androidx.test.filters.SmallTest;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -95,13 +95,12 @@ public class HardwareVideoEncoderTest {
       bufferCopy.rewind();
 
       frameQueue.offer(EncodedImage.builder()
-                           .setBuffer(bufferCopy)
+                           .setBuffer(bufferCopy, null)
                            .setEncodedWidth(frame.encodedWidth)
                            .setEncodedHeight(frame.encodedHeight)
                            .setCaptureTimeNs(frame.captureTimeNs)
                            .setFrameType(frame.frameType)
                            .setRotation(frame.rotation)
-                           .setCompleteFrame(frame.completeFrame)
                            .setQp(frame.qp)
                            .createEncodedImage());
     }
@@ -180,8 +179,8 @@ public class HardwareVideoEncoderTest {
     }
 
     @Override
-    public Type getType() {
-      return Type.OES;
+    public VideoFrame.TextureBuffer.Type getType() {
+      return VideoFrame.TextureBuffer.Type.OES;
     }
 
     @Override

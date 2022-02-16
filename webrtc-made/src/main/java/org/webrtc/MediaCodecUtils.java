@@ -11,15 +11,11 @@
 package org.webrtc;
 
 import android.annotation.TargetApi;
-import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaCodecInfo.CodecCapabilities;
 import android.os.Build;
-import androidx.annotation.Nullable;
-
-import java.util.Arrays;
+import android.support.annotation.Nullable;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /** Container class for static constants and helpers used with MediaCodec. */
@@ -33,15 +29,8 @@ class MediaCodecUtils {
   static final String INTEL_PREFIX = "OMX.Intel.";
   static final String NVIDIA_PREFIX = "OMX.Nvidia.";
   static final String QCOM_PREFIX = "OMX.qcom.";
-  static final String[] HARDWARE_IMPLEMENTATION_PREFIXES = {"OMX.MTK.", "OMX.hisi.", "OMX.google.", "OMX.ittiam.",
-          "OMX.rk.", "OMX.SEC.", "OMX.IMG.", "OMX.k3.", "OMX.TI.", "OMX.LG.", "OMX.amlogic."};
-  static final String[] SOFTWARE_IMPLEMENTATION_PREFIXES = {"OMX.google.", "OMX.SEC."};
-
-  // List of devices with poor H.264 encoder quality.
-  // HW H.264 encoder on below devices has poor bitrate control - actual
-  // bitrates deviates a lot from the target value.
-  static final List<String> H264_HW_EXCEPTION_MODELS =
-          Arrays.asList("SAMSUNG-SGH-I337", "Nexus 7", "Nexus 4");
+  static final String[] SOFTWARE_IMPLEMENTATION_PREFIXES = {
+      "OMX.google.", "OMX.SEC.", "c2.android"};
 
   // NV12 color format supported by QCOM codec, but not declared in MediaCodec -
   // see /hardware/qcom/media/mm-core/inc/OMX_QCOMExtns.h
@@ -61,9 +50,9 @@ class MediaCodecUtils {
 
   // Color formats supported by hardware encoder - in order of preference.
   static final int[] ENCODER_COLOR_FORMATS = {
-      CodecCapabilities.COLOR_FormatYUV420Planar,
-      CodecCapabilities.COLOR_FormatYUV420SemiPlanar,
-      CodecCapabilities.COLOR_QCOM_FormatYUV420SemiPlanar,
+      MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Planar,
+      MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420SemiPlanar,
+      MediaCodecInfo.CodecCapabilities.COLOR_QCOM_FormatYUV420SemiPlanar,
       MediaCodecUtils.COLOR_QCOM_FORMATYUV420PackedSemiPlanar32m};
 
   // Color formats supported by texture mode encoding - in order of preference.
@@ -71,7 +60,7 @@ class MediaCodecUtils {
 
   private static int[] getTextureColorFormats() {
     if (Build.VERSION.SDK_INT >= 18) {
-      return new int[] {CodecCapabilities.COLOR_FormatSurface};
+      return new int[] {MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface};
     } else {
       return new int[] {};
     }
@@ -89,7 +78,7 @@ class MediaCodecUtils {
     return null;
   }
 
-  static boolean codecSupportsType(MediaCodecInfo info, VideoCodecType type) {
+  static boolean codecSupportsType(MediaCodecInfo info, VideoCodecMimeType type) {
     for (String mimeType : info.getSupportedTypes()) {
       if (type.mimeType().equals(mimeType)) {
         return true;
@@ -98,16 +87,47 @@ class MediaCodecUtils {
     return false;
   }
 
-  static Map<String, String> getCodecProperties(VideoCodecType type, boolean highProfile) {
+  static Map<String, String> getCodecProperties(VideoCodecMimeType type, boolean highProfile) {
     switch (type) {
       case VP8:
       case VP9:
+      case AV1:
         return new HashMap<String, String>();
       case H264:
         return H264Utils.getDefaultH264Params(highProfile);
       default:
         throw new IllegalArgumentException("Unsupported codec: " + type);
     }
+  }
+
+  static boolean isHardwareAccelerated(MediaCodecInfo info) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+      return isHardwareAcceleratedQOrHigher(info);
+    }
+    return !isSoftwareOnly(info);
+  }
+
+  @TargetApi(29)
+  private static boolean isHardwareAcceleratedQOrHigher(android.media.MediaCodecInfo codecInfo) {
+    return codecInfo.isHardwareAccelerated();
+  }
+
+  static boolean isSoftwareOnly(android.media.MediaCodecInfo codecInfo) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+      return isSoftwareOnlyQOrHigher(codecInfo);
+    }
+    String name = codecInfo.getName();
+    for (String prefix : SOFTWARE_IMPLEMENTATION_PREFIXES) {
+      if (name.startsWith(prefix)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  @TargetApi(29)
+  private static boolean isSoftwareOnlyQOrHigher(android.media.MediaCodecInfo codecInfo) {
+    return codecInfo.isSoftwareOnly();
   }
 
   private MediaCodecUtils() {

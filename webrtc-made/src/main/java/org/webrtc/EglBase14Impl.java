@@ -19,7 +19,7 @@ import android.opengl.EGLDisplay;
 import android.opengl.EGLExt;
 import android.opengl.EGLSurface;
 import android.os.Build;
-import androidx.annotation.Nullable;
+import android.support.annotation.Nullable;
 import android.view.Surface;
 import org.webrtc.EglBase;
 
@@ -63,13 +63,13 @@ class EglBase14Impl implements EglBase14 {
                                                                  : egl14Context.getHandle();
     }
 
-    public Context(EGLContext eglContext) {
+    public Context(android.opengl.EGLContext eglContext) {
       this.egl14Context = eglContext;
     }
   }
 
   // Create a new context with the specified config type, sharing data with sharedContext.
-  // |sharedContext| may be null.
+  // `sharedContext` may be null.
   public EglBase14Impl(EGLContext sharedContext, int[] configAttributes) {
     eglDisplay = getEglDisplay();
     eglConfig = getEglConfig(eglDisplay, configAttributes);
@@ -170,7 +170,9 @@ class EglBase14Impl implements EglBase14 {
     checkIsNotReleased();
     releaseSurface();
     detachCurrent();
-    EGL14.eglDestroyContext(eglDisplay, eglContext);
+    synchronized (EglBase.lock) {
+      EGL14.eglDestroyContext(eglDisplay, eglContext);
+    }
     EGL14.eglReleaseThread();
     EGL14.eglTerminate(eglDisplay);
     eglContext = EGL14.EGL_NO_CONTEXT;

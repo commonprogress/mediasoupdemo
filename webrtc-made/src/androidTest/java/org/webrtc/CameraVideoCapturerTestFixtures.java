@@ -16,14 +16,12 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import android.content.Context;
-
-import androidx.annotation.Nullable;
-
+import android.support.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import org.chromium.base.test.BaseJUnit4ClassRunner;
 import org.webrtc.CameraEnumerationAndroid.CaptureFormat;
+import org.webrtc.VideoFrame;
 
 class CameraVideoCapturerTestFixtures {
   static final String TAG = "CameraVideoCapturerTestFixtures";
@@ -367,7 +365,7 @@ class CameraVideoCapturerTestFixtures {
   }
 
   private void startCapture(CapturerInstance instance, int formatIndex) {
-    final CaptureFormat format =
+    final CameraEnumerationAndroid.CaptureFormat format =
         instance.supportedFormats.get(formatIndex);
 
     instance.capturer.startCapture(format.width, format.height, format.framerate.max);
@@ -474,6 +472,10 @@ class CameraVideoCapturerTestFixtures {
   }
 
   public void switchCamera() throws InterruptedException {
+    switchCamera(false /* specifyCameraName */);
+  }
+
+  public void switchCamera(boolean specifyCameraName) throws InterruptedException {
     if (!testObjectFactory.haveTwoCameras()) {
       Logging.w(
           TAG, "Skipping test switch video capturer because the device doesn't have two cameras.");
@@ -489,18 +491,25 @@ class CameraVideoCapturerTestFixtures {
     // Array with one element to avoid final problem in nested classes.
     final boolean[] cameraSwitchSuccessful = new boolean[1];
     final CountDownLatch barrier = new CountDownLatch(1);
-    capturerInstance.capturer.switchCamera(new CameraVideoCapturer.CameraSwitchHandler() {
-      @Override
-      public void onCameraSwitchDone(boolean isFrontCamera) {
-        cameraSwitchSuccessful[0] = true;
-        barrier.countDown();
-      }
-      @Override
-      public void onCameraSwitchError(String errorDescription) {
-        cameraSwitchSuccessful[0] = false;
-        barrier.countDown();
-      }
-    });
+    final CameraVideoCapturer.CameraSwitchHandler cameraSwitchHandler =
+        new CameraVideoCapturer.CameraSwitchHandler() {
+          @Override
+          public void onCameraSwitchDone(boolean isFrontCamera) {
+            cameraSwitchSuccessful[0] = true;
+            barrier.countDown();
+          }
+          @Override
+          public void onCameraSwitchError(String errorDescription) {
+            cameraSwitchSuccessful[0] = false;
+            barrier.countDown();
+          }
+        };
+    if (specifyCameraName) {
+      String expectedCameraName = testObjectFactory.cameraEnumerator.getDeviceNames()[1];
+      capturerInstance.capturer.switchCamera(cameraSwitchHandler, expectedCameraName);
+    } else {
+      capturerInstance.capturer.switchCamera(cameraSwitchHandler);
+    }
     // Wait until the camera has been switched.
     barrier.await();
 
@@ -532,7 +541,7 @@ class CameraVideoCapturerTestFixtures {
     capturerInstance.capturer.stopCapture();
     capturerInstance.observer.releaseFrame();
 
-    // We can't change |capturer| at this point, but we should not crash.
+    // We can't change `capturer` at this point, but we should not crash.
     capturerInstance.capturer.switchCamera(null /* switchEventsHandler */);
     capturerInstance.capturer.changeCaptureFormat(DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_FPS);
 

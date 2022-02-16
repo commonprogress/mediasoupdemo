@@ -10,7 +10,7 @@
 
 package org.webrtc;
 
-import androidx.annotation.Nullable;
+import android.support.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,18 +18,19 @@ import java.util.List;
 public class SoftwareVideoEncoderFactory implements VideoEncoderFactory {
   @Nullable
   @Override
-  public VideoEncoder createEncoder(VideoCodecInfo info) {
-    Logging.w("SoftwareVideoEncoderFactory", "createEncoder info.name:" + info.name
-            + " ,Vp9IsSupported:" + LibvpxVp9Encoder.nativeIsSupported()
-            + " ,VH264IsSupported:" + LibvpxH264Encoder.nativeIsSupported());
-    if (info.name.equalsIgnoreCase("VP8")) {
+  public VideoEncoder createEncoder(VideoCodecInfo codecInfo) {
+    String codecName = codecInfo.getName();
+
+    if (codecName.equalsIgnoreCase(VideoCodecMimeType.VP8.toSdpCodecName())) {
       return new LibvpxVp8Encoder();
     }
-    if (info.name.equalsIgnoreCase("VP9") && LibvpxVp9Encoder.nativeIsSupported()) {
+    if (codecName.equalsIgnoreCase(VideoCodecMimeType.VP9.toSdpCodecName())
+        && LibvpxVp9Encoder.nativeIsSupported()) {
       return new LibvpxVp9Encoder();
     }
-    if (info.name.equalsIgnoreCase("H264") && LibvpxH264Encoder.nativeIsSupported()) {
-      return new LibvpxH264Encoder();
+    if (codecName.equalsIgnoreCase(VideoCodecMimeType.AV1.toSdpCodecName())
+        && LibaomAv1Encoder.nativeIsSupported()) {
+      return new LibaomAv1Encoder();
     }
 
     return null;
@@ -42,14 +43,13 @@ public class SoftwareVideoEncoderFactory implements VideoEncoderFactory {
 
   static VideoCodecInfo[] supportedCodecs() {
     List<VideoCodecInfo> codecs = new ArrayList<VideoCodecInfo>();
-    Logging.w("SoftwareVideoEncoderFactory", "supportedCodecs Vp9IsSupported:"  + LibvpxVp9Encoder.nativeIsSupported()
-            + " ,VH264IsSupported:" + LibvpxH264Encoder.nativeIsSupported());
-    codecs.add(new VideoCodecInfo("VP8", new HashMap<>()));
+
+    codecs.add(new VideoCodecInfo(VideoCodecMimeType.VP8.toSdpCodecName(), new HashMap<>()));
     if (LibvpxVp9Encoder.nativeIsSupported()) {
-      codecs.add(new VideoCodecInfo("VP9", new HashMap<>()));
+      codecs.add(new VideoCodecInfo(VideoCodecMimeType.VP9.toSdpCodecName(), new HashMap<>()));
     }
-    if (LibvpxH264Encoder.nativeIsSupported()) {
-      codecs.add(new VideoCodecInfo("H264", new HashMap<>()));
+    if (LibaomAv1Encoder.nativeIsSupported()) {
+      codecs.add(new VideoCodecInfo(VideoCodecMimeType.AV1.toSdpCodecName(), new HashMap<>()));
     }
 
     return codecs.toArray(new VideoCodecInfo[codecs.size()]);

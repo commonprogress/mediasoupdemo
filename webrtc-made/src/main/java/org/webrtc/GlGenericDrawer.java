@@ -12,7 +12,7 @@ package org.webrtc;
 
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
-import androidx.annotation.Nullable;
+import android.support.annotation.Nullable;
 import java.nio.FloatBuffer;
 import org.webrtc.GlShader;
 import org.webrtc.GlUtil;
@@ -55,7 +55,7 @@ class GlGenericDrawer implements RendererCommon.GlDrawer {
      * the shader that needs to happen every frame.
      */
     void onPrepareShader(GlShader shader, float[] texMatrix, int frameWidth, int frameHeight,
-                         int viewportWidth, int viewportHeight);
+        int viewportWidth, int viewportHeight);
   }
 
   private static final String INPUT_VERTEX_COORDINATE_NAME = "in_pos";
@@ -219,11 +219,14 @@ class GlGenericDrawer implements RendererCommon.GlDrawer {
       shader = currentShader;
     } else {
       // Allocate new shader.
-      currentShaderType = shaderType;
+      currentShaderType = null;
       if (currentShader != null) {
         currentShader.release();
+        currentShader = null;
       }
+
       shader = createShader(shaderType);
+      currentShaderType = shaderType;
       currentShader = shader;
 
       shader.useProgram();
